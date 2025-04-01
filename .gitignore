@@ -1,0 +1,11 @@
+.idea/
+.vscode/
+.vscode-test/
+.dynamodb/
+**/.env
+aws.credentials
+**/node_modules/
+**/target/
+**/classes/
+**/.DS_Store
+**/*.pem
