@@ -1,0 +1,91 @@
+{
+  "name": "instalite",
+  "version": "1.0.0",
+  "description": "",
+  "main": "app.js",
+  "type": "module",
+  "scripts": {
+    "start": "node --experimental-vm-modules backend/app.js",
+    "test": "node --experimental-vm-modules node_modules/.bin/jest --detectOpenHandles --forceExit --outputFile=test_results.json --json"
+  },
+  "author": "",
+  "license": "ISC",
+  "dependencies": {
+    "@aws-sdk/client-dynamodb": "^3.509.0",
+    "@aws-sdk/client-s3": "^3.740.0",
+    "@aws-sdk/credential-provider-ini": "3.734.0",
+    "@emotion/react": "^11.11.3",
+    "@emotion/styled": "^11.11.0",
+    "@langchain/community": "^0.3.36",
+    "@langchain/openai": "^0.4.7",
+    "@langchain/core": "^0.3.42",
+    "@mui/material": "^5.15.10",
+    "axios": "^1.7.9",
+    "bcrypt": "^5.0.1",
+    "cheerio": "^1.0.0-rc.12", 
+    "chromadb": "^1.10.5",
+    "cors": "^2.8.5",
+    "dotenv": "16.4.7",
+    "esbuild": "^0.19.11",
+    "eslint": "^8.56.0",
+    "eslint-config-airbnb-base": "^15.0.0",
+    "eslint-plugin-import": "^2.29.1",
+    "eslint-plugin-json": "^3.1.0",
+    "eslint-plugin-node": "^11.1.0",
+    "eslint-plugin-promise": "^6.1.1",
+    "express": "^4.21.2",
+    "express-session": "^1.18.1",
+    "fs": "^0.0.1-security",
+    "langchain": "^0.3.19",
+    "long": "^5.2.4",
+    "mysql2": "^3.12.0",
+    "nodemon": "^3.0.3",
+    "playwright": "^1.50.1",
+    "react": "^19.0.0",
+    "react-dom": "^19.0.0",
+    "react-scripts": "5.0.1",
+    "rimraf": "^5.0.5",
+    "seedrandom": "^3.0.5",
+    "split": "^1.0.1",
+    "typeorm": "^0.3.20"
+  },
+  "devDependencies": {
+    "@babel/core": "^7.26.10",
+    "@babel/preset-env": "^7.26.9",
+    "@babel/preset-react": "^7.16.7",
+    "@playwright/test": "^1.50.1",
+    "@testing-library/jest-dom": "^6.6.3",
+    "@testing-library/react": "^16.2.0",
+    "@testing-library/user-event": "^14.6.1",
+    "babel-jest": "^29.7.0",
+    "jest": "^29.7.0",
+    "msw": "0.47.0",
+    "ts-jest": "^29.2.5",
+    "whatwg-fetch": "3.6.0"
+  },
+  "browserslist": {
+    "production": [
+      ">0.2%",
+      "not dead",
+      "not op_mini all"
+    ],
+    "development": [
+      "last 1 chrome version",
+      "last 1 firefox version",
+      "last 1 safari version"
+    ]
+  },
+  "jest": {
+    "moduleNameMapper": {
+      "^uuid$": "uuid",
+      "\\.(css|less|scss|sass)$": "identity-obj-proxy"
+    },
+    "transform": {
+      "^.+\\.(js|jsx|mjs)$": "babel-jest"
+    },
+    "testMatch": [
+      "**/server/tests/*test*.js?(x)"
+    ],
+    "testEnvironment": "node"
+  }
+}
