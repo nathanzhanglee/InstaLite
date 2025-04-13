@@ -31,6 +31,7 @@ export default function Login() {
 
   return (
     <div className='login-container'>
+      <h1 className="welcome-title">Welcome to Pennstagram!</h1>
       <form>
         <div className='login-form'>
           <div className='login-title'>Log In</div>
@@ -44,13 +45,11 @@ export default function Login() {
             <input id="password" type="password" className='login-input'
               value={password} onChange={(e) => setPassword(e.target.value)} />
           </div>
-          <div className='w-full flex justify-center'>
-            <button type="button" className='login-button' onClick={handleLogin}>
+          <div className="login-button-stack">
+            <button type="button" className="login-button" onClick={handleLogin}>
               Log in
             </button>
-          </div>
-          <div className='w-full flex justify-center'>
-            <button type="button" className='login-button' onClick={signup}>
+            <button type="button" className="login-button" onClick={signup}>
               Sign up
             </button>
           </div>
