@@ -2,15 +2,14 @@
     "max": 100,
     "serverPort": 8080,
     "awsRegion": "us-east-1",
-    "dynamoDbTableName": "imdb_faces",
     "s3BucketName": "imdb-embeddings-upenn-nets2120-2024sp-<your-pennkey>",
     "chromaDbName": "imdb_photos",
     "database": {
         "host": "localhost",
         "port": "3306",
         "user": "admin",
-        "database": "imdbdatabase",
-        "password": "rds-password"
+        "database": "instalite",
+        "password": "80w9b243UBA*Xv!UnXSA%is"
     },
     "chroma": {
         "host": "localhost",

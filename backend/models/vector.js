@@ -4,7 +4,7 @@ import { ChromaClient } from 'chromadb';
 var vectorStore = null;
 
 //CHANGED path to reflect config file
-const configFile = fs.readFileSync('../config/config.json', 'utf8');
+const configFile = fs.readFileSync('backend/config/config.json', 'utf8');
 const config = JSON.parse(configFile);
 
 // Dotenv reads the .env file and makes the environment variables available
@@ -13,9 +13,9 @@ dotenv.config()
 
 
 /**
- * Get a connection to the DynamoDB database or a mock object
+ * Get a connection to the ChromaDB database or a mock object
  * 
- * @returns An instance of the DynamoDBClient
+ * @returns An instance of the ChramaDB client
  */
 function get_db_connection_singleton() {
   if (vectorStore) {

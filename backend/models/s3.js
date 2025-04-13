@@ -78,6 +78,24 @@ class S3KeyValueStore {
     }
   }
 
+  async uploadBuffer(buffer, key, contentType) {
+    const params = {
+      Bucket: this.bucketName,
+      Key: key,
+      Body: buffer,
+      ContentType: contentType
+    };
+  
+    try {
+      await this.client.send(new PutObjectCommand(params));
+      console.log(`Successfully uploaded ${key} to ${this.bucketName}`);
+      return `https://${this.bucketName}.s3.amazonaws.com/${key}`;
+    } catch (err) {
+      console.error(`Error uploading ${key}:`, err);
+      throw err;
+    }
+  }
+
   async uploadFile(filePath, bucketName, keyPrefix) {
     const fileContent = fs.readFileSync(filePath);
     const key = path.join(keyPrefix, path.relative(process.cwd(), filePath));
