@@ -1,0 +1,23 @@
+.login-container {
+    @apply w-screen h-screen flex items-center justify-center;
+}
+  
+.login-form {
+    @apply font-inter rounded-md bg-slate-50 p-6 space-y-2 w-full;
+}
+
+.login-title {
+    @apply font-bold flex w-full justify-center text-2xl mb-4;
+}
+
+.login-input-row {
+    @apply flex space-x-4 items-center justify-between;
+}
+
+.login-input {
+    @apply outline-none bg-white rounded-lg border border-slate-200 p-3;
+}
+
+.login-button {
+    @apply px-5 py-2 rounded-xl bg-blue-600 hover:bg-blue-700 transition duration-200 font-semibold text-white;
+}
