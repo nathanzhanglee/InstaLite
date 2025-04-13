@@ -1,0 +1,30 @@
+[33mWARNING[0m:  [13-04-2025 01:12:49] chroma_server_nofile is set to 65535, but this is less than current soft limit of 1048576. chroma_server_nofile will not be set.
+[32mINFO[0m:     [13-04-2025 01:12:49] Anonymized telemetry enabled. See                     https://docs.trychroma.com/telemetry for more information.
+[36mDEBUG[0m:    [13-04-2025 01:12:49] Starting component System
+[36mDEBUG[0m:    [13-04-2025 01:12:49] Starting component OpenTelemetryClient
+[36mDEBUG[0m:    [13-04-2025 01:12:49] Starting component SqliteDB
+[36mDEBUG[0m:    [13-04-2025 01:12:49] Starting component SimpleQuotaEnforcer
+[36mDEBUG[0m:    [13-04-2025 01:12:49] Starting component Posthog
+[36mDEBUG[0m:    [13-04-2025 01:12:49] Starting component SimpleRateLimitEnforcer
+[36mDEBUG[0m:    [13-04-2025 01:12:49] Starting component LocalSegmentManager
+[36mDEBUG[0m:    [13-04-2025 01:12:49] Starting component LocalExecutor
+[36mDEBUG[0m:    [13-04-2025 01:12:49] Starting component SegmentAPI
+[36mDEBUG[0m:    [13-04-2025 01:12:49] Starting component SimpleAsyncRateLimitEnforcer
+[32mINFO[0m:     [13-04-2025 01:12:49] Started server process [[36m34389[0m]
+[32mINFO[0m:     [13-04-2025 01:12:49] Waiting for application startup.
+[32mINFO[0m:     [13-04-2025 01:12:49] Application startup complete.
+[32mINFO[0m:     [13-04-2025 01:12:49] Uvicorn running on [1mhttp://0.0.0.0:8000[0m (Press CTRL+C to quit)
+[32mINFO[0m:     [13-04-2025 01:12:53] Shutting down
+[32mINFO[0m:     [13-04-2025 01:12:53] Waiting for application shutdown.
+[36mDEBUG[0m:    [13-04-2025 01:12:53] Stopping component System
+[36mDEBUG[0m:    [13-04-2025 01:12:53] Stopping component SegmentAPI
+[36mDEBUG[0m:    [13-04-2025 01:12:53] Stopping component LocalExecutor
+[36mDEBUG[0m:    [13-04-2025 01:12:53] Stopping component LocalSegmentManager
+[36mDEBUG[0m:    [13-04-2025 01:12:53] Stopping component SimpleAsyncRateLimitEnforcer
+[36mDEBUG[0m:    [13-04-2025 01:12:53] Stopping component SimpleRateLimitEnforcer
+[36mDEBUG[0m:    [13-04-2025 01:12:53] Stopping component Posthog
+[36mDEBUG[0m:    [13-04-2025 01:12:53] Stopping component SimpleQuotaEnforcer
+[36mDEBUG[0m:    [13-04-2025 01:12:53] Stopping component SqliteDB
+[36mDEBUG[0m:    [13-04-2025 01:12:53] Stopping component OpenTelemetryClient
+[32mINFO[0m:     [13-04-2025 01:12:53] Application shutdown complete.
+[32mINFO[0m:     [13-04-2025 01:12:53] Finished server process [[36m34389[0m]
