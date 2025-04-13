@@ -17,14 +17,15 @@ async function create_tables() {
     //user table: contains personal info and profile picture
     await dbaccess.create_tables('CREATE TABLE IF NOT EXISTS users ( \
       user_id INT NOT NULL AUTO_INCREMENT, \
-      username VARCHAR(30), \
+      username VARCHAR(30) NOT NULL, \
       email VARCHAR(255), \
       first_name VARCHAR(50), \
       last_name VARCHAR(50), \
       birthday DATE, \
       affiliation VARCHAR(255), \
       profile_pic_link VARCHAR(255), \
-      hashed_password VARCHAR(255), \
+      hashed_password VARCHAR(255) NOT NULL, \
+      last_online TIMESTAMP DEFAULT CURRENT_TIMESTAMP, \
       linked_actor VARCHAR(255) DEFAULT NULL, \
       FOREIGN KEY (linked_actor) REFERENCES names(nconst), \
       PRIMARY KEY(user_id) \
