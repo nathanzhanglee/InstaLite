@@ -14,5 +14,11 @@
     "chroma": {
         "host": "localhost",
         "port": "8000"
+    },
+    "kafka": {
+        "groupId": "instakann",
+        "bootstrapServers": ["localhost:9092"],
+        "topic": "Bluesky-Kafka",
+        "port": 4567
     }
   }
