@@ -1,4 +1,5 @@
-import { Kafka, CompressionTypes, CompressionCodecs } from 'kafkajs';
+import pkg from 'kafkajs';
+const { Kafka, CompressionTypes, CompressionCodecs } = pkg;
 import SnappyCodec from 'kafkajs-snappy';
 import fs from 'fs';
 
