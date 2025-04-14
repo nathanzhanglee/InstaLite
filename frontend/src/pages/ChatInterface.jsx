@@ -1,12 +1,15 @@
 import React from 'react';
-import ChatRoom from '../components/Chat/ChatRoom';
+import ChatGroup from '../components/Chat/ChatGroup';
+import './ChatInterface.css';
 
 const ChatInterface = () => {
   return (
-    <div className="h-screen w-screen flex flex-col items-center bg-white">
-      <h1 className="text-2xl font-bold py-4">Pennstagram Chat</h1>
-      <div className="w-full max-w-2xl h-[80%] border">
-        <ChatRoom />
+    <div className="login-container">
+      <h1 className="welcome-title">Pennstagram Chat</h1>
+      <div className="login-form">
+        <div className="w-full h-[80%] flex flex-col">
+          <ChatGroup />
+        </div>
       </div>
     </div>
   );

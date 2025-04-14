@@ -5,6 +5,7 @@ import ChatInterface from "./pages/ChatInterface";
 // Pages
 import Login from './pages/Login';
 import Signup from './pages/Signup';
+import HomePage from './pages/HomePage';
 
 // Components
 import NavigationBar from './components/NavigationBar/NavigationBar';
@@ -17,6 +18,7 @@ function App() {
           <Route path="/" element ={<Login />} />
           <Route path="/signup" element ={<Signup />} />
           <Route path="/chat" element={<ChatInterface />} />
+          <Route path="/home" element={<HomePage />} />
         </Routes>
       </main>
     </div>
