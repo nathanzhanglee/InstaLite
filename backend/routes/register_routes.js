@@ -1,3 +1,4 @@
+import { config } from 'dotenv';
 import * as routes from './routes.js';
 import multer from 'multer';
 
@@ -15,9 +16,10 @@ const IMAGE_CONFIG = {
     fieldName: 'postImage'
   },
   MESSAGE: {
-    maxSize: 3, // 3MB
-    destination: 'message-images',
-    fieldName: 'messageImage'
+    maxSize: 7, // 7MB to allow for documents as well
+    destination: 'message-attachments',
+    fieldName: 'messageAttachment',
+    acceptedTypes: ['application/pdf', 'text/plain', 'text/csv']
   }
 };
 
@@ -26,7 +28,7 @@ function createUploader(options = {}) {
     storage: multer.memoryStorage(),
     limits: { fileSize: (options.maxSize || defaultMaxSize) * 1024 * 1024 },
     fileFilter: (req, file, cb) => {
-      if ((options.acceptAllImages && file.mimetype.startsWith('image/')) || options.fileTypes?.includes(file.mimetype)) {
+      if ((options.acceptAllImages && file.mimetype.startsWith('image/')) || options.acceptedTypes?.includes(file.mimetype)) {
         // EITHER acceptAllImages + file is any image/* MIME type OR if the file type is in the allowed list, then accept
         cb(null, true);
       } else {
@@ -43,9 +45,10 @@ function createUploader(options = {}) {
  * @param {Function} handler - The route handler function
  * @returns {Function} Express middleware function
  */
-function handleImageUpload(imageConfig, handler) {
+function handleFileUpload(imageConfig, handler) {
   const uploader = createUploader({
     maxSize: imageConfig.maxSize,
+    acceptedTypes: config.acceptedTypes,
     acceptAllImages: true,
   });
   
@@ -83,18 +86,22 @@ function register_routes(app) {
     app.post('/register', routes.registerUser);
     app.post('/login', routes.loginUser);
     app.post('/logout', routes.logoutUser);
+    app.post('/addFriend', routes.postAddFriend);
+    app.post('/removeFriend', routes.postRemoveFriend);
+    app.get('/getFriends', routes.getFriends);
+    app.post('/createChat', routes.createOrGetChat);
 
     // Image upload routes
     app.post('/setProfilePic', 
-      handleImageUpload(IMAGE_CONFIG.PROFILE, routes.registerProfilePicture)
+      handleFileUpload(IMAGE_CONFIG.PROFILE, routes.registerProfilePicture)
     );
 
     app.post('/createPost', 
-      handleImageUpload(IMAGE_CONFIG.POST, routes.createPost)
+      handleFileUpload(IMAGE_CONFIG.POST, routes.createPost)
     );
 
     app.post('/sendMessage', 
-      handleImageUpload(IMAGE_CONFIG.MESSAGE, routes.sendMessage)
+      handleFileUpload(IMAGE_CONFIG.MESSAGE, routes.sendMessage)
     );
   }
 
