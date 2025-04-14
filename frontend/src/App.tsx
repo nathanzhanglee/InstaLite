@@ -7,7 +7,7 @@ import Login from './pages/Login';
 import Signup from './pages/Signup';
 
 // Components
-import NavigationBar from './components/NavigationBar';
+import NavigationBar from './components/NavigationBar/NavigationBar';
 
 function App() {
   return (

@@ -9,7 +9,7 @@ type Message = {
   timestamp?: string;
 };
 
-const ChatRoom: React.FC = () => {
+const ChatGroup: React.FC = () => {
   const [messages, setMessages] = useState<Message[]>([]);
   const [username, setUsername] = useState('');
   const [users, setUsers] = useState<string[]>([]);
@@ -86,4 +86,4 @@ const ChatRoom: React.FC = () => {
   );
 };
 
-export default ChatRoom;
+export default ChatGroup;
