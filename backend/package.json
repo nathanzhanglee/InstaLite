@@ -4,9 +4,15 @@
     "dependencies": {
         "express": "^5.1.0",
         "socket-io": "^1.0.0",
-        "socket.io": "^4.8.1"
+        "socket.io": "^4.8.1",
+        "dotenv": "^16.4.7",
+        "kafkajs": "2.2.4",
+        "kafkajs-snappy": "^1.1.0",
+        "snappy": "^7.2.2"
     },
     "scripts": {
-        "start": "node server.js"
+        "start": "node server.js",
+        "kafka": "node app.js"
     }
+
 }

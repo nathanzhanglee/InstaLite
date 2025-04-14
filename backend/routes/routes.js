@@ -6,6 +6,15 @@ import {v4 as uuidv4} from 'uuid';
 import bcrypt from 'bcrypt';
 import fs from 'fs';
 
+//hw4 langchain imports
+import { ChatOpenAI } from "@langchain/openai";
+import { PromptTemplate } from "@langchain/core/prompts";
+import { StringOutputParser } from "@langchain/core/output_parsers";
+import { OpenAIEmbeddings } from "@langchain/openai";
+import { formatDocumentsAsString } from "langchain/util/document";
+import { RunnableSequence, RunnablePassthrough } from "@langchain/core/runnables";
+import { Chroma } from "@langchain/community/vectorstores/chroma";
+
 const configFile = fs.readFileSync('backend/config/config.json', 'utf8');
 const config = JSON.parse(configFile);
 
@@ -14,6 +23,7 @@ const mysql_db = get_db_connection();
 const chroma_db = ChromaDB();
 const s3_db = new S3(config.s3BucketName);
 const face = new FaceEmbed();
+var vectorStore = null;
 
 /**
  * A helper function to upload files to S3
@@ -26,14 +36,30 @@ async function uploadToS3(file, filePrefix) {
   const fileName = `${filePrefix}/${Date.now()}-${uuidv4()}.${fileExtension}`; //scalability: use uuid + time to avoid name collisions
 
   const s3_path = await s3_db.uploadBuffer(file.buffer, fileName, file.mimetype);
-  return s3_path;
+  return {path: s3_path, type: file.mimetype};
 }
 
+/**
+ * 
+ * @param {String} filepath the path to the file in S3
+ * @returns the embedding of the image at the given filepath
+ */
 async function getEmbeddingFromPath(filepath) {
   let key = filepath.split('.com/')[1];
   const buffer = await s3_db.fetchFileBinary(key);
   const embeddings = await face.getEmbeddingsFromBuffer(buffer);
   return embeddings[0];
+}
+
+async function getVectorStore() {
+  if (vectorStore == null) {
+      vectorStore = await Chroma.fromExistingCollection(new OpenAIEmbeddings(), {
+          collectionName: "imdb_reviews2",
+          url: "http://localhost:8000", // Optional, will default to this value
+          });
+  } else
+      console.log('Vector store already initialized');
+  return vectorStore;
 }
 
 
@@ -98,7 +124,7 @@ async function registerProfilePicture(req, res) {
     return res.status(400).json({ error: 'No profile picture uploaded' });
   }
 
-  const s3_path = await uploadToS3(profilePic, "profile-pics");
+  const s3_path = await uploadToS3(profilePic, "profile-pics").path;
 
   const sql = 'UPDATE users SET profile_pic_link = ? WHERE user_id = ?';
   const params = [s3_path, userId];
@@ -172,22 +198,304 @@ async function postLogout(req, res) {
 // GET /friends
 async function getFriends(req, res) {    
     if (!req.session.user_id) {
-        res.status(403).json({error: 'Not logged in.'});
-    } else {
-        const currId = req.session.user_id;
-        let results;
-        console.log('Getting friends for ' + currId);
-        // find where the user is a FOLLOWER, take the followed's username
-        try {
-            results = await querySQLDatabase("SELECT u_followed.username FROM users AS u_follower JOIN friends AS f ON \
-              u_follower.user_id = f.follower JOIN users AS u_followed ON u_followed.user_id = f.followed \
-              WHERE u_follower.user_id = ?;", [currId]);
-        } catch (err) {
-            console.log("ERROR in getFriends query:",err);
-            return res.status(500).json({error: 'Error querying database'});
-        }
-        res.status(200).json(results);
+        return res.status(403).json({error: 'Not logged in.'});
     }
+    const currId = req.session.user_id;
+    let results;
+    console.log('Getting friends for ' + currId);
+    // find where the user is a FOLLOWER, take the followed's username (bidirectional edges means this choice ensures uniqueness)
+    try {
+        results = (await querySQLDatabase("SELECT u_followed.username FROM users AS u_follower JOIN friends AS f ON \
+          u_follower.user_id = f.follower JOIN users AS u_followed ON u_followed.user_id = f.followed \
+          WHERE u_follower.user_id = ?;", [currId]))[0]; //remove the schema thing
+        return res.status(200).json(results);
+    } catch (err) {
+        console.log("ERROR in getFriends query:",err);
+        return res.status(500).json({error: 'Error querying database'});
+    }
+}
+
+async function postAddFriend(req, res) {
+  const userId = req.session.user_id;
+  if (!userId) {
+    return res.status(403).json({error: 'Not logged in.'});
+  }
+  
+  const friendUsername = req.body.friendUsername;
+
+  if (!friendUsername) {
+    return res.status(400).json({error: 'Missing friend username'});
+  }
+
+  let friendId;
+  try {
+    const results = (await querySQLDatabase("SELECT user_id FROM users WHERE username = ?", [friendUsername]))[0];  
+    //[0] limits to just returned results (removes schema)
+    if (results.length === 0) {
+      return res.status(404).json({error: 'User not found'});
+    }
+    friendId = results[0].user_id; // [0] gets first result
+  } catch (err) {
+    console.log("ERROR in addFriend query:", err);
+    return res.status(500).json({error: 'Error querying database'});
+  }
+  try {
+    // Check if they are already friends - will be stored as TWO rows (both directions) in the table
+    const existingFriendship = await querySQLDatabase(
+      "SELECT COUNT(*) AS count FROM friends WHERE (follower = ? AND followed = ?)",
+      [userId, friendId, friendId, userId]
+    );
+
+    if (existingFriendship[0].count > 0) {
+      return res.status(400).json({ error: 'You are already friends with this user' });
+    }
+
+    // Insert bidirectional friendship
+    await querySQLDatabase("INSERT INTO friends (follower, followed) VALUES (?, ?), (?, ?)", [
+      userId, friendId, friendId, userId
+    ]);
+
+    return res.status(201).json({ message: 'Friendship created successfully', friendUsername });
+  } catch (err) {
+    console.log("ERROR in addFriend insertion:", err);
+    return res.status(500).json({ error: 'Error querying database' });
+  }
+}
+
+async function postRemoveFriend(req, res) {
+  const userId = req.session.user_id;
+  if (!userId) {
+    return res.status(403).json({ error: 'Not logged in.' });
+  }
+
+  const friendUsername = req.body.friendUsername;
+
+  if (!friendUsername) {
+    return res.status(400).json({ error: 'Missing friend username' });
+  }
+
+  let friendId;
+  try {
+    const results = await querySQLDatabase("SELECT user_id FROM users WHERE username = ?", [friendUsername]);
+    if (results.length === 0) {
+      return res.status(404).json({ error: 'User not found' });
+    }
+    friendId = results[0].user_id;
+  } catch (err) {
+    console.log("ERROR in removeFriend query:", err);
+    return res.status(500).json({ error: 'Error querying database' });
+  }
+
+  try {
+    // Check if they are actually friends
+    const existingFriendship = (await querySQLDatabase(
+      "SELECT COUNT(*) AS count FROM friends WHERE (follower = ? AND followed = ?) OR (follower = ? AND followed = ?)",
+      [userId, friendId, friendId, userId]
+    ))[0];
+    console.log("EXISTING FRIENDSHIP RESULT: ", existingFriendship);
+    if (existingFriendship[0].count === 0) {
+      return res.status(400).json({ error: 'You are not currently friends with this user' });
+    }
+
+    // Remove bidirectional friendship
+    await querySQLDatabase(
+      "DELETE FROM friends WHERE (follower = ? AND followed = ?) OR (follower = ? AND followed = ?)",
+      [userId, friendId, friendId, userId]
+    );
+
+    return res.status(200).json({ message: 'Friendship removed successfully', friendUsername });
+  } catch (err) {
+    console.log("ERROR in removeFriend deletion:", err);
+    return res.status(500).json({ error: 'Error querying database' });
+  }
+}
+
+/**
+ * Finds a chat ID with exactly the specified users as active members.
+ * @param {Array<number>} usernames - Array of usernames to check
+ * @returns - chat_id if an exact match is found, null otherwise
+ */
+async function findChat(usernames) {
+  if (!usernames || usernames.length === 0) {
+    return null;
+  }
+  
+  const userCount = usernames.length;
+  
+  try {
+    // Create placeholders for the IN clause, by marking the appropriate number of question marks
+    const placeholders = usernames.map(() => '?').join(',');
+    
+    // This query uses JOINs and set-based logic rather than subqueries
+    const sql = `
+      SELECT active_members.chat_id
+      FROM (
+        -- First, find chats where all our users are active members
+        SELECT chat_id 
+        FROM chat_members
+        WHERE user_id IN (${placeholders}) AND left_at IS NULL
+        GROUP BY chat_id
+        HAVING COUNT(DISTINCT user_id) = ?
+      ) AS candidate_chats
+      JOIN (
+        -- Then, count the total number of active members in each chat
+        SELECT chat_id, COUNT(*) AS total_members
+        FROM chat_members
+        WHERE left_at IS NULL
+        GROUP BY chat_id
+      ) AS active_members ON candidate_chats.chat_id = active_members.chat_id
+      -- Only return chats where the total count matches our user count
+      WHERE active_members.total_members = ?
+      LIMIT 1
+    `;
+    
+    const params = [...usernames, userCount, userCount];
+    const results = (await querySQLDatabase(sql, params))[0];
+    
+    if (results?.length > 0) {
+      return results[0].chat_id;
+    }
+    
+    return null;
+  } catch (err) {
+    console.error("Error finding chat with JOIN-based query:", err);
+    throw err;
+  }
+}
+
+/**
+ * Given a list of usernames in request, creates a new chat if one doesn't already exist,
+ * or gets the chat that does exist containing those users.
+ * 
+ * @returns an object containing the chat_id and a boolean indicating if the chat was newly created
+ */
+
+async function createOrGetChat(req, res) {
+  const userId = req.session.user_id;
+  if (!userId) {
+    return res.status(403).json({ error: 'Not logged in.' });
+  }
+
+  const usernames = req.body.usernames;
+
+  if (!usernames || !Array.isArray(usernames) || usernames.length === 0) {
+    return res.status(400).json({ error: 'Invalid, missing, or empty usernames array' });
+  }
+
+
+  try {
+  // First, ensure uniqueness of usernames
+  const username = (await querySQLDatabase("SELECT username FROM users WHERE user_id = ?", [userId]))[0][0].username;
+  usernames.push(username); // Add the current user's username to the list, if it's not already there
+
+  const uniqueUsernames = [...new Set(usernames)];
+
+  // Check if a chat with these exact members already exists
+  const existingChatId = await findChat(uniqueUsernames);
+  if (existingChatId) {
+    return res.status(200).json({ chat_id: existingChatId, created : false });
+  }
+
+  // Filter out the creator (current user) from the array to avoid duplicate add later
+  const otherUsernames = uniqueUsernames.filter(name => name !== username);
+
+  // Create a new chat with the current user
+  const newChatResult = await querySQLDatabase("INSERT INTO chat_members (user_id) VALUES (?)", [userId]);
+  const newChatId = newChatResult[0].insertId;
+
+  // Add the remaining users to the chat (if any)
+  if (otherUsernames.length > 0) {
+    // First get all the user IDs for the usernames
+    const userIdQuery = await querySQLDatabase(
+      `SELECT user_id FROM users WHERE username IN (${otherUsernames.map(() => '?').join(',')})`,
+      otherUsernames
+    );
+  
+    const otherUserIds = userIdQuery[0].map(row => row.user_id);
+
+    // Create parameter placeholders for the SQL query
+    const placeholders = otherUserIds.map(() => '(?,?)').join(',');
+    
+    // Create flattened array of values
+    const values = [];
+    for (const uid of otherUserIds) {
+      values.push(newChatId, uid);
+    }
+    
+    // Insert all other members in a single query
+    await querySQLDatabase(
+      `INSERT INTO chat_members (chat_id, user_id) VALUES ${placeholders}`,
+      values
+    );
+  }
+    return res.status(201).json({ chat_id: newChatId, created : true });
+  } catch (err) {
+    console.error("Error creating chat:", err);
+    return res.status(500).json({ error: 'Internal server error' });
+  }
+}
+
+/** 
+  * Send a message to an existing chat. To create a chat, one must use the createOrGetChat function.
+  */
+async function sendMessageExistingChat(req, res) {
+  const senderId = req.session.user_id;
+  const chatId = req.body.chat_id;
+  const file = req.file;    // again, multer stores in object
+
+  //validate sender identity
+  if (!senderId) {
+    return res.status(403).json({ error: 'Not logged in.' });
+  }
+
+  const messageContent = req.body.messageContent;
+
+  if (!messageContent || !chatId) {
+    return res.status(400).json({ error: 'Missing one or more fields from request: username, chat_id, messageContent' });
+  }
+
+  //validate existence of chat
+  try {
+    let results = (await querySQLDatabase("SELECT user_id FROM chat_members WHERE chat_id = ?", [chatId]))[0];
+    if (results.length === 0) {
+      return res.status(404).json({ error: 'Chat not found' });
+    }
+  } catch (err) {
+    console.error("ERROR in sendMessage query:", err);
+    return res.status(500).json({ error: 'Error querying database' });
+  }
+
+  //validate that sender is member of the chat
+  try {
+    const memberQueryString = "SELECT COUNT(*) AS count FROM chat_members WHERE chat_id = ? AND user_id = ?";
+    const userMemberCheck = (await querySQLDatabase(memberQueryString,[chatId, senderId]))[0];
+
+    if (userMemberCheck[0].count === 0) {
+      return res.status(404).json({ error: 'Sender is not a member of the specified chat' });
+    }
+  } catch (err) {
+    console.error("ERROR in chat member check:", err);
+    return res.status(500).json({ error: 'Error querying database' });
+  }
+
+  //At this point, safe to send message
+
+  let file_url = null;
+  let file_type = null;
+
+  try {
+    if (file) {
+      ({file_url, file_type} = await uploadToS3(file, 'message-files'));
+    }
+    await querySQLDatabase(
+      "INSERT INTO messages (chat_id, sender_id, content, file_link, file_type) VALUES (?, ?, ?, ?, ?)",
+      [chatId, senderId, messageContent, file_url, file_type]
+    );
+    return res.status(201).json({ message: 'Message sent successfully' });
+  } catch (err) {
+    console.error("ERROR in sendMessage insertion:", err);
+    return res.status(500).json({ error: 'Error querying database' });
+  }
 }
 
 /**
@@ -196,7 +504,7 @@ async function getFriends(req, res) {
 async function createPost(req, res) {
     const user_id = req.session.user_id;
     if (!user_id) {
-        return res.status(403).json({error: 'Not logged in.'});
+      return res.status(403).json({error: 'Not logged in.'});
     }
 
     const title = req.body.title;
@@ -206,17 +514,17 @@ async function createPost(req, res) {
     let image_path = null;
 
     if (image) {
-        image_path = await uploadToS3(image, "feed_posts");
+        image_path = await uploadToS3(image, "feed_posts").path;
     }
 
-    if (!allValid(title, content, parent_id)) {
+    //we choose to prevent _any_ empty fields, rather than allowing SOME to be empty
+    if (!title?.trim() || !content?.trim()) {
         return res.status(400).json({error: 'One or more of the fields you entered was empty, please try again.'});
     }
 
     //note that the mysql js driver converts a null object (like image_path) to NULL 
-    let results;
     try {
-        results = await querySQLDatabase("INSERT INTO posts (parent_post, title, content, image_link, author_id) VALUES (?, ?, ?, ?, ?);", 
+        await querySQLDatabase("INSERT INTO posts (parent_post, title, content, image_link, author_id) VALUES (?, ?, ?, ?, ?);", 
           [parent_id, title, content, image_path, user_id]);
     } catch (err) {
         console.log("ERROR in createPost ", err);
@@ -225,12 +533,12 @@ async function createPost(req, res) {
     return res.status(201).json({message: "Post created."});
 }
 
-//we choose to prevent _any_ empty fields, rather than allowing SOME to be empty
-function allValid(...args) {
-    return args.every(arg => arg?.trim());
-}
-
 async function getChatBot() {
+  console.log('Getting movie database');
+  const vs = await getVectorStore();
+  console.log('Connected...');
+  const retriever = vs.asRetriever();
+  console.log('Ready to run RAG chain...');
   const prompt =
   PromptTemplate.fromTemplate('Given that {context}, answer the following question. {question}');
   const llm = new ChatOpenAI({ modelName: "gpt-3.5-turbo", temperature: 0 });
@@ -245,17 +553,24 @@ async function getChatBot() {
     new StringOutputParser(),
   ]);
 
-  console.log(req.body.question);
+  let question = null; //DEFINE IT HERE
 
-  const result = await ragChain.invoke(req.body.question);
-  res.status(200).send({message:result});
+  console.log(question);  //req.body.question
+
+  const result = null; //= await ragChain.invoke(question);
+  //res.status(200).send({message:result});
+  return "chatbot method complete" // or process.exit(0) for full stop; there is no req/res here as of now so using this to exit the method
 }
 
 export {
   registerUser,
   registerProfilePicture,
   getChatBot,
+  postAddFriend,
+  postRemoveFriend,
   createPost,
+  createOrGetChat,
+  sendMessageExistingChat,
   postLogin,
   postLogout,
   getFriends
