@@ -44,6 +44,13 @@ function get_db_connection_singleton() {
       return this.client;
     },
 
+    delete_table: async function (tableName) {
+      try {
+        await this.client.deleteCollection({ name: tableName });
+      } catch (err) {} // Ignore collection not found errors.
+      return;
+    },
+
     create_table: async function (tableName) {
       return this.client.getOrCreateCollection({ name: tableName });
     },
@@ -51,10 +58,10 @@ function get_db_connection_singleton() {
     put_item_into_table: async function (tableName, key, embedding, item) {
       var collection = await this.client.getCollection({ name: tableName });
 
-      console.log('*****');
+      /*console.log('*****');
       console.log(key);
       console.log(embedding);
-      console.log(item);
+      console.log(item);*/
       return collection.add(
         {
           ids: [key],
@@ -81,6 +88,13 @@ function get_db_connection_singleton() {
         queryEmbeddings: [embedding],
         nResults: n_results
       })
+    },
+
+    get_item_count: async function(tableName) {
+      const collection = await this.client.getCollection({ name: tableName });
+      const count = await collection.count();
+      console.log("Collection size:", count);
+      return count;
     }
     
   };

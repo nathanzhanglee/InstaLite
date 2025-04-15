@@ -6,7 +6,7 @@ import {v4 as uuidv4} from 'uuid';
 import bcrypt from 'bcrypt';
 import fs from 'fs';
 
-//hw4 langchain imports
+// hw4 langchain imports
 import { ChatOpenAI } from "@langchain/openai";
 import { PromptTemplate } from "@langchain/core/prompts";
 import { StringOutputParser } from "@langchain/core/output_parsers";
@@ -22,7 +22,7 @@ import { sendFederatedPost } from '../kafka/producer.js';
 const configFile = fs.readFileSync('backend/config/config.json', 'utf8');
 const config = JSON.parse(configFile);
 
-//establish connections and initialize
+// establish connections and initialize
 const mysql_db = get_db_connection();
 const chroma_db = ChromaDB();
 const s3_db = new S3(config.s3BucketName);
@@ -106,7 +106,7 @@ async function registerUser(req, res) {
 
   try {
     await querySQLDatabase(sql, params);
-    const user_id = (await querySQLDatabase('SELECT user_id WHERE username = ?', [username]))[0].user_id;
+    const user_id = (await querySQLDatabase('SELECT user_id FROM users WHERE username = ?', [username]))[0].user_id;
 
     req.session.user_id = user_id;  //set session id
     return res.status(201).json({ message: `User ${username} registered successfully`});
@@ -166,6 +166,7 @@ async function postLogin(req, res) {
   // check if user exists then match password. If appropriate, set session
   try {
       results = (await querySQLDatabase("SELECT user_id, hashed_password FROM users WHERE username = ?;", [username]))[0];  //remove the format thing
+      console.log(results);
   } catch (err) {
       return res.status(500).json({error: 'Error querying database'});
   }
@@ -547,33 +548,71 @@ async function createPost(req, res) {
     return res.status(201).json({message: "Post created."});
 }
 
-async function getChatBot() {
+async function getChatBot(req, res) {
   console.log('Getting movie database');
   const vs = await getVectorStore();
   console.log('Connected...');
   const retriever = vs.asRetriever();
   console.log('Ready to run RAG chain...');
-  const prompt =
-  PromptTemplate.fromTemplate('Given that {context}, answer the following question. {question}');
-  const llm = new ChatOpenAI({ modelName: "gpt-3.5-turbo", temperature: 0 });
 
-  const ragChain = RunnableSequence.from([
-      {
-          context: retriever.pipe(formatDocumentsAsString),
-          question: new RunnablePassthrough(),
-        },
+  const prompt =
+    PromptTemplate.fromTemplate('Given that {context}, answer the following question. {question}');
+  
+  const llm = new ChatOpenAI({
+    modelName: "gpt-3.5-turbo", temperature: 0
+  });
+
+  const embeddings = new OpenAIEmbeddings({
+    modelName: "text-embedding-ada-002"
+  });
+
+  // Get embedding of question
+  const question = req.body.question;
+  console.log('question: ', question);
+  let embedding = null;
+  try {
+    embedding = await embeddings.embedQuery(question);
+  } catch (error) {
+    console.error("Error embedding question:", error);
+    return res.status(500).json({error: "Error while embedding question."});
+  }
+
+  // Get top 5 matches from ChromaDB.
+  const collectionName = "text_embeddings";
+  const topK = 3;
+  const results = await chroma_db.get_items_from_table(collectionName, embedding, topK);
+  const matchContext = (results.documents[0]).join('\n');
+
+  const ragChainImdb = RunnableSequence.from([
+    {
+        context: retriever.pipe(formatDocumentsAsString),
+        question: new RunnablePassthrough(),
+      },
     prompt,
     llm,
     new StringOutputParser(),
   ]);
+  let imdbContext = await ragChainImdb.invoke(req.body.question)
+  imdbContext = await retriever.pipe(formatDocumentsAsString).invoke(question);
 
-  let question = null; //DEFINE IT HERE
+  const context = matchContext + "\n" + imdbContext;
+  console.log(context);
 
-  console.log(question);  //req.body.question
+  await chroma_db.get_item_count(collectionName);
 
-  const result = null; //= await ragChain.invoke(question);
-  //res.status(200).send({message:result});
-  return "chatbot method complete" // or process.exit(0) for full stop; there is no req/res here as of now so using this to exit the method
+  // Generate response.
+  const ragChain = RunnableSequence.from([
+    {
+      context: async () => context,
+      question: new RunnablePassthrough(),
+    },
+    prompt,
+    llm,
+    new StringOutputParser(),
+  ]);
+  const result = await ragChain.invoke(req.body.question);
+
+  res.status(200).send({message: result});
 }
 
 export {

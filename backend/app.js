@@ -5,7 +5,7 @@ import cors from 'cors';
 import register_routes from './routes/register_routes.js';
 import session from 'express-session';
 
-//const configFile = fs.readFileSync('config.json', 'utf8');
+const configFile = fs.readFileSync('backend/config/config.json', 'utf8');
 import dotenv from 'dotenv';
 dotenv.config();
 const config = JSON.parse(configFile);
@@ -21,11 +21,11 @@ app.use(cors({
   credentials: true
 }));
 app.use(express.json());
-/*
+
 app.use(session({
   secret: 'nets2120_insecure', saveUninitialized: true, cookie: { httpOnly: false }, resave: true
 }));
-*/
+
 
 register_routes(app);
 

@@ -82,10 +82,10 @@ function handleFileUpload(imageConfig, handler) {
 }
 
 function register_routes(app) {
-    app.get('/chatbot', routes.getChatBot);
-    app.post('/register', routes.registerUser);
-    app.post('/login', routes.loginUser);
-    app.post('/logout', routes.logoutUser);
+  app.post('/chatbot', routes.getChatBot);
+  app.post('/register', routes.registerUser);
+  app.post('/login', routes.postLogin);
+    app.post('/logout', routes.postLogout);
     app.post('/addFriend', routes.postAddFriend);
     app.post('/removeFriend', routes.postRemoveFriend);
     app.get('/getFriends', routes.getFriends);
@@ -101,9 +101,9 @@ function register_routes(app) {
     );
 
     app.post('/sendMessage', 
-      handleFileUpload(IMAGE_CONFIG.MESSAGE, routes.sendMessage)
+      handleFileUpload(IMAGE_CONFIG.MESSAGE, routes.sendMessageExistingChat)
     );
-  }
+}
 
   
   export default register_routes;
