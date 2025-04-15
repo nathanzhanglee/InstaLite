@@ -24,6 +24,7 @@ const chroma_db = ChromaDB();
 const s3_db = new S3(config.s3BucketName);
 const face = new FaceEmbed();
 var vectorStore = null;
+const message_page_size = config.socialParams.messagePageSize;
 
 /**
  * A helper function to upload files to S3
@@ -434,6 +435,22 @@ async function createOrGetChat(req, res) {
     console.error("Error creating chat:", err);
     return res.status(500).json({ error: 'Internal server error' });
   }
+}
+
+async function getChatMessages(req, res) {
+  const chat_id = req.body.chatId;
+  const offset = req.body.offset || 0;
+  if (chat_id === null || chat_id === undefined) {
+    return res.status(400).json({error: 'Missing chat ID'});
+  }
+  const results = (await querySQLDatabase(
+    "SELECT * FROM messages WHERE chat_id = ? ORDER BY sent_at DESC LIMIT ? OFFSET ?", 
+    [chat_id, message_page_size, offset]
+  ))[0];
+  if (results.length === 0) {
+    return res.status(404).json({error: 'No messages found for this chat'});
+  }
+  return res.status(200).json(results);
 }
 
 /** 

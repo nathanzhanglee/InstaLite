@@ -2,7 +2,7 @@ import { config } from 'dotenv';
 import * as routes from './routes.js';
 import multer from 'multer';
 
-const defaultMaxSize = 5;      //default max size of image in MB
+const defaultMaxSize = config.socialParams.fileDefaultMaxSize;      //default max size of file in MB
 
 const IMAGE_CONFIG = {
   PROFILE: {

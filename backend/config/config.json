@@ -11,6 +11,10 @@
         "database": "instalite",
         "password": "80w9b243UBA*Xv!UnXSA%is"
     },
+    "socialParams": {
+        "messagePageSize" : 50,
+        "fileDefaultMaxSize": 5
+    },
     "chroma": {
         "host": "localhost",
         "port": "8000"

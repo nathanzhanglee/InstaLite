@@ -8,11 +8,6 @@ const max_message_length = 3000;
 
 async function create_tables() {
 
-  //assumes that we have a names imdb table available with data, as per Ed #591
-  //an easy way to move it over is by running the following commands in the terminal:
-  //mysqldump imdb_basic names > names_table_dump.sql
-  //mysql instalite < names_table_dump.sql
-
   ////////////////// USER TABLES //////////////////
     //user table: contains personal info and profile picture
     await dbaccess.create_tables('CREATE TABLE IF NOT EXISTS users ( \
@@ -64,7 +59,7 @@ async function create_tables() {
   //chat messages table: contains the actual content of chats, 1 row per message
   await dbaccess.create_tables('CREATE TABLE IF NOT EXISTS chat_messages ( \
     chat_id INT, \
-    message_id INT NOT NULL AUTO_INCREMENT, \
+    message_id BIGINT NOT NULL AUTO_INCREMENT, \
     sender_id INT NOT NULL, \
     content VARCHAR('+ max_message_length + '), \
     file_link VARCHAR(255) DEFAULT NULL, \
@@ -89,8 +84,8 @@ async function create_tables() {
   
   //posts table for public area/feed: contains post information, including S3 link to any image
   await dbaccess.create_tables('CREATE TABLE IF NOT EXISTS posts ( \
-    post_id INT NOT NULL AUTO_INCREMENT, \
-    parent_post INT, \
+    post_id BIGINT NOT NULL AUTO_INCREMENT, \
+    parent_post BIGINT, \
     title VARCHAR(255), \
     content VARCHAR(255), \
     author_id INT, \
@@ -101,11 +96,19 @@ async function create_tables() {
     );')
   
   //indices are useful for the 'chat-finding' queries
-  await dbaccess.send_sql('CREATE INDEX IF NOT EXISTS idx_users_username ON users(username);');
-  await dbaccess.send_sql('CREATE INDEX IF NOT EXISTS idx_chat_members_user_id_left_at ON chat_members(user_id, left_at);');
-  await dbaccess.send_sql('CREATE INDEX IF NOT EXISTS idx_friends_follower_followed ON friends(follower, followed);');
-  await dbaccess.send_sql('CREATE INDEX IF NOT EXISTS idx_posts_author_id ON posts(author_id);');
-  await dbaccess.send_sql('CREATE INDEX IF NOT EXISTS idx_chat_messages_sent ON chat_messages(chat_id, sent_at);');
+  try {
+    await dbaccess.send_sql('CREATE INDEX idx_users_username ON users(username);');
+    await dbaccess.send_sql('CREATE INDEX idx_chat_members_user_id_left_at ON chat_members(user_id, left_at);');
+    await dbaccess.send_sql('CREATE INDEX idx_friends_follower_followed ON friends(follower, followed);');
+    await dbaccess.send_sql('CREATE INDEX idx_posts_author_id ON posts(author_id);');
+    await dbaccess.send_sql('CREATE INDEX idx_chat_messages_sent ON chat_messages(chat_id, sent_at);');
+  } catch (err) {
+    if (err.code === 'ER_DUP_KEYNAME') {
+      console.log('Indices already exist; skipping creation.');
+    } else {
+      console.error('Error creating indices:', err);
+    }
+  }
 
   return null;
 }
