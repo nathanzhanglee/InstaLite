@@ -21,11 +21,11 @@ app.use(cors({
   credentials: true
 }));
 app.use(express.json());
-/*
+
 app.use(session({
   secret: 'nets2120_insecure', saveUninitialized: true, cookie: { httpOnly: false }, resave: true
 }));
-*/
+
 
 register_routes(app);
 

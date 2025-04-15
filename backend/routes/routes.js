@@ -102,7 +102,7 @@ async function registerUser(req, res) {
 
   try {
     await querySQLDatabase(sql, params);
-    const user_id = (await querySQLDatabase('SELECT user_id WHERE username = ?', [username]))[0].user_id;
+    const user_id = (await querySQLDatabase('SELECT user_id FROM users WHERE username = ?', [username]))[0].user_id;
 
     req.session.user_id = user_id;  //set session id
     return res.status(201).json({ message: `User ${username} registered successfully`});
@@ -162,6 +162,7 @@ async function postLogin(req, res) {
   // check if user exists then match password. If appropriate, set session
   try {
       results = (await querySQLDatabase("SELECT user_id, hashed_password FROM users WHERE username = ?;", [username]))[0];  //remove the format thing
+      console.log(results);
   } catch (err) {
       return res.status(500).json({error: 'Error querying database'});
   }
