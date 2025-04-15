@@ -4,7 +4,7 @@ import { ChromaClient } from 'chromadb';
 var vectorStore = null;
 
 //CHANGED path to reflect config file
-const configFile = fs.readFileSync('backend/config/config.json', 'utf8');
+const configFile = fs.readFileSync('./config/config.json', 'utf8');
 const config = JSON.parse(configFile);
 
 // Dotenv reads the .env file and makes the environment variables available

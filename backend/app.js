@@ -5,7 +5,7 @@ import cors from 'cors';
 import register_routes from './routes/register_routes.js';
 import session from 'express-session';
 
-const configFile = fs.readFileSync('backend/config/config.json', 'utf8');
+const configFile = fs.readFileSync('./config/config.json', 'utf8');
 import dotenv from 'dotenv';
 dotenv.config();
 const config = JSON.parse(configFile);

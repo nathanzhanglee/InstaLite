@@ -2,7 +2,7 @@ import fs from 'fs';
 import * as routes from './routes.js';
 import multer from 'multer';
 
-const configFile = fs.readFileSync('backend/config/config.json', 'utf8');
+const configFile = fs.readFileSync('./config/config.json', 'utf8');
 const config = JSON.parse(configFile);
 const defaultMaxSize = config.socialParams.fileDefaultMaxSize;      //default max size of file in MB
 

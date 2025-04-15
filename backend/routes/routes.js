@@ -19,7 +19,7 @@ import { Chroma } from "@langchain/community/vectorstores/chroma";
 import { sendFederatedPost } from '../kafka/producer.js';
 
 
-const configFile = fs.readFileSync('backend/config/config.json', 'utf8');
+const configFile = fs.readFileSync('./config/config.json', 'utf8');
 const config = JSON.parse(configFile);
 
 // establish connections and initialize
