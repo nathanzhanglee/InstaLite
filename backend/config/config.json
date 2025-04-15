@@ -22,7 +22,7 @@
         "port": "8000"
     },
     "kafka": {
-        "groupId": "instakann",
+        "groupId": "instakann-testing4",
         "bootstrapServers": ["localhost:9092"],
         "topic": {
             "bluesky": "Bluesky-Kafka", 

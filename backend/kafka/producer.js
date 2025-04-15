@@ -2,6 +2,7 @@ import pkg from 'kafkajs';
 const { Kafka } = pkg;
 import fs from 'fs';
 
+
 const config = JSON.parse(fs.readFileSync('config/config.json', 'utf8'));
 
 const kafka = new Kafka({

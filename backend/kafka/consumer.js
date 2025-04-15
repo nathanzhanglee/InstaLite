@@ -2,11 +2,10 @@ import pkg from 'kafkajs';
 const { Kafka, CompressionTypes, CompressionCodecs } = pkg;
 import SnappyCodec from 'kafkajs-snappy';
 import fs from 'fs';
-import { createPost } from '../routes/routes';
+// import { createPost } from '../routes/routes.js';
 
-
-CompressionCodecs[CompressionTypes.Snappy] = SnappyCodec;
 const config = JSON.parse(fs.readFileSync('config/config.json', 'utf8'));
+CompressionCodecs[CompressionTypes.Snappy] = SnappyCodec;
 
 const kafka = new Kafka({
   clientId: 'instakann-consumer',
@@ -21,20 +20,20 @@ export const runConsumer = async () => {
     { topics: ['FederatedPosts', 'Bluesky-Kafka'],
        fromBeginning: true 
       });
-
   await consumer.run({
     eachMessage: async ({ topic, message }) => {
       try {
         const postData = JSON.parse(message.value.toString());
-        console.log(`Received from ${topic}: `, postData);
-
+        // logging raw data from kafka:
+        // console.log(`Received from ${topic}: `, postData); 
+        let mockReq;
         if (topic === 'Bluesky-Kafka') {
           const imageHash = postData.embed?.images?.[0]?.image?.ref?.link;
           const imageUrl = imageHash
             ? `https://cdn.bsky.app/img/feed_fullsize/${imageHash}`
             : null;
         
-          const mockReq = {
+          mockReq = {
             session : { user_id: 9999 }, 
             body: {
               title: "Bluesky Post",
@@ -44,7 +43,7 @@ export const runConsumer = async () => {
             file: imageUrl
           };
         } else if (topic === 'FederatedPosts') {
-            const mockReq = {
+            mockReq = {
               session : { user_id: 9998 }, 
               body: {
                 title: "Federated Post",
@@ -57,11 +56,28 @@ export const runConsumer = async () => {
           console.error('ERROR: topic was neither Bluesky-Kafka or FederatedPosts');
         }
 
-        const mockRes = {
-          status: () => mockRes,
-          json: (data) => console.log(`Created post from ${topic}: `, data)
+        const mockRes = {};
+        mockRes.status = () => mockRes;
+        mockRes.json = (data) => console.log(`Created post from ${topic}: `, data);
+        
+        // uncomment once creatPost is functional:
+        // await createPost(mockReq, mockRes); 
+        const finalPost = {
+          user_id: mockReq.session.user_id,
+          title: mockReq.body.title,
+          content: mockReq.body.content,
+          parent_id: mockReq.body.parent_id,
+          image_url: mockReq.file || null
         };
-        await createPost(mockReq, mockRes);
+
+        if (topic === 'Bluesky-Kafka') {
+          console.log(`Simulated post from ${topic}:`, finalPost);
+          }
+
+        // if (topic === 'FederatedPosts') {
+        // console.log(`Simulated post from ${topic}:`, finalPost);
+        // }
+
       } catch (error) {
         console.error('ERROR: occured while creating post from Kafka');
       }

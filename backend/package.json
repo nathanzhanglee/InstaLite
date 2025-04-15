@@ -17,7 +17,8 @@
     "scripts": {
         "start": "concurrently \"node server.js\" \"node app.js\"",
         "server": "node server.js",
-        "kafka": "node app.js"
+        "bluesky_test": "node tests/kafka/bluesky_test.js", 
+        "federated_post_test": "node tests/kafka/federated_post_test.js"
     },
     "devDependencies": {
         "concurrently": "^9.1.2"
