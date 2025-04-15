@@ -3,6 +3,7 @@ import axios from 'axios';
 import config from '../../config.json';
 import { useNavigate } from 'react-router-dom';
 import './Login.css';
+import ReactSession from '../ReactSession';
 
 export default function Login() {
   const navigate = useNavigate(); 
@@ -18,6 +19,8 @@ export default function Login() {
         password
       }, { withCredentials: true });
       console.log('Login successful:', response.data);
+      const user = {'username': username};
+      ReactSession.setUser(user);
       navigate(`/${username}/home`);
     } catch (error) {
       console.error('Login failed:', error);
