@@ -22,7 +22,7 @@ export default function ChatBot() {
         try {
             setMessages(prev => [...prev, { sender: 'user', message: input }]);
 
-            var response = await axios.post('http://localhost:8080/chatbot', {
+            var response = await axios.post('http://localhost:8080/search', {
                 username: username,
                 question: input
               })
@@ -40,7 +40,7 @@ export default function ChatBot() {
             InstaLite&nbsp;
             </div>
         </div>
-            <div className='font-bold text-3xl'>ChatBot</div>
+            <div className='font-bold text-3xl'>Natural Language Search</div>
             <div className='h-[40rem] w-[30rem] bg-slate-100 p-3'>
                 <div className='h-[90%] overflow-scroll'>
                     <div className='space-y-2'>

@@ -84,7 +84,7 @@ function handleFileUpload(imageConfig, handler) {
 }
 
 function register_routes(app) {
-  app.post('/chatbot', routes.getChatBot);
+  app.post('/search', routes.getChatBot);
   app.post('/register', routes.registerUser);
   app.post('/login', routes.postLogin);
   app.post('/logout', routes.postLogout);

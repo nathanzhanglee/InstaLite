@@ -54,7 +54,7 @@ function App() {
           <Route path="/signup" element={<Signup />} />
           <Route path=":username/chat" element={<ProtectedRoute> <ChatInterface /> </ProtectedRoute>} />
           <Route path=":username/home" element={<ProtectedRoute> <HomePage /> </ProtectedRoute>} />
-          <Route path="/chatbot" element={<ProtectedRoute> <ChatBot /> </ProtectedRoute>} />
+          <Route path="/search" element={<ProtectedRoute> <ChatBot /> </ProtectedRoute>} />
         </Routes>
       </main>
     </div>
