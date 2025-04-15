@@ -15,6 +15,10 @@ import { formatDocumentsAsString } from "langchain/util/document";
 import { RunnableSequence, RunnablePassthrough } from "@langchain/core/runnables";
 import { Chroma } from "@langchain/community/vectorstores/chroma";
 
+//kafka send post function
+import { sendFederatedPost } from '../kafka/producer.js';
+
+
 const configFile = fs.readFileSync('backend/config/config.json', 'utf8');
 const config = JSON.parse(configFile);
 
@@ -526,6 +530,16 @@ async function createPost(req, res) {
     try {
         await querySQLDatabase("INSERT INTO posts (parent_post, title, content, image_link, author_id) VALUES (?, ?, ?, ?, ?);", 
           [parent_id, title, content, image_path, user_id]);
+        
+        // send post to Kafka
+        const federatedPost = {
+          username: username,
+          source_site: 'instakann', 
+          post_uuid_within_site: uuidv4(), // create unique id
+          post_text: `${content}`,
+          content_type: 'text/plain'
+      }
+      await sendFederatedPost(federatedPost);
     } catch (err) {
         console.log("ERROR in createPost ", err);
         res.status(500).json({error: 'Error querying database.'});

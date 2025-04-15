@@ -18,7 +18,10 @@
     "kafka": {
         "groupId": "instakann",
         "bootstrapServers": ["localhost:9092"],
-        "topic": "Bluesky-Kafka",
+        "topic": {
+            "bluesky": "Bluesky-Kafka", 
+            "federatedPosts": "FederatedPosts"
+        },
         "port": 4567
     }
   }
