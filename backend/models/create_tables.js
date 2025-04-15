@@ -78,10 +78,13 @@ async function create_tables() {
   await dbaccess.create_tables('CREATE TABLE IF NOT EXISTS chat_invites ( \
     invite_id INT NOT NULL AUTO_INCREMENT, \
     chat_id INT NOT NULL, \
-    recipient_id INT NOT NULL, \
+    recipient_id INT, \
+    sender_id INT, \
     sent_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP, \
-    accepted_at TIMESTAMP NULL DEFAULT NULL, \
+    accepted_at TIMESTAMP DEFAULT NULL, \
+    rejected_at TIMESTAMP DEFAULT NULL, \
     FOREIGN KEY (chat_id) REFERENCES chat_members(chat_id), \
+    FOREIGN KEY (sender_id) REFERENCES users(user_id), \
     FOREIGN KEY (recipient_id) REFERENCES users(user_id), \
     PRIMARY KEY(invite_id) \
     );')
@@ -106,6 +109,9 @@ async function create_tables() {
     await dbaccess.send_sql('CREATE INDEX idx_friends_follower_followed ON friends(follower, followed);');
     await dbaccess.send_sql('CREATE INDEX idx_posts_author_id ON posts(author_id);');
     await dbaccess.send_sql('CREATE INDEX idx_chat_messages_sent ON chat_messages(chat_id, sent_at);');
+    await dbaccess.send_sql('CREATE INDEX idx_chat_invites_invitee ON chat_invites (recipient_id);');
+    await dbaccess.send_sql('CREATE INDEX idx_chat_invites_chat ON chat_invites (chat_id);');
+
   } catch (err) {
     if (err.code === 'ER_DUP_KEYNAME') {
       console.log('Indices already exist; skipping creation.');

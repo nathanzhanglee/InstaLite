@@ -1,4 +1,4 @@
-import { config } from 'dotenv';
+import fs from 'fs';
 import * as routes from './routes.js';
 import multer from 'multer';
 
@@ -50,7 +50,7 @@ function createUploader(options = {}) {
 function handleFileUpload(imageConfig, handler) {
   const uploader = createUploader({
     maxSize: imageConfig.maxSize,
-    acceptedTypes: config.acceptedTypes,
+    acceptedTypes: imageConfig.acceptedTypes,
     acceptAllImages: true,
   });
   
@@ -87,25 +87,29 @@ function register_routes(app) {
   app.post('/chatbot', routes.getChatBot);
   app.post('/register', routes.registerUser);
   app.post('/login', routes.postLogin);
-    app.post('/logout', routes.postLogout);
-    app.post('/addFriend', routes.postAddFriend);
-    app.post('/removeFriend', routes.postRemoveFriend);
-    app.get('/getFriends', routes.getFriends);
-    app.post('/createChat', routes.createOrGetChat);
-    app.get('/messages', routes.getChatMessages);
+  app.post('/logout', routes.postLogout);
+  app.post('/addFriend', routes.postAddFriend);
+  app.post('/removeFriend', routes.postRemoveFriend);
+  app.get('/getFriends', routes.getFriends);
+  app.post('/createChat', routes.createOrGetChat);
+  app.get('/messages', routes.getChatMessages);
+  app.get('/chatInvites', routes.getChatInvites);
+  app.post('/sendInvite', routes.sendChatInvite);
+  app.post('/acceptInvite', routes.acceptChatInvite);
+  app.post('/rejectInvite', routes.rejectChatInvite);
 
-    // Image upload routes
-    app.post('/setProfilePic', 
-      handleFileUpload(IMAGE_CONFIG.PROFILE, routes.registerProfilePicture)
-    );
+  // Image upload routes
+  app.post('/setProfilePic', 
+    handleFileUpload(IMAGE_CONFIG.PROFILE, routes.registerProfilePicture)
+  );
 
-    app.post('/createPost', 
-      handleFileUpload(IMAGE_CONFIG.POST, routes.createPost)
-    );
+  app.post('/createPost', 
+    handleFileUpload(IMAGE_CONFIG.POST, routes.createPost)
+  );
 
-    app.post('/sendMessage', 
-      handleFileUpload(IMAGE_CONFIG.MESSAGE, routes.sendMessageExistingChat)
-    );
+  app.post('/sendMessage', 
+    handleFileUpload(IMAGE_CONFIG.MESSAGE, routes.sendMessageExistingChat)
+  );
 }
 
   

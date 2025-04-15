@@ -17,7 +17,6 @@ import { Chroma } from "@langchain/community/vectorstores/chroma";
 
 //kafka send post function
 import { sendFederatedPost } from '../kafka/producer.js';
-import { error } from 'console';
 
 
 const configFile = fs.readFileSync('backend/config/config.json', 'utf8');
@@ -319,6 +318,230 @@ async function postRemoveFriend(req, res) {
   }
 }
 
+// /POST /sendChatInvite
+async function sendChatInvite(req, res) {
+  const senderId = req.session.user_id;
+  if (!senderId) {
+    return res.status(403).json({ error: 'Not logged in.' });
+  }
+
+  const recipientUsername = req.body.recipientUsername;
+  const chatId = req.body.chatId;
+
+  if (!recipientUsername || !chatId) {
+    return res.status(400).json({ error: 'Missing recipient username or chat ID' });
+  }
+
+  try {
+    // Validate recipient exists
+    const recipientResult = (await querySQLDatabase("SELECT user_id FROM users WHERE username = ?", 
+      [recipientUsername]))[0];
+    if (recipientResult.length === 0) {
+      return res.status(404).json({ error: 'Recipient not found' });
+    }
+    const recipientId = recipientResult[0].user_id;
+
+    // Validate chat exists
+    const chatExists = (await querySQLDatabase(
+      "SELECT COUNT(*) AS count FROM chat_members WHERE chat_id = ?", 
+      [chatId]
+    ))[0].count > 0;
+
+    if (!chatExists) {
+      return res.status(404).json({ error: 'Chat not found' });
+    }
+
+    // Validate that sender is an active member of the chat
+    const senderIsMember = (await querySQLDatabase(
+      "SELECT COUNT(*) AS count FROM chat_members WHERE chat_id = ? AND user_id = ? AND left_at IS NULL",
+      [chatId, senderId]
+    ))[0][0].count > 0;
+
+    if (!senderIsMember) {
+      return res.status(403).json({ error: 'Sender is not a member of the specified chat' });
+    }
+
+    // Validate that recipient is not already an active member of the chat
+    const isMember = (await querySQLDatabase(
+      "SELECT COUNT(*) AS count FROM chat_members WHERE chat_id = ? AND user_id = ? AND left_at IS NULL", 
+      [chatId, recipientId]
+    ))[0][0].count > 0;
+
+    if (isMember) {
+      return res.status(400).json({ error: 'Recipient is already a member of the chat' });
+    }
+
+    // Check if invite to this chat already exists for this user
+    const existingInvite = (await querySQLDatabase(
+      "SELECT COUNT(*) AS count FROM chat_invites WHERE chat_id = ? AND recipient_id = ? AND accepted_at IS NULL",
+      [chatId, recipientId]
+    ))[0][0].count > 0;
+
+    if (existingInvite) {
+      return res.status(400).json({ error: 'Invite already exists for this user' });
+    }
+
+    // Get the members of the prospective chat
+    const members = (await querySQLDatabase(
+      "SELECT u.username FROM chat_members JOIN users AS u ON u.user_id = chat_members.user_id WHERE chat_id = ?",
+      [chatId]
+    ))[0].map(row => row.username);
+
+    members.push(recipientUsername);
+
+    // Check if such a chat would violate duplicates
+    const duplicateChatId = await findChat(members);
+    if (duplicateChatId != null) {
+      return res.status(400).json({ error: 'Chat already exists with these members', duplicateChatId});
+    }
+
+    // Insert chat invite
+    await querySQLDatabase(
+      "INSERT INTO chat_invites (chat_id, sender_id, recipient_id) VALUES (?, ?, ?)", 
+      [chatId, senderId, recipientId]
+    );
+
+    return res.status(201).json({ message: 'Chat invite sent successfully' });
+  } catch (err) {
+    console.error("Error sending chat invite:", err);
+    return res.status(500).json({ error: 'Internal server error' });
+  }
+}
+
+// GET /chatInvites
+async function getChatInvites(req, res) {
+  const userId = req.session.user_id;
+  if (!userId) {
+    return res.status(403).json({ error: 'Not logged in.' });
+  }
+  try {
+    const invites = (await querySQLDatabase(
+      "SELECT ci.invite_id, ci.chat_id, u.username AS sender_username \
+      FROM chat_invites AS ci JOIN users AS u ON ci.sender_id = u.user_id \
+      WHERE ci.recipient_id = ? AND ci.accepted_at IS NULL AND ci.rejected_at IS NULL",
+      [userId]
+    ))[0];
+
+    // Format the response to include sender's username and chat ID - perhaps we can say 
+    // something like "User A has invited you to join B, C, and others in chat" using the chatId
+    const formattedInvites = invites.map(invite => ({
+      inviteId: invite.invite_id,
+      chatId: invite.chat_id,
+      senderUsername: invite.sender_username
+    }));
+
+    return res.status(200).json({ invites: formattedInvites });
+  } catch (err) {
+    console.error("Error retrieving chat invites:", err);
+    return res.status(500).json({ error: 'Internal server error' });
+  }
+}
+
+// /POST /acceptChatInvite
+async function acceptChatInvite(req, res) {
+  const recipientId = req.session.user_id;
+  if (!recipientId) {
+    return res.status(403).json({ error: 'Not logged in.' });
+  }
+
+  const inviteId = req.body.inviteId;
+
+  if (!inviteId) {
+    return res.status(400).json({ error: 'Missing invite ID' });
+  }
+
+  try {
+    // Validate chat exists
+    const chatExists = (await querySQLDatabase(
+      "SELECT COUNT(*) AS count FROM chat_members WHERE chat_id = ?",
+      [chat_id]
+    ))[0].count > 0;
+
+    if (!chatExists) {
+      return res.status(404).json({ error: 'Chat not found' });
+    }
+
+    // Validate invite is active and is for the current user
+    const invite = (await querySQLDatabase(
+      "SELECT chat_id, sender_id FROM chat_invites WHERE invite_id = ? AND recipient_id = ? \
+      AND accepted_at IS NULL AND rejected_at IS NULL",
+      [inviteId, recipientId]
+    ))[0];
+
+    if (invite.length === 0) {
+      return res.status(404).json({ error: 'Invite not found or already accepted' });
+    }
+
+    const chat_id = invite[0].chat_id;
+    const sender_id = invite[0].sender_id;
+
+    // Add recipient to the chat
+    await querySQLDatabase(
+      "INSERT INTO chat_members (chat_id, user_id) VALUES (?, ?)",
+      [chat_id, recipientId]
+    );
+
+    // Mark invite as accepted
+    await querySQLDatabase(
+      "UPDATE chat_invites SET accepted_at = CURRENT_TIMESTAMP WHERE invite_id = ?",
+      [inviteId]
+    );
+
+    return res.status(200).json({ message: 'Invite accepted successfully', chat_id, sender_id });
+  } catch (err) {
+    console.error("Error accepting invite:", err);
+    return res.status(500).json({ error: 'Internal server error' });
+  }
+}
+
+// /POST /rejectChatInvite
+async function rejectChatInvite(req, res) {
+  const userId = req.session.user_id;
+  if (!userId) {
+    return res.status(403).json({ error: 'Not logged in.' });
+  }
+  const inviteId = req.body.inviteId;
+  if (!inviteId) {
+    return res.status(400).json({ error: 'Missing invite ID' });
+  }
+  try {
+    // Validate invite exists and is for the current user
+    const invite = (await querySQLDatabase(
+      "SELECT chat_id FROM chat_invites WHERE invite_id = ? AND recipient_id = ? \
+      AND accepted_at IS NULL AND rejected_at IS NULL",
+      [inviteId, userId]
+    ))[0];
+
+    if (invite.length === 0) {
+      return res.status(404).json({ error: 'Invite not found or already resolved' });
+    }
+
+    const chat_id = invite[0].chat_id;
+    // Validate chat exists
+    const chatExists = (await querySQLDatabase(
+      "SELECT COUNT(*) AS count FROM chat_members WHERE chat_id = ?",
+      [chat_id]
+    ))[0].count > 0;
+    
+    if (!chatExists) {
+      return res.status(404).json({ error: 'Chat not found' });  
+      //this could happen if chat got deleted before user accepts i.e. everyone leaves
+    }
+
+    // Mark invite as rejected
+    await querySQLDatabase(
+      "UPDATE chat_invites SET rejected_at = CURRENT_TIMESTAMP WHERE invite_id = ?",
+      [inviteId]
+    );
+
+    return res.status(200).json({ message: 'Invite rejected successfully' });
+  } catch (err) {
+    console.error("Error rejecting invite:", err);
+    return res.status(500).json({ error: 'Internal server error' });
+  }
+}
+
+
 /**
  * Finds a chat ID with exactly the specified users as active members.
  * @param {Array<number>} usernames - Array of usernames to check
@@ -451,6 +674,11 @@ async function createOrGetChat(req, res) {
  * @return The messages for that chat in descending order of timestamp, offset by the given amount
  */
 async function getChatMessages(req, res) {
+  const userId = req.session.user_id;
+  if (!userId) {
+    return res.status(403).json({error: 'Not logged in.'});
+  }
+  
   const chat_id = req.body.chatId;
   const offset = req.body.offset || 0;
   if (chat_id === null || chat_id === undefined) {
@@ -467,19 +695,42 @@ async function getChatMessages(req, res) {
     if (!chatExists) {
       return res.status(404).json({error: 'Chat not found'});
     }
+
+    // Then verify user is a member of the chat
+    const userMemberStatus = (await querySQLDatabase(
+      "SELECT user_id, left_at AS count FROM chat_members WHERE chat_id = ? AND user_id = ?",
+      [chat_id, userId]
+    ))[0];
+
+    if (userMemberStatus.length === 0) {
+      return res.status(403).json({error: 'User is not a member of chat'});
+    }
+
+    const queryParams = [chat_id];
+    let queryString = "SELECT * FROM messages WHERE chat_id = ?";
+
+    if (left_at !== null) {
+      queryString += " AND sent_at <= ?";
+      queryParams.push(left_at);  //if they left, only display things from _before_ they left
+    }
+
+    queryString += " ORDER BY sent_at DESC LIMIT ? OFFSET ?";
+    queryParams.push(message_page_size, offset);
+
+    const left_at = userMemberStatus[0].left_at;
     
     // Then get messages
-    const results = (await querySQLDatabase(
-      "SELECT * FROM messages WHERE chat_id = ? ORDER BY sent_at DESC LIMIT ? OFFSET ?", 
-      [chat_id, message_page_size, offset]
-    ))[0];
-    
-    // Only report what we know for certain based on this request
-    return res.status(200).json({
+    const results = (await querySQLDatabase(queryString, queryParams))[0];
+
+    const responseObj = {
       messages: results,
-      isComplete: results.length < message_page_size,  // True if we got fewer messages than requested
+      isComplete: results.length < message_page_size,          // True if we got fewer messages than requested
       nextOffset: isComplete ? null : offset + results.length  // if isComplete, no more offset
-    });
+    };
+    if (left_at !== null) {
+      responseObj.left_at = left_at;
+    }
+    return res.status(200).json(responseObj); //can display something like <you left this chat at TIME on DATE>
   } catch (err) {
     console.error("Error retrieving chat messages:", err);
     return res.status(500).json({error: 'Internal server error'});
@@ -517,10 +768,12 @@ async function sendMessageExistingChat(req, res) {
     return res.status(500).json({ error: 'Error querying database' });
   }
 
-  //validate that sender is member of the chat
+  //validate that sender is active member of the chat
   try {
-    const memberQueryString = "SELECT COUNT(*) AS count FROM chat_members WHERE chat_id = ? AND user_id = ?";
-    const userMemberCheck = (await querySQLDatabase(memberQueryString,[chatId, senderId]))[0];
+    const userMemberCheck = (await querySQLDatabase(
+      "SELECT COUNT(*) AS count FROM chat_members WHERE chat_id = ? AND user_id = ? AND left_at IS NULL",
+      [chatId, senderId])
+    )[0];
 
     if (userMemberCheck[0].count === 0) {
       return res.status(403).json({ error: 'Sender is not a member of the specified chat' });
@@ -668,6 +921,10 @@ export {
   getChatBot,
   postAddFriend,
   postRemoveFriend,
+  sendChatInvite,
+  getChatInvites,
+  acceptChatInvite,
+  rejectChatInvite,
   createPost,
   createOrGetChat,
   sendMessageExistingChat,
