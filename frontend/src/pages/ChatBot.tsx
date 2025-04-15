@@ -1,7 +1,6 @@
 import { useState } from 'react'
 import axios from 'axios';
 import { useParams } from 'react-router-dom';
-import { useNavigate } from 'react-router-dom';
 
 const MessageComponent = ({ sender, message }) => {
     return (
@@ -14,24 +13,19 @@ const MessageComponent = ({ sender, message }) => {
 }
 
 export default function ChatBot() {
-    console.log("in ChatBot()");
-
-    const [messages, setMessages] = useState([{ sender: 'chatbot', message: 'Hi there! What movie review questions do you have?' }]);
+    const [messages, setMessages] = useState([{ sender: 'chatbot', message: 'Hi there! Ask me anything.' }]);
     const [input, setInput] = useState<string>('');
     const { username } = useParams();
-    const navigate = useNavigate(); 
 
     const sendMessage = async () => {
         // CUT HERE 
         try {
             setMessages(prev => [...prev, { sender: 'user', message: input }]);
 
-            console.log(input);
-            var response = await axios.post('http://localhost:8080/' + username + '/movies', {
+            var response = await axios.post('http://localhost:8080/chatbot', {
                 username: username,
                 question: input
               })
-            console.log(response.data)
             setMessages(prev => [...prev, { sender: 'chatbot', message: response.data.message }])
         } catch (error) {
             setMessages(prev => [...prev, { sender: 'chatbot', message: 'Sorry, there was an issue. Please try again.' }])

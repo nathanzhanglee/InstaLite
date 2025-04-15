@@ -6,7 +6,7 @@ import {v4 as uuidv4} from 'uuid';
 import bcrypt from 'bcrypt';
 import fs from 'fs';
 
-//hw4 langchain imports
+// hw4 langchain imports
 import { ChatOpenAI } from "@langchain/openai";
 import { PromptTemplate } from "@langchain/core/prompts";
 import { StringOutputParser } from "@langchain/core/output_parsers";
@@ -18,7 +18,7 @@ import { Chroma } from "@langchain/community/vectorstores/chroma";
 const configFile = fs.readFileSync('backend/config/config.json', 'utf8');
 const config = JSON.parse(configFile);
 
-//establish connections and initialize
+// establish connections and initialize
 const mysql_db = get_db_connection();
 const chroma_db = ChromaDB();
 const s3_db = new S3(config.s3BucketName);
@@ -545,9 +545,9 @@ async function getChatBot() {
 
   const ragChain = RunnableSequence.from([
       {
-          context: retriever.pipe(formatDocumentsAsString),
-          question: new RunnablePassthrough(),
-        },
+        context: async () => context,
+        question: new RunnablePassthrough(),
+      },
     prompt,
     llm,
     new StringOutputParser(),
@@ -557,8 +557,7 @@ async function getChatBot() {
 
   console.log(question);  //req.body.question
 
-  const result = null; //= await ragChain.invoke(question);
-  //res.status(200).send({message:result});
+  res.status(200).send({message:result});
   return "chatbot method complete" // or process.exit(0) for full stop; there is no req/res here as of now so using this to exit the method
 }
 
