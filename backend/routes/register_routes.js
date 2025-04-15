@@ -2,6 +2,8 @@ import { config } from 'dotenv';
 import * as routes from './routes.js';
 import multer from 'multer';
 
+const configFile = fs.readFileSync('backend/config/config.json', 'utf8');
+const config = JSON.parse(configFile);
 const defaultMaxSize = config.socialParams.fileDefaultMaxSize;      //default max size of file in MB
 
 const IMAGE_CONFIG = {
@@ -90,6 +92,7 @@ function register_routes(app) {
     app.post('/removeFriend', routes.postRemoveFriend);
     app.get('/getFriends', routes.getFriends);
     app.post('/createChat', routes.createOrGetChat);
+    app.get('/messages', routes.getChatMessages);
 
     // Image upload routes
     app.post('/setProfilePic', 

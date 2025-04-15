@@ -1,10 +1,14 @@
+import { config } from 'dotenv';
 import { get_db_connection } from './rdbms.js';
 
 // Database connection setup
 const dbaccess = get_db_connection();
+const configFile = fs.readFileSync('backend/config/config.json', 'utf8');
+const config = JSON.parse(configFile);
 
 //the max length of a message, in characters (based on Discord limits)
-const max_message_length = 3000; 
+const max_message_length = config.socialParams.chatMessageMaxLength; 
+const max_post_length = config.socialParams.postMaxLength;
 
 async function create_tables() {
 
@@ -87,7 +91,7 @@ async function create_tables() {
     post_id BIGINT NOT NULL AUTO_INCREMENT, \
     parent_post BIGINT, \
     title VARCHAR(255), \
-    content VARCHAR(255), \
+    content VARCHAR(' + max_post_length + '), \
     author_id INT, \
     image_link VARCHAR(255) DEFAULT NULL, \
     FOREIGN KEY (author_id) REFERENCES users(user_id), \

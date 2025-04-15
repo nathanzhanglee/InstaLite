@@ -13,7 +13,9 @@
     },
     "socialParams": {
         "messagePageSize" : 50,
-        "fileDefaultMaxSize": 5
+        "fileDefaultMaxSize": 5,
+        "chatMessageMaxLength": 3000,
+        "postMaxLength": 500
     },
     "chroma": {
         "host": "localhost",

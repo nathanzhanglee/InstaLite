@@ -9,3 +9,4 @@ aws.credentials
 **/classes/
 **/.DS_Store
 **/*.pem
+*.log

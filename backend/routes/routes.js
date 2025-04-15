@@ -17,6 +17,7 @@ import { Chroma } from "@langchain/community/vectorstores/chroma";
 
 //kafka send post function
 import { sendFederatedPost } from '../kafka/producer.js';
+import { error } from 'console';
 
 
 const configFile = fs.readFileSync('backend/config/config.json', 'utf8');
@@ -221,6 +222,7 @@ async function getFriends(req, res) {
     }
 }
 
+//POST /addFriend
 async function postAddFriend(req, res) {
   const userId = req.session.user_id;
   if (!userId) {
@@ -268,6 +270,7 @@ async function postAddFriend(req, res) {
   }
 }
 
+//POST /removeFriend
 async function postRemoveFriend(req, res) {
   const userId = req.session.user_id;
   if (!userId) {
@@ -309,7 +312,7 @@ async function postRemoveFriend(req, res) {
       [userId, friendId, friendId, userId]
     );
 
-    return res.status(200).json({ message: 'Friendship removed successfully', friendUsername });
+    return res.status(200).json({ message: 'Friend removed successfully', friendUsername });
   } catch (err) {
     console.log("ERROR in removeFriend deletion:", err);
     return res.status(500).json({ error: 'Error querying database' });
@@ -332,7 +335,7 @@ async function findChat(usernames) {
     // Create placeholders for the IN clause, by marking the appropriate number of question marks
     const placeholders = usernames.map(() => '?').join(',');
     
-    // This query uses JOINs and set-based logic rather than subqueries
+    
     const sql = `
       SELECT active_members.chat_id
       FROM (
@@ -365,7 +368,7 @@ async function findChat(usernames) {
     return null;
   } catch (err) {
     console.error("Error finding chat with JOIN-based query:", err);
-    throw err;
+    return res.status(500).json({error: 'Internal server error when querying:\n' + err});
   }
 }
 
@@ -441,22 +444,49 @@ async function createOrGetChat(req, res) {
   }
 }
 
+//GET /messages
+/**
+ * Get messages for a specific chat. The chat_id and offset are passed in the request body.
+ * The offset is used for pagination/infinite scrolling within chats.
+ * @return The messages for that chat in descending order of timestamp, offset by the given amount
+ */
 async function getChatMessages(req, res) {
   const chat_id = req.body.chatId;
   const offset = req.body.offset || 0;
   if (chat_id === null || chat_id === undefined) {
     return res.status(400).json({error: 'Missing chat ID'});
   }
-  const results = (await querySQLDatabase(
-    "SELECT * FROM messages WHERE chat_id = ? ORDER BY sent_at DESC LIMIT ? OFFSET ?", 
-    [chat_id, message_page_size, offset]
-  ))[0];
-  if (results.length === 0) {
-    return res.status(404).json({error: 'No messages found for this chat'});
+  
+  try {
+    // First verify chat exists
+    const chatExists = (await querySQLDatabase(
+      "SELECT COUNT(*) AS count FROM chat_members WHERE chat_id = ?", 
+      [chat_id]
+    ))[0][0].count > 0;
+    
+    if (!chatExists) {
+      return res.status(404).json({error: 'Chat not found'});
+    }
+    
+    // Then get messages
+    const results = (await querySQLDatabase(
+      "SELECT * FROM messages WHERE chat_id = ? ORDER BY sent_at DESC LIMIT ? OFFSET ?", 
+      [chat_id, message_page_size, offset]
+    ))[0];
+    
+    // Only report what we know for certain based on this request
+    return res.status(200).json({
+      messages: results,
+      isComplete: results.length < message_page_size,  // True if we got fewer messages than requested
+      nextOffset: isComplete ? null : offset + results.length  // if isComplete, no more offset
+    });
+  } catch (err) {
+    console.error("Error retrieving chat messages:", err);
+    return res.status(500).json({error: 'Internal server error'});
   }
-  return res.status(200).json(results);
 }
 
+// /POST /sendMessage 
 /** 
   * Send a message to an existing chat. To create a chat, one must use the createOrGetChat function.
   */
@@ -493,7 +523,7 @@ async function sendMessageExistingChat(req, res) {
     const userMemberCheck = (await querySQLDatabase(memberQueryString,[chatId, senderId]))[0];
 
     if (userMemberCheck[0].count === 0) {
-      return res.status(404).json({ error: 'Sender is not a member of the specified chat' });
+      return res.status(403).json({ error: 'Sender is not a member of the specified chat' });
     }
   } catch (err) {
     console.error("ERROR in chat member check:", err);
@@ -643,5 +673,6 @@ export {
   sendMessageExistingChat,
   postLogin,
   postLogout,
-  getFriends
+  getFriends,
+  getChatMessages
 }
