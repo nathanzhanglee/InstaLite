@@ -3,7 +3,7 @@ import { get_db_connection } from "../models/rdbms.js";
 import ChromaDB from "../models/vector.js";
 import fs from 'fs';
 
-const configFile = fs.readFileSync('./backend/config/config.json', 'utf8');
+const configFile = fs.readFileSync('./config/config.json', 'utf8');
 const config = JSON.parse(configFile);
 
 // Database connections
@@ -45,10 +45,9 @@ async function getPostData() {
       p.post_id AS post_id, \
       p.title AS title, \
       p.content AS content, \
-      n.primaryName as author \
+      u.username as author \
     FROM posts p \
     JOIN users u on u.user_id = p.author_id \
-    JOIN names n on n.nconst = u.linked_nconst \
   ';
   try {
     return await mysql_db.send_sql(query);
@@ -137,6 +136,7 @@ async function embedAndStoreMovies() {
     const post = posts[i]; // JSON object
     const text = `Post ${post.post_id}, titled ${post.title}. ${post.content}. Written by ${post.author}.`;
     const embedding = await embedText(text);
+    console.log(text);
     const key = `post_${post.post_id}`; // for chromadb
     await chroma_db.put_item_into_table(COLLECTION_NAME, key, embedding, text);
   }
@@ -149,7 +149,7 @@ async function embedAndStoreMovies() {
     const text = `Name of ${user.username} is ${user.primaryName}, who follows ${user.follows}`;
     const embedding = await embedText(text);
     const key = `user_${user.user_id}`; // for chromadb
-    await chroma_db.put_item_into_table(COLLECTION_NAME, key, embedding, text);
+    //await chroma_db.put_item_into_table(COLLECTION_NAME, key, embedding, text);
   }
 
   // Embed data about principals (actors, directors, writers) and their roles in movies.
@@ -160,7 +160,7 @@ async function embedAndStoreMovies() {
     const text = JSON.stringify(actor);
     const embedding = await embedText(text);
     const key = `${actor.nconst}`; // for chromadb
-    await chroma_db.put_item_into_table(COLLECTION_NAME, key, embedding, text);
+    //await chroma_db.put_item_into_table(COLLECTION_NAME, key, embedding, text);
   }
 
   console.log("Embeddings loaded into ChromaDB");

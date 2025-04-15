@@ -17678,3 +17678,167 @@
 [32mINFO[0m:     [15-04-2025 17:22:24] 127.0.0.1:51000 - "POST /api/v2/tenants/default_tenant/databases/default_database/collections/f051874e-c867-4143-bec5-2cadc7287bf1/query HTTP/1.1" 200
 [32mINFO[0m:     [15-04-2025 17:22:24] 127.0.0.1:51016 - "GET /api/v2/tenants/default_tenant/databases/default_database/collections/text_embeddings HTTP/1.1" 200
 [32mINFO[0m:     [15-04-2025 17:22:24] 127.0.0.1:51000 - "GET /api/v2/tenants/default_tenant/databases/default_database/collections/bb16a67a-0d21-45a9-b35f-52eb2463aa09/count HTTP/1.1" 200
+[33mWARNING[0m:  [15-04-2025 21:26:05] chroma_server_nofile is set to 65535, but this is less than current soft limit of 1048576. chroma_server_nofile will not be set.
+[32mINFO[0m:     [15-04-2025 21:26:06] Anonymized telemetry enabled. See                     https://docs.trychroma.com/telemetry for more information.
+[36mDEBUG[0m:    [15-04-2025 21:26:06] Starting component System
+[36mDEBUG[0m:    [15-04-2025 21:26:06] Starting component OpenTelemetryClient
+[36mDEBUG[0m:    [15-04-2025 21:26:06] Starting component SqliteDB
+[36mDEBUG[0m:    [15-04-2025 21:26:06] Starting component SimpleQuotaEnforcer
+[36mDEBUG[0m:    [15-04-2025 21:26:06] Starting component Posthog
+[36mDEBUG[0m:    [15-04-2025 21:26:06] Starting component SimpleRateLimitEnforcer
+[36mDEBUG[0m:    [15-04-2025 21:26:06] Starting component LocalSegmentManager
+[36mDEBUG[0m:    [15-04-2025 21:26:06] Starting component LocalExecutor
+[36mDEBUG[0m:    [15-04-2025 21:26:06] Starting component SegmentAPI
+[36mDEBUG[0m:    [15-04-2025 21:26:06] Starting component SimpleAsyncRateLimitEnforcer
+[32mINFO[0m:     [15-04-2025 21:26:06] Started server process [[36m21201[0m]
+[32mINFO[0m:     [15-04-2025 21:26:06] Waiting for application startup.
+[32mINFO[0m:     [15-04-2025 21:26:06] Application startup complete.
+[31mERROR[0m:    [15-04-2025 21:26:06] [Errno 98] error while attempting to bind on address ('0.0.0.0', 8000): address already in use
+[32mINFO[0m:     [15-04-2025 21:26:06] Waiting for application shutdown.
+[36mDEBUG[0m:    [15-04-2025 21:26:06] Stopping component System
+[36mDEBUG[0m:    [15-04-2025 21:26:06] Stopping component SegmentAPI
+[36mDEBUG[0m:    [15-04-2025 21:26:06] Stopping component LocalExecutor
+[36mDEBUG[0m:    [15-04-2025 21:26:06] Stopping component LocalSegmentManager
+[36mDEBUG[0m:    [15-04-2025 21:26:06] Stopping component SimpleAsyncRateLimitEnforcer
+[36mDEBUG[0m:    [15-04-2025 21:26:06] Stopping component SimpleRateLimitEnforcer
+[36mDEBUG[0m:    [15-04-2025 21:26:06] Stopping component Posthog
+[36mDEBUG[0m:    [15-04-2025 21:26:06] Stopping component SimpleQuotaEnforcer
+[36mDEBUG[0m:    [15-04-2025 21:26:06] Stopping component SqliteDB
+[36mDEBUG[0m:    [15-04-2025 21:26:06] Stopping component OpenTelemetryClient
+[32mINFO[0m:     [15-04-2025 21:26:06] Application shutdown complete.
+[33mWARNING[0m:  [15-04-2025 21:26:22] chroma_server_nofile is set to 65535, but this is less than current soft limit of 1048576. chroma_server_nofile will not be set.
+[32mINFO[0m:     [15-04-2025 21:26:22] Anonymized telemetry enabled. See                     https://docs.trychroma.com/telemetry for more information.
+[36mDEBUG[0m:    [15-04-2025 21:26:22] Starting component System
+[36mDEBUG[0m:    [15-04-2025 21:26:22] Starting component OpenTelemetryClient
+[36mDEBUG[0m:    [15-04-2025 21:26:22] Starting component SqliteDB
+[36mDEBUG[0m:    [15-04-2025 21:26:22] Starting component SimpleQuotaEnforcer
+[36mDEBUG[0m:    [15-04-2025 21:26:22] Starting component Posthog
+[36mDEBUG[0m:    [15-04-2025 21:26:22] Starting component SimpleRateLimitEnforcer
+[36mDEBUG[0m:    [15-04-2025 21:26:22] Starting component LocalSegmentManager
+[36mDEBUG[0m:    [15-04-2025 21:26:22] Starting component LocalExecutor
+[36mDEBUG[0m:    [15-04-2025 21:26:22] Starting component SegmentAPI
+[36mDEBUG[0m:    [15-04-2025 21:26:22] Starting component SimpleAsyncRateLimitEnforcer
+[32mINFO[0m:     [15-04-2025 21:26:23] Started server process [[36m21566[0m]
+[32mINFO[0m:     [15-04-2025 21:26:23] Waiting for application startup.
+[32mINFO[0m:     [15-04-2025 21:26:23] Application startup complete.
+[31mERROR[0m:    [15-04-2025 21:26:23] [Errno 98] error while attempting to bind on address ('0.0.0.0', 8000): address already in use
+[32mINFO[0m:     [15-04-2025 21:26:23] Waiting for application shutdown.
+[36mDEBUG[0m:    [15-04-2025 21:26:23] Stopping component System
+[36mDEBUG[0m:    [15-04-2025 21:26:23] Stopping component SegmentAPI
+[36mDEBUG[0m:    [15-04-2025 21:26:23] Stopping component LocalExecutor
+[36mDEBUG[0m:    [15-04-2025 21:26:23] Stopping component LocalSegmentManager
+[36mDEBUG[0m:    [15-04-2025 21:26:23] Stopping component SimpleAsyncRateLimitEnforcer
+[36mDEBUG[0m:    [15-04-2025 21:26:23] Stopping component SimpleRateLimitEnforcer
+[36mDEBUG[0m:    [15-04-2025 21:26:23] Stopping component Posthog
+[36mDEBUG[0m:    [15-04-2025 21:26:23] Stopping component SimpleQuotaEnforcer
+[36mDEBUG[0m:    [15-04-2025 21:26:23] Stopping component SqliteDB
+[36mDEBUG[0m:    [15-04-2025 21:26:23] Stopping component OpenTelemetryClient
+[32mINFO[0m:     [15-04-2025 21:26:23] Application shutdown complete.
+[33mWARNING[0m:  [15-04-2025 21:27:02] chroma_server_nofile is set to 65535, but this is less than current soft limit of 1048576. chroma_server_nofile will not be set.
+[32mINFO[0m:     [15-04-2025 21:27:02] Anonymized telemetry enabled. See                     https://docs.trychroma.com/telemetry for more information.
+[36mDEBUG[0m:    [15-04-2025 21:27:02] Starting component System
+[36mDEBUG[0m:    [15-04-2025 21:27:02] Starting component OpenTelemetryClient
+[36mDEBUG[0m:    [15-04-2025 21:27:02] Starting component SqliteDB
+[36mDEBUG[0m:    [15-04-2025 21:27:02] Starting component SimpleQuotaEnforcer
+[36mDEBUG[0m:    [15-04-2025 21:27:02] Starting component Posthog
+[36mDEBUG[0m:    [15-04-2025 21:27:02] Starting component SimpleRateLimitEnforcer
+[36mDEBUG[0m:    [15-04-2025 21:27:02] Starting component LocalSegmentManager
+[36mDEBUG[0m:    [15-04-2025 21:27:02] Starting component LocalExecutor
+[36mDEBUG[0m:    [15-04-2025 21:27:02] Starting component SegmentAPI
+[36mDEBUG[0m:    [15-04-2025 21:27:02] Starting component SimpleAsyncRateLimitEnforcer
+[32mINFO[0m:     [15-04-2025 21:27:02] Started server process [[36m22212[0m]
+[32mINFO[0m:     [15-04-2025 21:27:02] Waiting for application startup.
+[32mINFO[0m:     [15-04-2025 21:27:02] Application startup complete.
+[31mERROR[0m:    [15-04-2025 21:27:02] [Errno 98] error while attempting to bind on address ('0.0.0.0', 8000): address already in use
+[32mINFO[0m:     [15-04-2025 21:27:02] Waiting for application shutdown.
+[36mDEBUG[0m:    [15-04-2025 21:27:02] Stopping component System
+[36mDEBUG[0m:    [15-04-2025 21:27:02] Stopping component SegmentAPI
+[36mDEBUG[0m:    [15-04-2025 21:27:02] Stopping component LocalExecutor
+[36mDEBUG[0m:    [15-04-2025 21:27:02] Stopping component LocalSegmentManager
+[36mDEBUG[0m:    [15-04-2025 21:27:02] Stopping component SimpleAsyncRateLimitEnforcer
+[36mDEBUG[0m:    [15-04-2025 21:27:02] Stopping component SimpleRateLimitEnforcer
+[36mDEBUG[0m:    [15-04-2025 21:27:02] Stopping component Posthog
+[36mDEBUG[0m:    [15-04-2025 21:27:02] Stopping component SimpleQuotaEnforcer
+[36mDEBUG[0m:    [15-04-2025 21:27:02] Stopping component SqliteDB
+[36mDEBUG[0m:    [15-04-2025 21:27:02] Stopping component OpenTelemetryClient
+[32mINFO[0m:     [15-04-2025 21:27:02] Application shutdown complete.
+[33mWARNING[0m:  [15-04-2025 21:28:01] chroma_server_nofile is set to 65535, but this is less than current soft limit of 1048576. chroma_server_nofile will not be set.
+[32mINFO[0m:     [15-04-2025 21:28:01] Anonymized telemetry enabled. See                     https://docs.trychroma.com/telemetry for more information.
+[36mDEBUG[0m:    [15-04-2025 21:28:01] Starting component System
+[36mDEBUG[0m:    [15-04-2025 21:28:01] Starting component OpenTelemetryClient
+[36mDEBUG[0m:    [15-04-2025 21:28:01] Starting component SqliteDB
+[36mDEBUG[0m:    [15-04-2025 21:28:01] Starting component SimpleQuotaEnforcer
+[36mDEBUG[0m:    [15-04-2025 21:28:01] Starting component Posthog
+[36mDEBUG[0m:    [15-04-2025 21:28:01] Starting component SimpleRateLimitEnforcer
+[36mDEBUG[0m:    [15-04-2025 21:28:01] Starting component LocalSegmentManager
+[36mDEBUG[0m:    [15-04-2025 21:28:01] Starting component LocalExecutor
+[36mDEBUG[0m:    [15-04-2025 21:28:01] Starting component SegmentAPI
+[36mDEBUG[0m:    [15-04-2025 21:28:01] Starting component SimpleAsyncRateLimitEnforcer
+[32mINFO[0m:     [15-04-2025 21:28:02] Started server process [[36m23223[0m]
+[32mINFO[0m:     [15-04-2025 21:28:02] Waiting for application startup.
+[32mINFO[0m:     [15-04-2025 21:28:02] Application startup complete.
+[32mINFO[0m:     [15-04-2025 21:28:02] Uvicorn running on [1mhttp://0.0.0.0:8000[0m (Press CTRL+C to quit)
+[32mINFO[0m:     [15-04-2025 21:28:12] 127.0.0.1:39250 - "GET /api/v2/tenants/default_tenant HTTP/1.1" 200
+[32mINFO[0m:     [15-04-2025 21:28:12] 127.0.0.1:39262 - "GET /api/v2/tenants/default_tenant/databases/default_database HTTP/1.1" 200
+[36mDEBUG[0m:    [15-04-2025 21:28:12] Collection imdb_reviews2 already exists, returning existing collection.
+[32mINFO[0m:     [15-04-2025 21:28:12] 127.0.0.1:39250 - "POST /api/v2/tenants/default_tenant/databases/default_database/collections HTTP/1.1" 200
+[32mINFO[0m:     [15-04-2025 21:28:13] 127.0.0.1:39250 - "GET /api/v2/tenants/default_tenant HTTP/1.1" 200
+[32mINFO[0m:     [15-04-2025 21:28:13] 127.0.0.1:39262 - "GET /api/v2/tenants/default_tenant/databases/default_database HTTP/1.1" 200
+[32mINFO[0m:     [15-04-2025 21:28:13] 127.0.0.1:39250 - "GET /api/v2/tenants/default_tenant/databases/default_database/collections/text_embeddings HTTP/1.1" 200
+[36mDEBUG[0m:    [15-04-2025 21:28:15] Starting component PersistentLocalHnswSegment
+[32mINFO[0m:     [15-04-2025 21:28:15] 127.0.0.1:39262 - "POST /api/v2/tenants/default_tenant/databases/default_database/collections/bb16a67a-0d21-45a9-b35f-52eb2463aa09/query HTTP/1.1" 200
+[32mINFO[0m:     [15-04-2025 21:29:18] 127.0.0.1:36904 - "GET /api/v2/tenants/default_tenant/databases/default_database/collections/text_embeddings HTTP/1.1" 200
+[32mINFO[0m:     [15-04-2025 21:29:18] 127.0.0.1:36906 - "POST /api/v2/tenants/default_tenant/databases/default_database/collections/bb16a67a-0d21-45a9-b35f-52eb2463aa09/query HTTP/1.1" 200
+[32mINFO[0m:     [15-04-2025 21:30:50] 127.0.0.1:44724 - "GET /api/v2/tenants/default_tenant HTTP/1.1" 200
+[32mINFO[0m:     [15-04-2025 21:30:50] 127.0.0.1:44734 - "GET /api/v2/tenants/default_tenant/databases/default_database HTTP/1.1" 200
+[36mDEBUG[0m:    [15-04-2025 21:30:50] Collection imdb_reviews2 already exists, returning existing collection.
+[32mINFO[0m:     [15-04-2025 21:30:50] 127.0.0.1:44724 - "POST /api/v2/tenants/default_tenant/databases/default_database/collections HTTP/1.1" 200
+[32mINFO[0m:     [15-04-2025 21:30:51] 127.0.0.1:44724 - "GET /api/v2/tenants/default_tenant HTTP/1.1" 200
+[32mINFO[0m:     [15-04-2025 21:30:51] 127.0.0.1:44734 - "GET /api/v2/tenants/default_tenant/databases/default_database HTTP/1.1" 200
+[32mINFO[0m:     [15-04-2025 21:30:51] 127.0.0.1:44724 - "GET /api/v2/tenants/default_tenant/databases/default_database/collections/text_embeddings HTTP/1.1" 200
+[32mINFO[0m:     [15-04-2025 21:30:51] 127.0.0.1:44734 - "POST /api/v2/tenants/default_tenant/databases/default_database/collections/bb16a67a-0d21-45a9-b35f-52eb2463aa09/query HTTP/1.1" 200
+[36mDEBUG[0m:    [15-04-2025 21:30:51] Starting component PersistentLocalHnswSegment
+[32mINFO[0m:     [15-04-2025 21:30:51] 127.0.0.1:44724 - "POST /api/v2/tenants/default_tenant/databases/default_database/collections/f051874e-c867-4143-bec5-2cadc7287bf1/query HTTP/1.1" 200
+[32mINFO[0m:     [15-04-2025 21:30:52] 127.0.0.1:44724 - "POST /api/v2/tenants/default_tenant/databases/default_database/collections/f051874e-c867-4143-bec5-2cadc7287bf1/query HTTP/1.1" 200
+[32mINFO[0m:     [15-04-2025 21:30:52] 127.0.0.1:44734 - "GET /api/v2/tenants/default_tenant/databases/default_database/collections/text_embeddings HTTP/1.1" 200
+[32mINFO[0m:     [15-04-2025 21:30:52] 127.0.0.1:44724 - "GET /api/v2/tenants/default_tenant/databases/default_database/collections/bb16a67a-0d21-45a9-b35f-52eb2463aa09/count HTTP/1.1" 200
+[32mINFO[0m:     [15-04-2025 21:33:13] 127.0.0.1:41842 - "GET /api/v2/tenants/default_tenant/databases/default_database/collections/text_embeddings HTTP/1.1" 200
+[32mINFO[0m:     [15-04-2025 21:33:13] 127.0.0.1:41850 - "POST /api/v2/tenants/default_tenant/databases/default_database/collections/bb16a67a-0d21-45a9-b35f-52eb2463aa09/query HTTP/1.1" 200
+[32mINFO[0m:     [15-04-2025 21:33:14] 127.0.0.1:41842 - "POST /api/v2/tenants/default_tenant/databases/default_database/collections/f051874e-c867-4143-bec5-2cadc7287bf1/query HTTP/1.1" 200
+[32mINFO[0m:     [15-04-2025 21:33:16] 127.0.0.1:41842 - "POST /api/v2/tenants/default_tenant/databases/default_database/collections/f051874e-c867-4143-bec5-2cadc7287bf1/query HTTP/1.1" 200
+[32mINFO[0m:     [15-04-2025 21:33:16] 127.0.0.1:41850 - "GET /api/v2/tenants/default_tenant/databases/default_database/collections/text_embeddings HTTP/1.1" 200
+[32mINFO[0m:     [15-04-2025 21:33:16] 127.0.0.1:41842 - "GET /api/v2/tenants/default_tenant/databases/default_database/collections/bb16a67a-0d21-45a9-b35f-52eb2463aa09/count HTTP/1.1" 200
+[32mINFO[0m:     [15-04-2025 21:39:51] 127.0.0.1:47390 - "GET /api/v2/tenants/default_tenant HTTP/1.1" 200
+[32mINFO[0m:     [15-04-2025 21:39:51] 127.0.0.1:47394 - "GET /api/v2/tenants/default_tenant/databases/default_database HTTP/1.1" 200
+[36mDEBUG[0m:    [15-04-2025 21:39:51] Collection text_embeddings already exists, returning existing collection.
+[32mINFO[0m:     [15-04-2025 21:39:51] 127.0.0.1:47390 - "POST /api/v2/tenants/default_tenant/databases/default_database/collections HTTP/1.1" 200
+[32mINFO[0m:     [15-04-2025 21:41:53] 127.0.0.1:33456 - "GET /api/v2/tenants/default_tenant HTTP/1.1" 200
+[32mINFO[0m:     [15-04-2025 21:41:53] 127.0.0.1:33470 - "GET /api/v2/tenants/default_tenant/databases/default_database HTTP/1.1" 200
+[36mDEBUG[0m:    [15-04-2025 21:41:53] Collection text_embeddings already exists, returning existing collection.
+[32mINFO[0m:     [15-04-2025 21:41:53] 127.0.0.1:33456 - "POST /api/v2/tenants/default_tenant/databases/default_database/collections HTTP/1.1" 200
+[32mINFO[0m:     [15-04-2025 21:45:21] 127.0.0.1:53352 - "GET /api/v2/tenants/default_tenant HTTP/1.1" 200
+[32mINFO[0m:     [15-04-2025 21:45:21] 127.0.0.1:53358 - "GET /api/v2/tenants/default_tenant/databases/default_database HTTP/1.1" 200
+[36mDEBUG[0m:    [15-04-2025 21:45:22] Collection text_embeddings already exists, returning existing collection.
+[32mINFO[0m:     [15-04-2025 21:45:22] 127.0.0.1:53352 - "POST /api/v2/tenants/default_tenant/databases/default_database/collections HTTP/1.1" 200
+[32mINFO[0m:     [15-04-2025 21:45:22] 127.0.0.1:53352 - "GET /api/v2/tenants/default_tenant/databases/default_database/collections/text_embeddings HTTP/1.1" 200
+[33mWARNING[0m:  [15-04-2025 21:45:22] Add of existing embedding ID: post_1
+[33mWARNING[0m:  [15-04-2025 21:45:22] Insert of existing embedding ID: post_1
+[32mINFO[0m:     [15-04-2025 21:45:22] 127.0.0.1:53358 - "POST /api/v2/tenants/default_tenant/databases/default_database/collections/bb16a67a-0d21-45a9-b35f-52eb2463aa09/add HTTP/1.1" 201
+[32mINFO[0m:     [15-04-2025 21:45:23] 127.0.0.1:53352 - "GET /api/v2/tenants/default_tenant/databases/default_database/collections/text_embeddings HTTP/1.1" 200
+[33mWARNING[0m:  [15-04-2025 21:45:23] Add of existing embedding ID: post_3
+[33mWARNING[0m:  [15-04-2025 21:45:23] Insert of existing embedding ID: post_3
+[32mINFO[0m:     [15-04-2025 21:45:23] 127.0.0.1:53358 - "POST /api/v2/tenants/default_tenant/databases/default_database/collections/bb16a67a-0d21-45a9-b35f-52eb2463aa09/add HTTP/1.1" 201
+[32mINFO[0m:     [15-04-2025 21:45:23] 127.0.0.1:53352 - "GET /api/v2/tenants/default_tenant/databases/default_database/collections/text_embeddings HTTP/1.1" 200
+[32mINFO[0m:     [15-04-2025 21:45:23] 127.0.0.1:53358 - "POST /api/v2/tenants/default_tenant/databases/default_database/collections/bb16a67a-0d21-45a9-b35f-52eb2463aa09/add HTTP/1.1" 201
+[32mINFO[0m:     [15-04-2025 21:46:56] 127.0.0.1:57692 - "GET /api/v2/tenants/default_tenant HTTP/1.1" 200
+[32mINFO[0m:     [15-04-2025 21:46:56] 127.0.0.1:57698 - "GET /api/v2/tenants/default_tenant/databases/default_database HTTP/1.1" 200
+[36mDEBUG[0m:    [15-04-2025 21:46:56] Collection imdb_reviews2 already exists, returning existing collection.
+[32mINFO[0m:     [15-04-2025 21:46:56] 127.0.0.1:57692 - "POST /api/v2/tenants/default_tenant/databases/default_database/collections HTTP/1.1" 200
+[32mINFO[0m:     [15-04-2025 21:46:57] 127.0.0.1:57692 - "GET /api/v2/tenants/default_tenant HTTP/1.1" 200
+[32mINFO[0m:     [15-04-2025 21:46:57] 127.0.0.1:57698 - "GET /api/v2/tenants/default_tenant/databases/default_database HTTP/1.1" 200
+[32mINFO[0m:     [15-04-2025 21:46:57] 127.0.0.1:57692 - "GET /api/v2/tenants/default_tenant/databases/default_database/collections/text_embeddings HTTP/1.1" 200
+[32mINFO[0m:     [15-04-2025 21:46:57] 127.0.0.1:57698 - "POST /api/v2/tenants/default_tenant/databases/default_database/collections/bb16a67a-0d21-45a9-b35f-52eb2463aa09/query HTTP/1.1" 200
+[32mINFO[0m:     [15-04-2025 21:46:58] 127.0.0.1:57692 - "POST /api/v2/tenants/default_tenant/databases/default_database/collections/f051874e-c867-4143-bec5-2cadc7287bf1/query HTTP/1.1" 200
+[32mINFO[0m:     [15-04-2025 21:47:04] 127.0.0.1:57708 - "POST /api/v2/tenants/default_tenant/databases/default_database/collections/f051874e-c867-4143-bec5-2cadc7287bf1/query HTTP/1.1" 200
+[32mINFO[0m:     [15-04-2025 21:47:04] 127.0.0.1:57720 - "GET /api/v2/tenants/default_tenant/databases/default_database/collections/text_embeddings HTTP/1.1" 200
+[32mINFO[0m:     [15-04-2025 21:47:04] 127.0.0.1:57708 - "GET /api/v2/tenants/default_tenant/databases/default_database/collections/bb16a67a-0d21-45a9-b35f-52eb2463aa09/count HTTP/1.1" 200

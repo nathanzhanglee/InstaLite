@@ -11,6 +11,7 @@ import { ChatOpenAI } from "@langchain/openai";
 import { PromptTemplate } from "@langchain/core/prompts";
 import { StringOutputParser } from "@langchain/core/output_parsers";
 import { OpenAIEmbeddings } from "@langchain/openai";
+import { formatDocumentsAsString } from "langchain/util/document";
 import { RunnableSequence, RunnablePassthrough } from "@langchain/core/runnables";
 import { Chroma } from "@langchain/community/vectorstores/chroma";
 
@@ -810,7 +811,7 @@ async function createPost(req, res) {
 
     const user_id = req.session.user_id;
     const username = req.params.username;
-    
+
     if (!user_id) {
       return res.status(403).json({error: 'Not logged in.'});
     }
@@ -879,12 +880,13 @@ async function getChatBot(req, res) {
     return res.status(500).json({error: "Error while embedding question."});
   }
 
-  // Get top 5 matches from ChromaDB.
+  // Get top k matches from ChromaDB.
   const collectionName = "text_embeddings";
   const topK = 3;
   const results = await chroma_db.get_items_from_table(collectionName, embedding, topK);
   const matchContext = (results.documents[0]).join('\n');
 
+  // Get match from imdb reviews.
   const ragChainImdb = RunnableSequence.from([
     {
         context: retriever.pipe(formatDocumentsAsString),
