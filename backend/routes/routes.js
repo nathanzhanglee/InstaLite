@@ -565,9 +565,23 @@ async function getChatBot(req, res) {
 
   // Get top 5 matches from ChromaDB.
   const collectionName = "text_embeddings";
-  const topK = 5;
+  const topK = 3;
   const results = await chroma_db.get_items_from_table(collectionName, embedding, topK);
-  const context = (results.documents[0]).join('\n');
+  const matchContext = (results.documents[0]).join('\n');
+
+  const ragChainImdb = RunnableSequence.from([
+    {
+        context: retriever.pipe(formatDocumentsAsString),
+        question: new RunnablePassthrough(),
+      },
+    prompt,
+    llm,
+    new StringOutputParser(),
+  ]);
+  let imdbContext = await ragChainImdb.invoke(req.body.question)
+  imdbContext = await retriever.pipe(formatDocumentsAsString).invoke(question);
+
+  const context = matchContext + "\n" + imdbContext;
   console.log(context);
 
   await chroma_db.get_item_count(collectionName);

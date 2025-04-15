@@ -17286,3 +17286,273 @@
 [36mDEBUG[0m:    [15-04-2025 02:21:53] Stopping component SqliteDB
 [36mDEBUG[0m:    [15-04-2025 02:21:53] Stopping component OpenTelemetryClient
 [32mINFO[0m:     [15-04-2025 02:21:53] Application shutdown complete.
+[33mWARNING[0m:  [15-04-2025 02:52:30] chroma_server_nofile is set to 65535, but this is less than current soft limit of 1048576. chroma_server_nofile will not be set.
+[32mINFO[0m:     [15-04-2025 02:52:31] Anonymized telemetry enabled. See                     https://docs.trychroma.com/telemetry for more information.
+[36mDEBUG[0m:    [15-04-2025 02:52:31] Starting component System
+[36mDEBUG[0m:    [15-04-2025 02:52:31] Starting component OpenTelemetryClient
+[36mDEBUG[0m:    [15-04-2025 02:52:31] Starting component SqliteDB
+[36mDEBUG[0m:    [15-04-2025 02:52:31] Starting component SimpleQuotaEnforcer
+[36mDEBUG[0m:    [15-04-2025 02:52:31] Starting component Posthog
+[36mDEBUG[0m:    [15-04-2025 02:52:31] Starting component SimpleRateLimitEnforcer
+[36mDEBUG[0m:    [15-04-2025 02:52:31] Starting component LocalSegmentManager
+[36mDEBUG[0m:    [15-04-2025 02:52:31] Starting component LocalExecutor
+[36mDEBUG[0m:    [15-04-2025 02:52:31] Starting component SegmentAPI
+[36mDEBUG[0m:    [15-04-2025 02:52:31] Starting component SimpleAsyncRateLimitEnforcer
+[32mINFO[0m:     [15-04-2025 02:52:31] Started server process [[36m34783[0m]
+[32mINFO[0m:     [15-04-2025 02:52:31] Waiting for application startup.
+[32mINFO[0m:     [15-04-2025 02:52:31] Application startup complete.
+[31mERROR[0m:    [15-04-2025 02:52:31] [Errno 98] error while attempting to bind on address ('0.0.0.0', 8000): address already in use
+[32mINFO[0m:     [15-04-2025 02:52:31] Waiting for application shutdown.
+[36mDEBUG[0m:    [15-04-2025 02:52:31] Stopping component System
+[36mDEBUG[0m:    [15-04-2025 02:52:31] Stopping component SegmentAPI
+[36mDEBUG[0m:    [15-04-2025 02:52:31] Stopping component LocalExecutor
+[36mDEBUG[0m:    [15-04-2025 02:52:31] Stopping component LocalSegmentManager
+[36mDEBUG[0m:    [15-04-2025 02:52:31] Stopping component SimpleAsyncRateLimitEnforcer
+[36mDEBUG[0m:    [15-04-2025 02:52:31] Stopping component SimpleRateLimitEnforcer
+[36mDEBUG[0m:    [15-04-2025 02:52:31] Stopping component Posthog
+[36mDEBUG[0m:    [15-04-2025 02:52:31] Stopping component SimpleQuotaEnforcer
+[36mDEBUG[0m:    [15-04-2025 02:52:31] Stopping component SqliteDB
+[36mDEBUG[0m:    [15-04-2025 02:52:31] Stopping component OpenTelemetryClient
+[32mINFO[0m:     [15-04-2025 02:52:31] Application shutdown complete.
+[32mINFO[0m:     [15-04-2025 02:52:52] 127.0.0.1:39000 - "GET /api/v2/tenants/default_tenant HTTP/1.1" 200
+[32mINFO[0m:     [15-04-2025 02:52:52] 127.0.0.1:39010 - "GET /api/v2/tenants/default_tenant/databases/default_database HTTP/1.1" 200
+[36mDEBUG[0m:    [15-04-2025 02:52:52] Collection imdb_reviews2 already exists, returning existing collection.
+[32mINFO[0m:     [15-04-2025 02:52:52] 127.0.0.1:39000 - "POST /api/v2/tenants/default_tenant/databases/default_database/collections HTTP/1.1" 200
+[32mINFO[0m:     [15-04-2025 02:52:53] 127.0.0.1:39000 - "GET /api/v2/tenants/default_tenant HTTP/1.1" 200
+[32mINFO[0m:     [15-04-2025 02:52:53] 127.0.0.1:39010 - "GET /api/v2/tenants/default_tenant/databases/default_database HTTP/1.1" 200
+[32mINFO[0m:     [15-04-2025 02:52:53] 127.0.0.1:39000 - "GET /api/v2/tenants/default_tenant/databases/default_database/collections/text_embeddings HTTP/1.1" 200
+[32mINFO[0m:     [15-04-2025 02:52:54] 127.0.0.1:39010 - "POST /api/v2/tenants/default_tenant/databases/default_database/collections/bb16a67a-0d21-45a9-b35f-52eb2463aa09/query HTTP/1.1" 200
+[32mINFO[0m:     [15-04-2025 02:52:54] 127.0.0.1:39000 - "GET /api/v2/tenants/default_tenant/databases/default_database/collections/text_embeddings HTTP/1.1" 200
+[32mINFO[0m:     [15-04-2025 02:52:54] 127.0.0.1:39010 - "GET /api/v2/tenants/default_tenant/databases/default_database/collections/bb16a67a-0d21-45a9-b35f-52eb2463aa09/count HTTP/1.1" 200
+[32mINFO[0m:     [15-04-2025 02:53:05] 127.0.0.1:53154 - "GET /api/v2/tenants/default_tenant/databases/default_database/collections/text_embeddings HTTP/1.1" 200
+[32mINFO[0m:     [15-04-2025 02:53:06] 127.0.0.1:53168 - "POST /api/v2/tenants/default_tenant/databases/default_database/collections/bb16a67a-0d21-45a9-b35f-52eb2463aa09/query HTTP/1.1" 200
+[32mINFO[0m:     [15-04-2025 02:53:06] 127.0.0.1:53154 - "GET /api/v2/tenants/default_tenant/databases/default_database/collections/text_embeddings HTTP/1.1" 200
+[32mINFO[0m:     [15-04-2025 02:53:06] 127.0.0.1:53168 - "GET /api/v2/tenants/default_tenant/databases/default_database/collections/bb16a67a-0d21-45a9-b35f-52eb2463aa09/count HTTP/1.1" 200
+[32mINFO[0m:     [15-04-2025 02:53:17] 127.0.0.1:36902 - "GET /api/v2/tenants/default_tenant/databases/default_database/collections/text_embeddings HTTP/1.1" 200
+[32mINFO[0m:     [15-04-2025 02:53:17] 127.0.0.1:36904 - "POST /api/v2/tenants/default_tenant/databases/default_database/collections/bb16a67a-0d21-45a9-b35f-52eb2463aa09/query HTTP/1.1" 200
+[32mINFO[0m:     [15-04-2025 02:53:17] 127.0.0.1:36902 - "GET /api/v2/tenants/default_tenant/databases/default_database/collections/text_embeddings HTTP/1.1" 200
+[32mINFO[0m:     [15-04-2025 02:53:17] 127.0.0.1:36904 - "GET /api/v2/tenants/default_tenant/databases/default_database/collections/bb16a67a-0d21-45a9-b35f-52eb2463aa09/count HTTP/1.1" 200
+[32mINFO[0m:     [15-04-2025 02:53:26] 127.0.0.1:33640 - "GET /api/v2/tenants/default_tenant/databases/default_database/collections/text_embeddings HTTP/1.1" 200
+[32mINFO[0m:     [15-04-2025 02:53:26] 127.0.0.1:33646 - "POST /api/v2/tenants/default_tenant/databases/default_database/collections/bb16a67a-0d21-45a9-b35f-52eb2463aa09/query HTTP/1.1" 200
+[32mINFO[0m:     [15-04-2025 02:53:26] 127.0.0.1:33640 - "GET /api/v2/tenants/default_tenant/databases/default_database/collections/text_embeddings HTTP/1.1" 200
+[32mINFO[0m:     [15-04-2025 02:53:27] 127.0.0.1:33646 - "GET /api/v2/tenants/default_tenant/databases/default_database/collections/bb16a67a-0d21-45a9-b35f-52eb2463aa09/count HTTP/1.1" 200
+[32mINFO[0m:     [15-04-2025 02:53:33] 127.0.0.1:33660 - "GET /api/v2/tenants/default_tenant/databases/default_database/collections/text_embeddings HTTP/1.1" 200
+[32mINFO[0m:     [15-04-2025 02:53:33] 127.0.0.1:33674 - "POST /api/v2/tenants/default_tenant/databases/default_database/collections/bb16a67a-0d21-45a9-b35f-52eb2463aa09/query HTTP/1.1" 200
+[32mINFO[0m:     [15-04-2025 02:53:33] 127.0.0.1:33660 - "GET /api/v2/tenants/default_tenant/databases/default_database/collections/text_embeddings HTTP/1.1" 200
+[32mINFO[0m:     [15-04-2025 02:53:33] 127.0.0.1:33674 - "GET /api/v2/tenants/default_tenant/databases/default_database/collections/bb16a67a-0d21-45a9-b35f-52eb2463aa09/count HTTP/1.1" 200
+[32mINFO[0m:     [15-04-2025 02:53:45] 127.0.0.1:55124 - "GET /api/v2/tenants/default_tenant/databases/default_database/collections/text_embeddings HTTP/1.1" 200
+[32mINFO[0m:     [15-04-2025 02:53:45] 127.0.0.1:55134 - "POST /api/v2/tenants/default_tenant/databases/default_database/collections/bb16a67a-0d21-45a9-b35f-52eb2463aa09/query HTTP/1.1" 200
+[32mINFO[0m:     [15-04-2025 02:53:45] 127.0.0.1:55124 - "GET /api/v2/tenants/default_tenant/databases/default_database/collections/text_embeddings HTTP/1.1" 200
+[32mINFO[0m:     [15-04-2025 02:53:45] 127.0.0.1:55134 - "GET /api/v2/tenants/default_tenant/databases/default_database/collections/bb16a67a-0d21-45a9-b35f-52eb2463aa09/count HTTP/1.1" 200
+[32mINFO[0m:     [15-04-2025 02:54:09] 127.0.0.1:59416 - "GET /api/v2/tenants/default_tenant/databases/default_database/collections/text_embeddings HTTP/1.1" 200
+[32mINFO[0m:     [15-04-2025 02:54:09] 127.0.0.1:59420 - "POST /api/v2/tenants/default_tenant/databases/default_database/collections/bb16a67a-0d21-45a9-b35f-52eb2463aa09/query HTTP/1.1" 200
+[32mINFO[0m:     [15-04-2025 02:54:09] 127.0.0.1:59416 - "GET /api/v2/tenants/default_tenant/databases/default_database/collections/text_embeddings HTTP/1.1" 200
+[32mINFO[0m:     [15-04-2025 02:54:09] 127.0.0.1:59420 - "GET /api/v2/tenants/default_tenant/databases/default_database/collections/bb16a67a-0d21-45a9-b35f-52eb2463aa09/count HTTP/1.1" 200
+[32mINFO[0m:     [15-04-2025 02:54:24] 127.0.0.1:49486 - "GET /api/v2/tenants/default_tenant/databases/default_database/collections/text_embeddings HTTP/1.1" 200
+[32mINFO[0m:     [15-04-2025 02:54:24] 127.0.0.1:49498 - "POST /api/v2/tenants/default_tenant/databases/default_database/collections/bb16a67a-0d21-45a9-b35f-52eb2463aa09/query HTTP/1.1" 200
+[32mINFO[0m:     [15-04-2025 02:54:24] 127.0.0.1:49486 - "GET /api/v2/tenants/default_tenant/databases/default_database/collections/text_embeddings HTTP/1.1" 200
+[32mINFO[0m:     [15-04-2025 02:54:24] 127.0.0.1:49498 - "GET /api/v2/tenants/default_tenant/databases/default_database/collections/bb16a67a-0d21-45a9-b35f-52eb2463aa09/count HTTP/1.1" 200
+[32mINFO[0m:     [15-04-2025 02:54:31] 127.0.0.1:51426 - "GET /api/v2/tenants/default_tenant/databases/default_database/collections/text_embeddings HTTP/1.1" 200
+[32mINFO[0m:     [15-04-2025 02:54:31] 127.0.0.1:51430 - "POST /api/v2/tenants/default_tenant/databases/default_database/collections/bb16a67a-0d21-45a9-b35f-52eb2463aa09/query HTTP/1.1" 200
+[32mINFO[0m:     [15-04-2025 02:54:31] 127.0.0.1:51426 - "GET /api/v2/tenants/default_tenant/databases/default_database/collections/text_embeddings HTTP/1.1" 200
+[32mINFO[0m:     [15-04-2025 02:54:31] 127.0.0.1:51430 - "GET /api/v2/tenants/default_tenant/databases/default_database/collections/bb16a67a-0d21-45a9-b35f-52eb2463aa09/count HTTP/1.1" 200
+[32mINFO[0m:     [15-04-2025 02:54:42] 127.0.0.1:42742 - "GET /api/v2/tenants/default_tenant/databases/default_database/collections/text_embeddings HTTP/1.1" 200
+[32mINFO[0m:     [15-04-2025 02:54:42] 127.0.0.1:42756 - "POST /api/v2/tenants/default_tenant/databases/default_database/collections/bb16a67a-0d21-45a9-b35f-52eb2463aa09/query HTTP/1.1" 200
+[32mINFO[0m:     [15-04-2025 02:54:42] 127.0.0.1:42742 - "GET /api/v2/tenants/default_tenant/databases/default_database/collections/text_embeddings HTTP/1.1" 200
+[32mINFO[0m:     [15-04-2025 02:54:42] 127.0.0.1:42756 - "GET /api/v2/tenants/default_tenant/databases/default_database/collections/bb16a67a-0d21-45a9-b35f-52eb2463aa09/count HTTP/1.1" 200
+[32mINFO[0m:     [15-04-2025 02:58:11] 127.0.0.1:33708 - "GET /api/v2/tenants/default_tenant/databases/default_database/collections/text_embeddings HTTP/1.1" 200
+[32mINFO[0m:     [15-04-2025 02:58:11] 127.0.0.1:33718 - "POST /api/v2/tenants/default_tenant/databases/default_database/collections/bb16a67a-0d21-45a9-b35f-52eb2463aa09/query HTTP/1.1" 200
+[32mINFO[0m:     [15-04-2025 02:58:11] 127.0.0.1:33708 - "GET /api/v2/tenants/default_tenant/databases/default_database/collections/text_embeddings HTTP/1.1" 200
+[32mINFO[0m:     [15-04-2025 02:58:11] 127.0.0.1:33718 - "GET /api/v2/tenants/default_tenant/databases/default_database/collections/bb16a67a-0d21-45a9-b35f-52eb2463aa09/count HTTP/1.1" 200
+[32mINFO[0m:     [15-04-2025 02:58:37] 127.0.0.1:33722 - "GET /api/v2/tenants/default_tenant HTTP/1.1" 200
+[32mINFO[0m:     [15-04-2025 02:58:37] 127.0.0.1:33724 - "GET /api/v2/tenants/default_tenant/databases/default_database HTTP/1.1" 200
+[36mDEBUG[0m:    [15-04-2025 02:58:37] Collection imdb_reviews2 already exists, returning existing collection.
+[32mINFO[0m:     [15-04-2025 02:58:37] 127.0.0.1:33722 - "POST /api/v2/tenants/default_tenant/databases/default_database/collections HTTP/1.1" 200
+[32mINFO[0m:     [15-04-2025 02:58:38] 127.0.0.1:33722 - "GET /api/v2/tenants/default_tenant HTTP/1.1" 200
+[32mINFO[0m:     [15-04-2025 02:58:38] 127.0.0.1:33724 - "GET /api/v2/tenants/default_tenant/databases/default_database HTTP/1.1" 200
+[32mINFO[0m:     [15-04-2025 02:58:38] 127.0.0.1:33722 - "GET /api/v2/tenants/default_tenant/databases/default_database/collections/text_embeddings HTTP/1.1" 200
+[32mINFO[0m:     [15-04-2025 02:58:38] 127.0.0.1:33724 - "POST /api/v2/tenants/default_tenant/databases/default_database/collections/bb16a67a-0d21-45a9-b35f-52eb2463aa09/query HTTP/1.1" 200
+[32mINFO[0m:     [15-04-2025 02:58:38] 127.0.0.1:33722 - "GET /api/v2/tenants/default_tenant/databases/default_database/collections/text_embeddings HTTP/1.1" 200
+[32mINFO[0m:     [15-04-2025 02:58:38] 127.0.0.1:33724 - "GET /api/v2/tenants/default_tenant/databases/default_database/collections/bb16a67a-0d21-45a9-b35f-52eb2463aa09/count HTTP/1.1" 200
+[36mDEBUG[0m:    [15-04-2025 02:58:39] Starting component PersistentLocalHnswSegment
+[32mINFO[0m:     [15-04-2025 02:58:39] 127.0.0.1:33722 - "POST /api/v2/tenants/default_tenant/databases/default_database/collections/f051874e-c867-4143-bec5-2cadc7287bf1/query HTTP/1.1" 200
+[32mINFO[0m:     [15-04-2025 02:59:16] 127.0.0.1:58168 - "GET /api/v2/tenants/default_tenant/databases/default_database/collections/text_embeddings HTTP/1.1" 200
+[32mINFO[0m:     [15-04-2025 02:59:16] 127.0.0.1:58174 - "POST /api/v2/tenants/default_tenant/databases/default_database/collections/bb16a67a-0d21-45a9-b35f-52eb2463aa09/query HTTP/1.1" 200
+[32mINFO[0m:     [15-04-2025 02:59:16] 127.0.0.1:58168 - "GET /api/v2/tenants/default_tenant/databases/default_database/collections/text_embeddings HTTP/1.1" 200
+[32mINFO[0m:     [15-04-2025 02:59:16] 127.0.0.1:58174 - "GET /api/v2/tenants/default_tenant/databases/default_database/collections/bb16a67a-0d21-45a9-b35f-52eb2463aa09/count HTTP/1.1" 200
+[32mINFO[0m:     [15-04-2025 02:59:16] 127.0.0.1:58168 - "POST /api/v2/tenants/default_tenant/databases/default_database/collections/f051874e-c867-4143-bec5-2cadc7287bf1/query HTTP/1.1" 200
+[32mINFO[0m:     [15-04-2025 02:59:28] 127.0.0.1:49832 - "GET /api/v2/tenants/default_tenant/databases/default_database/collections/text_embeddings HTTP/1.1" 200
+[32mINFO[0m:     [15-04-2025 02:59:28] 127.0.0.1:49838 - "POST /api/v2/tenants/default_tenant/databases/default_database/collections/bb16a67a-0d21-45a9-b35f-52eb2463aa09/query HTTP/1.1" 200
+[32mINFO[0m:     [15-04-2025 02:59:28] 127.0.0.1:49832 - "GET /api/v2/tenants/default_tenant/databases/default_database/collections/text_embeddings HTTP/1.1" 200
+[32mINFO[0m:     [15-04-2025 02:59:28] 127.0.0.1:49838 - "GET /api/v2/tenants/default_tenant/databases/default_database/collections/bb16a67a-0d21-45a9-b35f-52eb2463aa09/count HTTP/1.1" 200
+[32mINFO[0m:     [15-04-2025 02:59:29] 127.0.0.1:49832 - "POST /api/v2/tenants/default_tenant/databases/default_database/collections/f051874e-c867-4143-bec5-2cadc7287bf1/query HTTP/1.1" 200
+[32mINFO[0m:     [15-04-2025 02:59:35] 127.0.0.1:49844 - "GET /api/v2/tenants/default_tenant/databases/default_database/collections/text_embeddings HTTP/1.1" 200
+[32mINFO[0m:     [15-04-2025 02:59:35] 127.0.0.1:49856 - "POST /api/v2/tenants/default_tenant/databases/default_database/collections/bb16a67a-0d21-45a9-b35f-52eb2463aa09/query HTTP/1.1" 200
+[32mINFO[0m:     [15-04-2025 02:59:35] 127.0.0.1:49844 - "GET /api/v2/tenants/default_tenant/databases/default_database/collections/text_embeddings HTTP/1.1" 200
+[32mINFO[0m:     [15-04-2025 02:59:35] 127.0.0.1:49856 - "GET /api/v2/tenants/default_tenant/databases/default_database/collections/bb16a67a-0d21-45a9-b35f-52eb2463aa09/count HTTP/1.1" 200
+[32mINFO[0m:     [15-04-2025 02:59:36] 127.0.0.1:49844 - "POST /api/v2/tenants/default_tenant/databases/default_database/collections/f051874e-c867-4143-bec5-2cadc7287bf1/query HTTP/1.1" 200
+[32mINFO[0m:     [15-04-2025 02:59:46] 127.0.0.1:56886 - "GET /api/v2/tenants/default_tenant/databases/default_database/collections/text_embeddings HTTP/1.1" 200
+[32mINFO[0m:     [15-04-2025 02:59:46] 127.0.0.1:56890 - "POST /api/v2/tenants/default_tenant/databases/default_database/collections/bb16a67a-0d21-45a9-b35f-52eb2463aa09/query HTTP/1.1" 200
+[32mINFO[0m:     [15-04-2025 02:59:46] 127.0.0.1:56886 - "GET /api/v2/tenants/default_tenant/databases/default_database/collections/text_embeddings HTTP/1.1" 200
+[32mINFO[0m:     [15-04-2025 02:59:46] 127.0.0.1:56890 - "GET /api/v2/tenants/default_tenant/databases/default_database/collections/bb16a67a-0d21-45a9-b35f-52eb2463aa09/count HTTP/1.1" 200
+[32mINFO[0m:     [15-04-2025 02:59:46] 127.0.0.1:56886 - "POST /api/v2/tenants/default_tenant/databases/default_database/collections/f051874e-c867-4143-bec5-2cadc7287bf1/query HTTP/1.1" 200
+[32mINFO[0m:     [15-04-2025 03:00:00] 127.0.0.1:35092 - "GET /api/v2/tenants/default_tenant/databases/default_database/collections/text_embeddings HTTP/1.1" 200
+[32mINFO[0m:     [15-04-2025 03:00:00] 127.0.0.1:35094 - "POST /api/v2/tenants/default_tenant/databases/default_database/collections/bb16a67a-0d21-45a9-b35f-52eb2463aa09/query HTTP/1.1" 200
+[32mINFO[0m:     [15-04-2025 03:00:00] 127.0.0.1:35092 - "GET /api/v2/tenants/default_tenant/databases/default_database/collections/text_embeddings HTTP/1.1" 200
+[32mINFO[0m:     [15-04-2025 03:00:00] 127.0.0.1:35094 - "GET /api/v2/tenants/default_tenant/databases/default_database/collections/bb16a67a-0d21-45a9-b35f-52eb2463aa09/count HTTP/1.1" 200
+[32mINFO[0m:     [15-04-2025 03:00:01] 127.0.0.1:35092 - "POST /api/v2/tenants/default_tenant/databases/default_database/collections/f051874e-c867-4143-bec5-2cadc7287bf1/query HTTP/1.1" 200
+[32mINFO[0m:     [15-04-2025 03:01:02] 127.0.0.1:45106 - "GET /api/v2/tenants/default_tenant HTTP/1.1" 200
+[32mINFO[0m:     [15-04-2025 03:01:02] 127.0.0.1:45120 - "GET /api/v2/tenants/default_tenant/databases/default_database HTTP/1.1" 200
+[36mDEBUG[0m:    [15-04-2025 03:01:02] Collection imdb_reviews2 already exists, returning existing collection.
+[32mINFO[0m:     [15-04-2025 03:01:02] 127.0.0.1:45106 - "POST /api/v2/tenants/default_tenant/databases/default_database/collections HTTP/1.1" 200
+[32mINFO[0m:     [15-04-2025 03:01:03] 127.0.0.1:45106 - "GET /api/v2/tenants/default_tenant HTTP/1.1" 200
+[32mINFO[0m:     [15-04-2025 03:01:03] 127.0.0.1:45120 - "GET /api/v2/tenants/default_tenant/databases/default_database HTTP/1.1" 200
+[32mINFO[0m:     [15-04-2025 03:01:03] 127.0.0.1:45106 - "GET /api/v2/tenants/default_tenant/databases/default_database/collections/text_embeddings HTTP/1.1" 200
+[32mINFO[0m:     [15-04-2025 03:01:03] 127.0.0.1:45120 - "POST /api/v2/tenants/default_tenant/databases/default_database/collections/bb16a67a-0d21-45a9-b35f-52eb2463aa09/query HTTP/1.1" 200
+[32mINFO[0m:     [15-04-2025 03:01:04] 127.0.0.1:45106 - "POST /api/v2/tenants/default_tenant/databases/default_database/collections/f051874e-c867-4143-bec5-2cadc7287bf1/query HTTP/1.1" 200
+[32mINFO[0m:     [15-04-2025 03:01:04] 127.0.0.1:45120 - "GET /api/v2/tenants/default_tenant/databases/default_database/collections/text_embeddings HTTP/1.1" 200
+[32mINFO[0m:     [15-04-2025 03:01:04] 127.0.0.1:45106 - "GET /api/v2/tenants/default_tenant/databases/default_database/collections/bb16a67a-0d21-45a9-b35f-52eb2463aa09/count HTTP/1.1" 200
+[32mINFO[0m:     [15-04-2025 03:02:31] 127.0.0.1:49492 - "GET /api/v2/tenants/default_tenant HTTP/1.1" 200
+[32mINFO[0m:     [15-04-2025 03:02:31] 127.0.0.1:49502 - "GET /api/v2/tenants/default_tenant/databases/default_database HTTP/1.1" 200
+[36mDEBUG[0m:    [15-04-2025 03:02:31] Collection imdb_reviews2 already exists, returning existing collection.
+[32mINFO[0m:     [15-04-2025 03:02:31] 127.0.0.1:49492 - "POST /api/v2/tenants/default_tenant/databases/default_database/collections HTTP/1.1" 200
+[32mINFO[0m:     [15-04-2025 03:02:31] 127.0.0.1:49492 - "GET /api/v2/tenants/default_tenant HTTP/1.1" 200
+[32mINFO[0m:     [15-04-2025 03:02:31] 127.0.0.1:49502 - "GET /api/v2/tenants/default_tenant/databases/default_database HTTP/1.1" 200
+[32mINFO[0m:     [15-04-2025 03:02:31] 127.0.0.1:49492 - "GET /api/v2/tenants/default_tenant/databases/default_database/collections/text_embeddings HTTP/1.1" 200
+[32mINFO[0m:     [15-04-2025 03:02:31] 127.0.0.1:49502 - "POST /api/v2/tenants/default_tenant/databases/default_database/collections/bb16a67a-0d21-45a9-b35f-52eb2463aa09/query HTTP/1.1" 200
+[32mINFO[0m:     [15-04-2025 03:02:32] 127.0.0.1:49492 - "POST /api/v2/tenants/default_tenant/databases/default_database/collections/f051874e-c867-4143-bec5-2cadc7287bf1/query HTTP/1.1" 200
+[32mINFO[0m:     [15-04-2025 03:02:32] 127.0.0.1:49492 - "POST /api/v2/tenants/default_tenant/databases/default_database/collections/f051874e-c867-4143-bec5-2cadc7287bf1/query HTTP/1.1" 200
+[32mINFO[0m:     [15-04-2025 03:02:32] 127.0.0.1:49502 - "GET /api/v2/tenants/default_tenant/databases/default_database/collections/text_embeddings HTTP/1.1" 200
+[32mINFO[0m:     [15-04-2025 03:02:32] 127.0.0.1:49492 - "GET /api/v2/tenants/default_tenant/databases/default_database/collections/bb16a67a-0d21-45a9-b35f-52eb2463aa09/count HTTP/1.1" 200
+[32mINFO[0m:     [15-04-2025 03:06:25] 127.0.0.1:54580 - "GET /api/v2/tenants/default_tenant HTTP/1.1" 200
+[32mINFO[0m:     [15-04-2025 03:06:25] 127.0.0.1:54586 - "GET /api/v2/tenants/default_tenant/databases/default_database HTTP/1.1" 200
+[36mDEBUG[0m:    [15-04-2025 03:06:25] Collection imdb_reviews2 already exists, returning existing collection.
+[32mINFO[0m:     [15-04-2025 03:06:25] 127.0.0.1:54580 - "POST /api/v2/tenants/default_tenant/databases/default_database/collections HTTP/1.1" 200
+[32mINFO[0m:     [15-04-2025 03:06:25] 127.0.0.1:54580 - "GET /api/v2/tenants/default_tenant HTTP/1.1" 200
+[32mINFO[0m:     [15-04-2025 03:06:25] 127.0.0.1:54586 - "GET /api/v2/tenants/default_tenant/databases/default_database HTTP/1.1" 200
+[32mINFO[0m:     [15-04-2025 03:06:25] 127.0.0.1:54580 - "GET /api/v2/tenants/default_tenant/databases/default_database/collections/text_embeddings HTTP/1.1" 200
+[32mINFO[0m:     [15-04-2025 03:06:25] 127.0.0.1:54586 - "POST /api/v2/tenants/default_tenant/databases/default_database/collections/bb16a67a-0d21-45a9-b35f-52eb2463aa09/query HTTP/1.1" 200
+[32mINFO[0m:     [15-04-2025 03:06:25] 127.0.0.1:54580 - "POST /api/v2/tenants/default_tenant/databases/default_database/collections/f051874e-c867-4143-bec5-2cadc7287bf1/query HTTP/1.1" 200
+[32mINFO[0m:     [15-04-2025 03:06:26] 127.0.0.1:54580 - "POST /api/v2/tenants/default_tenant/databases/default_database/collections/f051874e-c867-4143-bec5-2cadc7287bf1/query HTTP/1.1" 200
+[32mINFO[0m:     [15-04-2025 03:06:26] 127.0.0.1:54586 - "GET /api/v2/tenants/default_tenant/databases/default_database/collections/text_embeddings HTTP/1.1" 200
+[32mINFO[0m:     [15-04-2025 03:06:26] 127.0.0.1:54580 - "GET /api/v2/tenants/default_tenant/databases/default_database/collections/bb16a67a-0d21-45a9-b35f-52eb2463aa09/count HTTP/1.1" 200
+[32mINFO[0m:     [15-04-2025 03:09:12] 127.0.0.1:57082 - "GET /api/v2/tenants/default_tenant HTTP/1.1" 200
+[32mINFO[0m:     [15-04-2025 03:09:12] 127.0.0.1:57084 - "GET /api/v2/tenants/default_tenant/databases/default_database HTTP/1.1" 200
+[36mDEBUG[0m:    [15-04-2025 03:09:12] Collection imdb_reviews2 already exists, returning existing collection.
+[32mINFO[0m:     [15-04-2025 03:09:12] 127.0.0.1:57082 - "POST /api/v2/tenants/default_tenant/databases/default_database/collections HTTP/1.1" 200
+[32mINFO[0m:     [15-04-2025 03:09:12] 127.0.0.1:57082 - "GET /api/v2/tenants/default_tenant HTTP/1.1" 200
+[32mINFO[0m:     [15-04-2025 03:09:12] 127.0.0.1:57084 - "GET /api/v2/tenants/default_tenant/databases/default_database HTTP/1.1" 200
+[32mINFO[0m:     [15-04-2025 03:09:12] 127.0.0.1:57082 - "GET /api/v2/tenants/default_tenant/databases/default_database/collections/text_embeddings HTTP/1.1" 200
+[32mINFO[0m:     [15-04-2025 03:09:12] 127.0.0.1:57084 - "POST /api/v2/tenants/default_tenant/databases/default_database/collections/bb16a67a-0d21-45a9-b35f-52eb2463aa09/query HTTP/1.1" 200
+[32mINFO[0m:     [15-04-2025 03:09:12] 127.0.0.1:57082 - "POST /api/v2/tenants/default_tenant/databases/default_database/collections/f051874e-c867-4143-bec5-2cadc7287bf1/query HTTP/1.1" 200
+[32mINFO[0m:     [15-04-2025 03:09:39] 127.0.0.1:36888 - "GET /api/v2/tenants/default_tenant HTTP/1.1" 200
+[32mINFO[0m:     [15-04-2025 03:09:39] 127.0.0.1:36896 - "GET /api/v2/tenants/default_tenant/databases/default_database HTTP/1.1" 200
+[36mDEBUG[0m:    [15-04-2025 03:09:39] Collection imdb_reviews2 already exists, returning existing collection.
+[32mINFO[0m:     [15-04-2025 03:09:39] 127.0.0.1:36888 - "POST /api/v2/tenants/default_tenant/databases/default_database/collections HTTP/1.1" 200
+[32mINFO[0m:     [15-04-2025 03:09:40] 127.0.0.1:36888 - "GET /api/v2/tenants/default_tenant HTTP/1.1" 200
+[32mINFO[0m:     [15-04-2025 03:09:40] 127.0.0.1:36896 - "GET /api/v2/tenants/default_tenant/databases/default_database HTTP/1.1" 200
+[32mINFO[0m:     [15-04-2025 03:09:40] 127.0.0.1:36888 - "GET /api/v2/tenants/default_tenant/databases/default_database/collections/text_embeddings HTTP/1.1" 200
+[32mINFO[0m:     [15-04-2025 03:09:40] 127.0.0.1:36896 - "POST /api/v2/tenants/default_tenant/databases/default_database/collections/bb16a67a-0d21-45a9-b35f-52eb2463aa09/query HTTP/1.1" 200
+[32mINFO[0m:     [15-04-2025 03:09:40] 127.0.0.1:36888 - "POST /api/v2/tenants/default_tenant/databases/default_database/collections/f051874e-c867-4143-bec5-2cadc7287bf1/query HTTP/1.1" 200
+[32mINFO[0m:     [15-04-2025 03:09:41] 127.0.0.1:36888 - "POST /api/v2/tenants/default_tenant/databases/default_database/collections/f051874e-c867-4143-bec5-2cadc7287bf1/query HTTP/1.1" 200
+[32mINFO[0m:     [15-04-2025 03:09:45] 127.0.0.1:36900 - "GET /api/v2/tenants/default_tenant/databases/default_database/collections/text_embeddings HTTP/1.1" 200
+[32mINFO[0m:     [15-04-2025 03:09:45] 127.0.0.1:36906 - "GET /api/v2/tenants/default_tenant/databases/default_database/collections/bb16a67a-0d21-45a9-b35f-52eb2463aa09/count HTTP/1.1" 200
+[32mINFO[0m:     [15-04-2025 03:10:55] 127.0.0.1:47854 - "GET /api/v2/tenants/default_tenant HTTP/1.1" 200
+[32mINFO[0m:     [15-04-2025 03:10:55] 127.0.0.1:47864 - "GET /api/v2/tenants/default_tenant/databases/default_database HTTP/1.1" 200
+[36mDEBUG[0m:    [15-04-2025 03:10:55] Collection imdb_reviews2 already exists, returning existing collection.
+[32mINFO[0m:     [15-04-2025 03:10:55] 127.0.0.1:47854 - "POST /api/v2/tenants/default_tenant/databases/default_database/collections HTTP/1.1" 200
+[32mINFO[0m:     [15-04-2025 03:10:56] 127.0.0.1:47854 - "GET /api/v2/tenants/default_tenant HTTP/1.1" 200
+[32mINFO[0m:     [15-04-2025 03:10:56] 127.0.0.1:47864 - "GET /api/v2/tenants/default_tenant/databases/default_database HTTP/1.1" 200
+[32mINFO[0m:     [15-04-2025 03:10:56] 127.0.0.1:47854 - "GET /api/v2/tenants/default_tenant/databases/default_database/collections/text_embeddings HTTP/1.1" 200
+[32mINFO[0m:     [15-04-2025 03:10:56] 127.0.0.1:47864 - "POST /api/v2/tenants/default_tenant/databases/default_database/collections/bb16a67a-0d21-45a9-b35f-52eb2463aa09/query HTTP/1.1" 200
+[32mINFO[0m:     [15-04-2025 03:10:57] 127.0.0.1:47854 - "POST /api/v2/tenants/default_tenant/databases/default_database/collections/f051874e-c867-4143-bec5-2cadc7287bf1/query HTTP/1.1" 200
+[32mINFO[0m:     [15-04-2025 03:10:58] 127.0.0.1:47854 - "GET /api/v2/tenants/default_tenant/databases/default_database/collections/text_embeddings HTTP/1.1" 200
+[32mINFO[0m:     [15-04-2025 03:10:58] 127.0.0.1:47864 - "GET /api/v2/tenants/default_tenant/databases/default_database/collections/bb16a67a-0d21-45a9-b35f-52eb2463aa09/count HTTP/1.1" 200
+[32mINFO[0m:     [15-04-2025 03:11:11] 127.0.0.1:50422 - "GET /api/v2/tenants/default_tenant/databases/default_database/collections/text_embeddings HTTP/1.1" 200
+[32mINFO[0m:     [15-04-2025 03:11:11] 127.0.0.1:50432 - "POST /api/v2/tenants/default_tenant/databases/default_database/collections/bb16a67a-0d21-45a9-b35f-52eb2463aa09/query HTTP/1.1" 200
+[32mINFO[0m:     [15-04-2025 03:11:11] 127.0.0.1:50422 - "POST /api/v2/tenants/default_tenant/databases/default_database/collections/f051874e-c867-4143-bec5-2cadc7287bf1/query HTTP/1.1" 200
+[32mINFO[0m:     [15-04-2025 03:11:13] 127.0.0.1:50422 - "GET /api/v2/tenants/default_tenant/databases/default_database/collections/text_embeddings HTTP/1.1" 200
+[32mINFO[0m:     [15-04-2025 03:11:13] 127.0.0.1:50432 - "GET /api/v2/tenants/default_tenant/databases/default_database/collections/bb16a67a-0d21-45a9-b35f-52eb2463aa09/count HTTP/1.1" 200
+[32mINFO[0m:     [15-04-2025 03:11:25] 127.0.0.1:47812 - "GET /api/v2/tenants/default_tenant/databases/default_database/collections/text_embeddings HTTP/1.1" 200
+[32mINFO[0m:     [15-04-2025 03:11:25] 127.0.0.1:47820 - "POST /api/v2/tenants/default_tenant/databases/default_database/collections/bb16a67a-0d21-45a9-b35f-52eb2463aa09/query HTTP/1.1" 200
+[32mINFO[0m:     [15-04-2025 03:11:25] 127.0.0.1:47812 - "POST /api/v2/tenants/default_tenant/databases/default_database/collections/f051874e-c867-4143-bec5-2cadc7287bf1/query HTTP/1.1" 200
+[32mINFO[0m:     [15-04-2025 03:11:27] 127.0.0.1:47812 - "GET /api/v2/tenants/default_tenant/databases/default_database/collections/text_embeddings HTTP/1.1" 200
+[32mINFO[0m:     [15-04-2025 03:11:27] 127.0.0.1:47820 - "GET /api/v2/tenants/default_tenant/databases/default_database/collections/bb16a67a-0d21-45a9-b35f-52eb2463aa09/count HTTP/1.1" 200
+[32mINFO[0m:     [15-04-2025 03:12:04] 127.0.0.1:52666 - "GET /api/v2/tenants/default_tenant/databases/default_database/collections/text_embeddings HTTP/1.1" 200
+[32mINFO[0m:     [15-04-2025 03:12:04] 127.0.0.1:52676 - "POST /api/v2/tenants/default_tenant/databases/default_database/collections/bb16a67a-0d21-45a9-b35f-52eb2463aa09/query HTTP/1.1" 200
+[32mINFO[0m:     [15-04-2025 03:12:04] 127.0.0.1:52666 - "POST /api/v2/tenants/default_tenant/databases/default_database/collections/f051874e-c867-4143-bec5-2cadc7287bf1/query HTTP/1.1" 200
+[32mINFO[0m:     [15-04-2025 03:12:06] 127.0.0.1:52666 - "GET /api/v2/tenants/default_tenant/databases/default_database/collections/text_embeddings HTTP/1.1" 200
+[32mINFO[0m:     [15-04-2025 03:12:07] 127.0.0.1:52676 - "GET /api/v2/tenants/default_tenant/databases/default_database/collections/bb16a67a-0d21-45a9-b35f-52eb2463aa09/count HTTP/1.1" 200
+[32mINFO[0m:     [15-04-2025 03:12:26] 127.0.0.1:60768 - "GET /api/v2/tenants/default_tenant/databases/default_database/collections/text_embeddings HTTP/1.1" 200
+[32mINFO[0m:     [15-04-2025 03:12:26] 127.0.0.1:60776 - "POST /api/v2/tenants/default_tenant/databases/default_database/collections/bb16a67a-0d21-45a9-b35f-52eb2463aa09/query HTTP/1.1" 200
+[32mINFO[0m:     [15-04-2025 03:12:27] 127.0.0.1:60768 - "POST /api/v2/tenants/default_tenant/databases/default_database/collections/f051874e-c867-4143-bec5-2cadc7287bf1/query HTTP/1.1" 200
+[32mINFO[0m:     [15-04-2025 03:12:27] 127.0.0.1:60768 - "GET /api/v2/tenants/default_tenant/databases/default_database/collections/text_embeddings HTTP/1.1" 200
+[32mINFO[0m:     [15-04-2025 03:12:27] 127.0.0.1:60776 - "GET /api/v2/tenants/default_tenant/databases/default_database/collections/bb16a67a-0d21-45a9-b35f-52eb2463aa09/count HTTP/1.1" 200
+[32mINFO[0m:     [15-04-2025 03:12:39] 127.0.0.1:43812 - "GET /api/v2/tenants/default_tenant/databases/default_database/collections/text_embeddings HTTP/1.1" 200
+[32mINFO[0m:     [15-04-2025 03:12:39] 127.0.0.1:43814 - "POST /api/v2/tenants/default_tenant/databases/default_database/collections/bb16a67a-0d21-45a9-b35f-52eb2463aa09/query HTTP/1.1" 200
+[32mINFO[0m:     [15-04-2025 03:12:40] 127.0.0.1:43812 - "POST /api/v2/tenants/default_tenant/databases/default_database/collections/f051874e-c867-4143-bec5-2cadc7287bf1/query HTTP/1.1" 200
+[32mINFO[0m:     [15-04-2025 03:12:40] 127.0.0.1:43812 - "GET /api/v2/tenants/default_tenant/databases/default_database/collections/text_embeddings HTTP/1.1" 200
+[32mINFO[0m:     [15-04-2025 03:12:40] 127.0.0.1:43814 - "GET /api/v2/tenants/default_tenant/databases/default_database/collections/bb16a67a-0d21-45a9-b35f-52eb2463aa09/count HTTP/1.1" 200
+[32mINFO[0m:     [15-04-2025 03:12:50] 127.0.0.1:51344 - "GET /api/v2/tenants/default_tenant/databases/default_database/collections/text_embeddings HTTP/1.1" 200
+[32mINFO[0m:     [15-04-2025 03:12:50] 127.0.0.1:51350 - "POST /api/v2/tenants/default_tenant/databases/default_database/collections/bb16a67a-0d21-45a9-b35f-52eb2463aa09/query HTTP/1.1" 200
+[32mINFO[0m:     [15-04-2025 03:12:51] 127.0.0.1:51344 - "POST /api/v2/tenants/default_tenant/databases/default_database/collections/f051874e-c867-4143-bec5-2cadc7287bf1/query HTTP/1.1" 200
+[32mINFO[0m:     [15-04-2025 03:12:51] 127.0.0.1:51344 - "GET /api/v2/tenants/default_tenant/databases/default_database/collections/text_embeddings HTTP/1.1" 200
+[32mINFO[0m:     [15-04-2025 03:12:51] 127.0.0.1:51350 - "GET /api/v2/tenants/default_tenant/databases/default_database/collections/bb16a67a-0d21-45a9-b35f-52eb2463aa09/count HTTP/1.1" 200
+[32mINFO[0m:     [15-04-2025 03:13:24] 127.0.0.1:36342 - "GET /api/v2/tenants/default_tenant HTTP/1.1" 200
+[32mINFO[0m:     [15-04-2025 03:13:24] 127.0.0.1:36356 - "GET /api/v2/tenants/default_tenant/databases/default_database HTTP/1.1" 200
+[36mDEBUG[0m:    [15-04-2025 03:13:24] Collection imdb_reviews2 already exists, returning existing collection.
+[32mINFO[0m:     [15-04-2025 03:13:24] 127.0.0.1:36342 - "POST /api/v2/tenants/default_tenant/databases/default_database/collections HTTP/1.1" 200
+[32mINFO[0m:     [15-04-2025 03:13:24] 127.0.0.1:36342 - "GET /api/v2/tenants/default_tenant HTTP/1.1" 200
+[32mINFO[0m:     [15-04-2025 03:13:24] 127.0.0.1:36356 - "GET /api/v2/tenants/default_tenant/databases/default_database HTTP/1.1" 200
+[32mINFO[0m:     [15-04-2025 03:13:24] 127.0.0.1:36342 - "GET /api/v2/tenants/default_tenant/databases/default_database/collections/text_embeddings HTTP/1.1" 200
+[32mINFO[0m:     [15-04-2025 03:13:24] 127.0.0.1:36356 - "POST /api/v2/tenants/default_tenant/databases/default_database/collections/bb16a67a-0d21-45a9-b35f-52eb2463aa09/query HTTP/1.1" 200
+[32mINFO[0m:     [15-04-2025 03:13:25] 127.0.0.1:36342 - "POST /api/v2/tenants/default_tenant/databases/default_database/collections/f051874e-c867-4143-bec5-2cadc7287bf1/query HTTP/1.1" 200
+[32mINFO[0m:     [15-04-2025 03:13:25] 127.0.0.1:36342 - "GET /api/v2/tenants/default_tenant/databases/default_database/collections/text_embeddings HTTP/1.1" 200
+[32mINFO[0m:     [15-04-2025 03:13:25] 127.0.0.1:36356 - "GET /api/v2/tenants/default_tenant/databases/default_database/collections/bb16a67a-0d21-45a9-b35f-52eb2463aa09/count HTTP/1.1" 200
+[32mINFO[0m:     [15-04-2025 03:13:39] 127.0.0.1:35286 - "GET /api/v2/tenants/default_tenant/databases/default_database/collections/text_embeddings HTTP/1.1" 200
+[32mINFO[0m:     [15-04-2025 03:13:39] 127.0.0.1:35294 - "POST /api/v2/tenants/default_tenant/databases/default_database/collections/bb16a67a-0d21-45a9-b35f-52eb2463aa09/query HTTP/1.1" 200
+[32mINFO[0m:     [15-04-2025 03:13:40] 127.0.0.1:35286 - "POST /api/v2/tenants/default_tenant/databases/default_database/collections/f051874e-c867-4143-bec5-2cadc7287bf1/query HTTP/1.1" 200
+[32mINFO[0m:     [15-04-2025 03:13:40] 127.0.0.1:35286 - "GET /api/v2/tenants/default_tenant/databases/default_database/collections/text_embeddings HTTP/1.1" 200
+[32mINFO[0m:     [15-04-2025 03:13:40] 127.0.0.1:35294 - "GET /api/v2/tenants/default_tenant/databases/default_database/collections/bb16a67a-0d21-45a9-b35f-52eb2463aa09/count HTTP/1.1" 200
+[32mINFO[0m:     [15-04-2025 03:14:56] 127.0.0.1:59426 - "GET /api/v2/tenants/default_tenant HTTP/1.1" 200
+[32mINFO[0m:     [15-04-2025 03:14:56] 127.0.0.1:59432 - "GET /api/v2/tenants/default_tenant/databases/default_database HTTP/1.1" 200
+[36mDEBUG[0m:    [15-04-2025 03:14:56] Collection imdb_reviews2 already exists, returning existing collection.
+[32mINFO[0m:     [15-04-2025 03:14:56] 127.0.0.1:59426 - "POST /api/v2/tenants/default_tenant/databases/default_database/collections HTTP/1.1" 200
+[32mINFO[0m:     [15-04-2025 03:14:57] 127.0.0.1:59426 - "GET /api/v2/tenants/default_tenant HTTP/1.1" 200
+[32mINFO[0m:     [15-04-2025 03:14:57] 127.0.0.1:59432 - "GET /api/v2/tenants/default_tenant/databases/default_database HTTP/1.1" 200
+[32mINFO[0m:     [15-04-2025 03:14:57] 127.0.0.1:59426 - "GET /api/v2/tenants/default_tenant/databases/default_database/collections/text_embeddings HTTP/1.1" 200
+[32mINFO[0m:     [15-04-2025 03:14:57] 127.0.0.1:59432 - "POST /api/v2/tenants/default_tenant/databases/default_database/collections/bb16a67a-0d21-45a9-b35f-52eb2463aa09/query HTTP/1.1" 200
+[32mINFO[0m:     [15-04-2025 03:14:57] 127.0.0.1:59426 - "POST /api/v2/tenants/default_tenant/databases/default_database/collections/f051874e-c867-4143-bec5-2cadc7287bf1/query HTTP/1.1" 200
+[32mINFO[0m:     [15-04-2025 03:14:58] 127.0.0.1:59426 - "GET /api/v2/tenants/default_tenant/databases/default_database/collections/text_embeddings HTTP/1.1" 200
+[32mINFO[0m:     [15-04-2025 03:14:58] 127.0.0.1:59432 - "GET /api/v2/tenants/default_tenant/databases/default_database/collections/bb16a67a-0d21-45a9-b35f-52eb2463aa09/count HTTP/1.1" 200
+[32mINFO[0m:     [15-04-2025 03:14:58] 127.0.0.1:59426 - "POST /api/v2/tenants/default_tenant/databases/default_database/collections/f051874e-c867-4143-bec5-2cadc7287bf1/query HTTP/1.1" 200
+[32mINFO[0m:     [15-04-2025 03:15:23] 127.0.0.1:32938 - "GET /api/v2/tenants/default_tenant HTTP/1.1" 200
+[32mINFO[0m:     [15-04-2025 03:15:23] 127.0.0.1:32942 - "GET /api/v2/tenants/default_tenant/databases/default_database HTTP/1.1" 200
+[36mDEBUG[0m:    [15-04-2025 03:15:23] Collection imdb_reviews2 already exists, returning existing collection.
+[32mINFO[0m:     [15-04-2025 03:15:23] 127.0.0.1:32938 - "POST /api/v2/tenants/default_tenant/databases/default_database/collections HTTP/1.1" 200
+[32mINFO[0m:     [15-04-2025 03:15:24] 127.0.0.1:32938 - "GET /api/v2/tenants/default_tenant HTTP/1.1" 200
+[32mINFO[0m:     [15-04-2025 03:15:24] 127.0.0.1:32942 - "GET /api/v2/tenants/default_tenant/databases/default_database HTTP/1.1" 200
+[32mINFO[0m:     [15-04-2025 03:15:24] 127.0.0.1:32938 - "GET /api/v2/tenants/default_tenant/databases/default_database/collections/text_embeddings HTTP/1.1" 200
+[32mINFO[0m:     [15-04-2025 03:15:24] 127.0.0.1:32942 - "POST /api/v2/tenants/default_tenant/databases/default_database/collections/bb16a67a-0d21-45a9-b35f-52eb2463aa09/query HTTP/1.1" 200
+[32mINFO[0m:     [15-04-2025 03:15:24] 127.0.0.1:32938 - "POST /api/v2/tenants/default_tenant/databases/default_database/collections/f051874e-c867-4143-bec5-2cadc7287bf1/query HTTP/1.1" 200
+[32mINFO[0m:     [15-04-2025 03:15:25] 127.0.0.1:32938 - "POST /api/v2/tenants/default_tenant/databases/default_database/collections/f051874e-c867-4143-bec5-2cadc7287bf1/query HTTP/1.1" 200
+[32mINFO[0m:     [15-04-2025 03:15:25] 127.0.0.1:32942 - "GET /api/v2/tenants/default_tenant/databases/default_database/collections/text_embeddings HTTP/1.1" 200
+[32mINFO[0m:     [15-04-2025 03:15:25] 127.0.0.1:32938 - "GET /api/v2/tenants/default_tenant/databases/default_database/collections/bb16a67a-0d21-45a9-b35f-52eb2463aa09/count HTTP/1.1" 200
+[32mINFO[0m:     [15-04-2025 03:15:45] 127.0.0.1:58278 - "GET /api/v2/tenants/default_tenant/databases/default_database/collections/text_embeddings HTTP/1.1" 200
+[32mINFO[0m:     [15-04-2025 03:15:45] 127.0.0.1:58290 - "POST /api/v2/tenants/default_tenant/databases/default_database/collections/bb16a67a-0d21-45a9-b35f-52eb2463aa09/query HTTP/1.1" 200
+[32mINFO[0m:     [15-04-2025 03:15:46] 127.0.0.1:58278 - "POST /api/v2/tenants/default_tenant/databases/default_database/collections/f051874e-c867-4143-bec5-2cadc7287bf1/query HTTP/1.1" 200
+[32mINFO[0m:     [15-04-2025 03:15:48] 127.0.0.1:58278 - "POST /api/v2/tenants/default_tenant/databases/default_database/collections/f051874e-c867-4143-bec5-2cadc7287bf1/query HTTP/1.1" 200
+[32mINFO[0m:     [15-04-2025 03:15:48] 127.0.0.1:58290 - "GET /api/v2/tenants/default_tenant/databases/default_database/collections/text_embeddings HTTP/1.1" 200
+[32mINFO[0m:     [15-04-2025 03:15:48] 127.0.0.1:58278 - "GET /api/v2/tenants/default_tenant/databases/default_database/collections/bb16a67a-0d21-45a9-b35f-52eb2463aa09/count HTTP/1.1" 200
+[32mINFO[0m:     [15-04-2025 03:15:56] 127.0.0.1:36722 - "GET /api/v2/tenants/default_tenant/databases/default_database/collections/text_embeddings HTTP/1.1" 200
+[32mINFO[0m:     [15-04-2025 03:15:56] 127.0.0.1:36738 - "POST /api/v2/tenants/default_tenant/databases/default_database/collections/bb16a67a-0d21-45a9-b35f-52eb2463aa09/query HTTP/1.1" 200
+[32mINFO[0m:     [15-04-2025 03:15:56] 127.0.0.1:36722 - "POST /api/v2/tenants/default_tenant/databases/default_database/collections/f051874e-c867-4143-bec5-2cadc7287bf1/query HTTP/1.1" 200
+[32mINFO[0m:     [15-04-2025 03:15:58] 127.0.0.1:36722 - "POST /api/v2/tenants/default_tenant/databases/default_database/collections/f051874e-c867-4143-bec5-2cadc7287bf1/query HTTP/1.1" 200
+[32mINFO[0m:     [15-04-2025 03:15:59] 127.0.0.1:36738 - "GET /api/v2/tenants/default_tenant/databases/default_database/collections/text_embeddings HTTP/1.1" 200
+[32mINFO[0m:     [15-04-2025 03:15:59] 127.0.0.1:36722 - "GET /api/v2/tenants/default_tenant/databases/default_database/collections/bb16a67a-0d21-45a9-b35f-52eb2463aa09/count HTTP/1.1" 200
+[32mINFO[0m:     [15-04-2025 03:16:15] 127.0.0.1:56326 - "GET /api/v2/tenants/default_tenant/databases/default_database/collections/text_embeddings HTTP/1.1" 200
+[32mINFO[0m:     [15-04-2025 03:16:15] 127.0.0.1:56336 - "POST /api/v2/tenants/default_tenant/databases/default_database/collections/bb16a67a-0d21-45a9-b35f-52eb2463aa09/query HTTP/1.1" 200
+[32mINFO[0m:     [15-04-2025 03:16:16] 127.0.0.1:56326 - "POST /api/v2/tenants/default_tenant/databases/default_database/collections/f051874e-c867-4143-bec5-2cadc7287bf1/query HTTP/1.1" 200
+[32mINFO[0m:     [15-04-2025 03:16:16] 127.0.0.1:56326 - "POST /api/v2/tenants/default_tenant/databases/default_database/collections/f051874e-c867-4143-bec5-2cadc7287bf1/query HTTP/1.1" 200
+[32mINFO[0m:     [15-04-2025 03:16:16] 127.0.0.1:56336 - "GET /api/v2/tenants/default_tenant/databases/default_database/collections/text_embeddings HTTP/1.1" 200
+[32mINFO[0m:     [15-04-2025 03:16:16] 127.0.0.1:56326 - "GET /api/v2/tenants/default_tenant/databases/default_database/collections/bb16a67a-0d21-45a9-b35f-52eb2463aa09/count HTTP/1.1" 200
