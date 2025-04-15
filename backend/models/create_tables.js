@@ -1,4 +1,4 @@
-import { config } from 'dotenv';
+import fs from 'fs';
 import { get_db_connection } from './rdbms.js';
 
 // Database connection setup
@@ -103,24 +103,29 @@ async function create_tables() {
     );')
   
   //indices are useful for the 'chat-finding' queries
-  try {
-    await dbaccess.send_sql('CREATE INDEX idx_users_username ON users(username);');
-    await dbaccess.send_sql('CREATE INDEX idx_chat_members_user_id_left_at ON chat_members(user_id, left_at);');
-    await dbaccess.send_sql('CREATE INDEX idx_friends_follower_followed ON friends(follower, followed);');
-    await dbaccess.send_sql('CREATE INDEX idx_posts_author_id ON posts(author_id);');
-    await dbaccess.send_sql('CREATE INDEX idx_chat_messages_sent ON chat_messages(chat_id, sent_at);');
-    await dbaccess.send_sql('CREATE INDEX idx_chat_invites_invitee ON chat_invites (recipient_id);');
-    await dbaccess.send_sql('CREATE INDEX idx_chat_invites_chat ON chat_invites (chat_id);');
-
-  } catch (err) {
-    if (err.code === 'ER_DUP_KEYNAME') {
-      console.log('Indices already exist; skipping creation.');
-    } else {
-      console.error('Error creating indices:', err);
-    }
-  }
+  // Create each index individually to allow for more flexibility based on edits
+  await createIndex('idx_users_username', 'users', 'username');
+  await createIndex('idx_chat_members_user_id_left_at', 'chat_members', 'user_id, left_at');
+  await createIndex('idx_friends_follower_followed', 'friends', 'follower, followed');
+  await createIndex('idx_posts_author_id', 'posts', 'author_id');
+  await createIndex('idx_chat_messages_sent', 'chat_messages', 'chat_id, sent_at');
+  await createIndex('idx_chat_invites_invitee', 'chat_invites', 'recipient_id');
+  await createIndex('idx_chat_invites_chat', 'chat_invites', 'chat_id');
 
   return null;
+}
+
+async function createIndex(indexName, tableName, columns) {
+  try {
+    await dbaccess.send_sql(`CREATE INDEX ${indexName} ON ${tableName}(${columns});`);
+    console.log(`Index ${indexName} created successfully.`);
+  } catch (err) {
+    if (err.code === 'ER_DUP_KEYNAME') {
+      console.log(`Index ${indexName} already exists; skipping creation.`);
+    } else {
+      console.error(`Error creating index ${indexName}:`, err);
+    }
+  }
 }
 
 console.log('Creating tables');
