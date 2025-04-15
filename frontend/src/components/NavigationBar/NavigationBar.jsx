@@ -17,7 +17,7 @@ const NavigationBar = () => {
     return (
         <nav className="navigation-bar">
             <div className="nav-logo">
-                <Link to="/">Pennstagram</Link>
+                <Link to={`/${username}/home`}>Pennstagram</Link>
             </div>
             <ul className="nav-links">
                 <li>

@@ -11,7 +11,6 @@ import { ChatOpenAI } from "@langchain/openai";
 import { PromptTemplate } from "@langchain/core/prompts";
 import { StringOutputParser } from "@langchain/core/output_parsers";
 import { OpenAIEmbeddings } from "@langchain/openai";
-import { formatDocumentsAsString } from "langchain/util/document";
 import { RunnableSequence, RunnablePassthrough } from "@langchain/core/runnables";
 import { Chroma } from "@langchain/community/vectorstores/chroma";
 
@@ -807,11 +806,14 @@ async function sendMessageExistingChat(req, res) {
  * Create posts with a title, content, an optional parent post, and optional image.
  */
 async function createPost(req, res) {
+    console.log('Session user:', req.session.user_id);
+
     const user_id = req.session.user_id;
+    const username = req.params.username;
+    
     if (!user_id) {
       return res.status(403).json({error: 'Not logged in.'});
     }
-
     const title = req.body.title;
     const content = req.body.content;
     const parent_id = req.body.parent_id;
