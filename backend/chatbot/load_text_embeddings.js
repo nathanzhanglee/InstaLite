@@ -128,7 +128,6 @@ async function embedAndStoreMovies() {
   const chroma_db = ChromaDB();
 
   // Clear collection before creating it.
-  await chroma_db.delete_table(COLLECTION_NAME);
   await chroma_db.create_table(COLLECTION_NAME);
 
   // Embed posts
@@ -139,7 +138,7 @@ async function embedAndStoreMovies() {
     const text = `Post ${post.post_id}, titled ${post.title}. ${post.content}. Written by ${post.author}.`;
     const embedding = await embedText(text);
     const key = `post_${post.post_id}`; // for chromadb
-    //await chroma_db.put_item_into_table(COLLECTION_NAME, key, embedding, text);
+    await chroma_db.put_item_into_table(COLLECTION_NAME, key, embedding, text);
   }
 
   // Embed followed-follower user data (TODO: use public info only)
@@ -150,7 +149,7 @@ async function embedAndStoreMovies() {
     const text = `Name of ${user.username} is ${user.primaryName}, who follows ${user.follows}`;
     const embedding = await embedText(text);
     const key = `user_${user.user_id}`; // for chromadb
-    //await chroma_db.put_item_into_table(COLLECTION_NAME, key, embedding, text);
+    await chroma_db.put_item_into_table(COLLECTION_NAME, key, embedding, text);
   }
 
   // Embed data about principals (actors, directors, writers) and their roles in movies.
@@ -159,10 +158,9 @@ async function embedAndStoreMovies() {
   for (var i = 0; i < actors.length; i++) {
     const actor = actors[i]; // JSON object
     const text = JSON.stringify(actor);
-    console.log(text);
     const embedding = await embedText(text);
     const key = `${actor.nconst}`; // for chromadb
-    //await chroma_db.put_item_into_table(COLLECTION_NAME, key, embedding, text);
+    await chroma_db.put_item_into_table(COLLECTION_NAME, key, embedding, text);
   }
 
   console.log("Embeddings loaded into ChromaDB");

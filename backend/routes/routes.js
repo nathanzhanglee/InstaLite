@@ -533,32 +533,57 @@ async function createPost(req, res) {
     return res.status(201).json({message: "Post created."});
 }
 
-async function getChatBot() {
+async function getChatBot(req, res) {
   console.log('Getting movie database');
   const vs = await getVectorStore();
   console.log('Connected...');
   const retriever = vs.asRetriever();
   console.log('Ready to run RAG chain...');
-  const prompt =
-  PromptTemplate.fromTemplate('Given that {context}, answer the following question. {question}');
-  const llm = new ChatOpenAI({ modelName: "gpt-3.5-turbo", temperature: 0 });
 
+  const prompt =
+    PromptTemplate.fromTemplate('Given that {context}, answer the following question. {question}');
+  
+  const llm = new ChatOpenAI({
+    modelName: "gpt-3.5-turbo", temperature: 0
+  });
+
+  const embeddings = new OpenAIEmbeddings({
+    modelName: "text-embedding-ada-002"
+  });
+
+  // Get embedding of question
+  const question = req.body.question;
+  console.log('question: ', question);
+  let embedding = null;
+  try {
+    embedding = await embeddings.embedQuery(question);
+  } catch (error) {
+    console.error("Error embedding question:", error);
+    return res.status(500).json({error: "Error while embedding question."});
+  }
+
+  // Get top 5 matches from ChromaDB.
+  const collectionName = "text_embeddings";
+  const topK = 5;
+  const results = await chroma_db.get_items_from_table(collectionName, embedding, topK);
+  const context = (results.documents[0]).join('\n');
+  console.log(context);
+
+  await chroma_db.get_item_count(collectionName);
+
+  // Generate response.
   const ragChain = RunnableSequence.from([
-      {
-        context: async () => context,
-        question: new RunnablePassthrough(),
-      },
+    {
+      context: async () => context,
+      question: new RunnablePassthrough(),
+    },
     prompt,
     llm,
     new StringOutputParser(),
   ]);
+  const result = await ragChain.invoke(req.body.question);
 
-  let question = null; //DEFINE IT HERE
-
-  console.log(question);  //req.body.question
-
-  res.status(200).send({message:result});
-  return "chatbot method complete" // or process.exit(0) for full stop; there is no req/res here as of now so using this to exit the method
+  res.status(200).send({message: result});
 }
 
 export {

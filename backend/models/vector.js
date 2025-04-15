@@ -88,6 +88,13 @@ function get_db_connection_singleton() {
         queryEmbeddings: [embedding],
         nResults: n_results
       })
+    },
+
+    get_item_count: async function(tableName) {
+      const collection = await this.client.getCollection({ name: tableName });
+      const count = await collection.count();
+      console.log("Collection size:", count);
+      return count;
     }
     
   };
