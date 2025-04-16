@@ -1,12 +1,16 @@
 import express from 'express';
 import fs from 'fs';
 import cors from 'cors';
-
+import dotenv from 'dotenv';
 import register_routes from './routes/register_routes.js';
 import session from 'express-session';
 
-const configFile = fs.readFileSync('./config/config.json', 'utf8');
-import dotenv from 'dotenv';
+// Simple approach to determine config file path
+const configPath = fs.existsSync('./config/config.json') 
+  ? './config/config.json'           // Running from backend folder
+  : 'backend/config/config.json';    // Running from root folder
+const configFile = fs.readFileSync(configPath, 'utf8');
+
 dotenv.config();
 const config = JSON.parse(configFile);
 
