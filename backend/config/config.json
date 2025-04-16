@@ -2,7 +2,7 @@
     "max": 100,
     "serverPort": 8080,
     "awsRegion": "us-east-1",
-    "s3BucketName": "imdb-embeddings-upenn-nets2120-2024sp-<your-pennkey>",
+    "s3BucketName": "nets2120-instakann-imagestorage",
     "chromaDbName": "imdb_photos",
     "database": {
         "host": "localhost",

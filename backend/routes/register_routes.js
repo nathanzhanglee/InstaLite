@@ -106,10 +106,10 @@ function register_routes(app) {
   app.post('/setProfilePic', 
     handleFileUpload(IMAGE_CONFIG.PROFILE, routes.registerProfilePicture)
   );
-  /*
+  
   app.post('/createPost', 
     handleFileUpload(IMAGE_CONFIG.POST, routes.createPost)
-  );*/
+  );
   app.post('/:username/createPost', routes.createPost);
 
   app.post('/sendMessage', 

@@ -155,7 +155,7 @@ async function registerProfilePicture(req, res) {
     let top_matches;
     try {
       const embedding = await getEmbeddingFromPath(s3_path);
-      top_matches = await chroma_db.get_items_from_table(config.chromaDbName, embedding, 5);
+      top_matches = (await chroma_db.get_items_from_table(config.chromaDbName, embedding, 5)).documents[0];
     } catch (error) {
       console.error(`Error getting top matches for user ${userId}:`, error);
       return res.status(500).json({error: 'Internal server error'});
@@ -829,6 +829,21 @@ async function sendMessageExistingChat(req, res) {
 }
 
 /**
+ * Extracts hashtags from a given text.
+ * @param {String} text - The input text containing hashtags.
+ * @returns {Array<String>} - An array of unique hashtags (without the # symbol).
+ */
+function extractHashtags(text) {
+  if (!text || typeof text !== 'string') {
+    return [];
+  }
+  const hashtagRegex = /#(\w+)/g;
+  const matches = [...text.matchAll(hashtagRegex)];
+  const hashtags = matches.map(match => match[1].toLowerCase());
+  return [...new Set(hashtags)]; // Return unique hashtags
+}
+
+/**
  * Create posts with a title, content, an optional parent post, and optional image.
  */
 async function createPost(req, res) {
@@ -855,12 +870,14 @@ async function createPost(req, res) {
     const title = req.body.title;
     const content = req.body.content;
     const parent_id = req.body.parent_id;
+    const hashtags = extractHashtags(content); // Extract hashtags from content
+    
     const image = req.file; // multer stores the binary file in req.file
     let image_path = null;
 
     if (image) {
       try {
-        image_path = await uploadToS3(image, "feed_posts").path;
+        image_path = (await uploadToS3(image, "feed_posts")).path;
       } catch(err) {
         console.error("ERROR uploading image in createPost:", err);
         return res.status(500).json({error: 'Error uploading image'});
@@ -874,8 +891,8 @@ async function createPost(req, res) {
 
     //note that the mysql js driver converts a null object (like image_path) to NULL 
     try {
-        await querySQLDatabase("INSERT INTO posts (parent_post, title, content, image_link, author_id) VALUES (?, ?, ?, ?, ?);", 
-          [parent_id, title, content, image_path, user_id]);
+        await querySQLDatabase("INSERT INTO posts (parent_post, title, content, image_link, author_username) VALUES (?, ?, ?, ?, ?);", 
+          [parent_id, title, content, image_path, username]);
         
         // send post to Kafka
         const federatedPost = {
