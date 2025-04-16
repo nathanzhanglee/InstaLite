@@ -869,7 +869,7 @@ async function createPost(req, res) {
       await sendFederatedPost(federatedPost);
     } catch (err) {
         console.log("ERROR in createPost ", err);
-        res.status(500).json({error: 'Error querying database.'});
+        return res.status(500).json({error: 'Error querying database.'}); //remember to return to avoid double-sending!!
     }
     return res.status(201).json({message: "Post created."});
 }
@@ -894,6 +894,10 @@ async function getChatBot(req, res) {
 
   // Get embedding of question
   const question = req.body.question;
+
+  if (question === null || question === undefined) {
+    return res.status(400).json({error: 'No question provided'});
+  }
   console.log('question: ', question);
   let embedding = null;
   try {

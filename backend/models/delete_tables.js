@@ -1,4 +1,3 @@
-import fs from 'fs';
 import { get_db_connection } from './rdbms.js';
 
 // Database connection setup
