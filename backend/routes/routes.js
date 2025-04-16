@@ -832,7 +832,10 @@ async function createPost(req, res) {
     let username;
 
     try {
-        username = (await querySQLDatabase("SELECT username FROM users WHERE user_id = ?", [user_id]))[0][0].username;
+        username = (await querySQLDatabase("SELECT username FROM users WHERE user_id = ?", [user_id]))[0][0]?.username;
+        if (!username) {
+          return res.status(400).json({error: 'User not found'});
+        }
     } catch (err) {
         console.error("ERROR getting username in createPost query:", err);
         return res.status(500).json({error: 'Error querying database'});
@@ -872,6 +875,15 @@ async function createPost(req, res) {
         return res.status(500).json({error: 'Error querying database.'}); //remember to return to avoid double-sending!!
     }
     return res.status(201).json({message: "Post created."});
+}
+
+async function getFeed(req, res) {
+  const user_id = req.session.user_id;
+  if (!user_id) {
+    return res.status(403).json({error: 'Not logged in.'});
+  }
+
+  return res.status(200).json({message: "Feed retrieval not yet implemented."});
 }
 
 async function getChatBot(req, res) {
@@ -959,6 +971,7 @@ export {
   createPost,
   createOrGetChat,
   sendMessageExistingChat,
+  getFeed,
   postLogin,
   postLogout,
   getFriends,
