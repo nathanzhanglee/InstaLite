@@ -19,7 +19,11 @@ import { Chroma } from "@langchain/community/vectorstores/chroma";
 import { sendFederatedPost } from '../kafka/producer.js';
 
 
-const configFile = fs.readFileSync('./config/config.json', 'utf8');
+// Simple approach to determine config file path
+const configPath = fs.existsSync('./config/config.json') 
+  ? './config/config.json'           // Running from backend folder
+  : 'backend/config/config.json';    // Running from root folder
+const configFile = fs.readFileSync(configPath, 'utf8');
 const config = JSON.parse(configFile);
 
 // establish connections and initialize
@@ -75,82 +79,82 @@ async function querySQLDatabase(query, params = []) {
 }
 
 async function registerUser(req, res) {
-  //initialize variables from request
-  const username = req.body.username;
-  const email = req.body.email;
-  const first_name = req.body.fname;
-  const last_name = req.body.lname;
-  const password = req.body.password;
-  const birthday = req.body.birthday;   
-  const affiliation = req.body.affiliation;
+    //initialize variables from request
+    const username = req.body.username;
+    const email = req.body.email;
+    const first_name = req.body.fname;
+    const last_name = req.body.lname;
+    const password = req.body.password;
+    const birthday = req.body.birthday;   
+    const affiliation = req.body.affiliation;
 
-  //think about how bday would be passed in: let's assume YYYY-MM-DD because that's how SQL wants it
-  //validate birthday here
-  if (!(birthday instanceof Date) && (typeof birthday !== 'string' || !birthday.match(/^\d{4}-\d{2}-\d{2}$/))) {
-    console.log(`Invalid birthday format\n birthday: ${birthday}\n`);
-    return res.status(400).json({ error: 'Invalid birthday format' });
-  }
+    //think about how bday would be passed in: let's assume YYYY-MM-DD because that's how SQL wants it
+    //validate birthday here
+    if (!(birthday instanceof Date) && (typeof birthday !== 'string' || !birthday.match(/^\d{4}-\d{2}-\d{2}$/))) {
+      console.log(`Invalid birthday format\n birthday: ${birthday}\n`);
+      return res.status(400).json({ error: 'Invalid birthday format' });
+    }
 
-  if ([username, email, first_name, last_name, password, birthday, affiliation].some(field => field === undefined)) {
-    return res.status(400).json({ error: 'Missing required fields' });
-  }
-  const usernameMatches = await querySQLDatabase(`SELECT COUNT(*) AS ucount FROM users WHERE username = ?`, [username]);
+    if ([username, email, first_name, last_name, password, birthday, affiliation].some(field => field === undefined)) {
+      return res.status(400).json({ error: 'Missing required fields' });
+    }
+    const usernameMatches = await querySQLDatabase(`SELECT COUNT(*) AS ucount FROM users WHERE username = ?`, [username]);
 
-  if (usernameMatches[0].ucount > 0) {
-    return res.status(400).json({ error: 'Username already exists' });
-  }
+    if (usernameMatches[0].ucount > 0) {
+      return res.status(400).json({ error: 'Username already exists' });
+    }
 
-  const hashedPassword = await bcrypt.hash(password, 10);
+    const hashedPassword = await bcrypt.hash(password, 10);
 
-  const sql = 'INSERT INTO users (username, email, first_name, last_name, birthday, affiliation, hashed_password) VALUES (?, ?, ?, ?, ?, ?, ?)';
-  const params = [username, email, first_name, last_name, birthday, affiliation, hashedPassword];
+    const sql = 'INSERT INTO users (username, email, first_name, last_name, birthday, affiliation, hashed_password) VALUES (?, ?, ?, ?, ?, ?, ?)';
+    const params = [username, email, first_name, last_name, birthday, affiliation, hashedPassword];
 
-  try {
-    await querySQLDatabase(sql, params);
-    const user_id = (await querySQLDatabase('SELECT user_id FROM users WHERE username = ?', [username]))[0].user_id;
+    try {
+      await querySQLDatabase(sql, params);
+      const user_id = (await querySQLDatabase('SELECT user_id FROM users WHERE username = ?', [username]))[0].user_id;
 
-    req.session.user_id = user_id;  //set session id
-    return res.status(201).json({ message: `User ${username} registered successfully`});
-  } catch (error) {
-    console.error(`Error registering user ${username}:`, error);
-    return res.status(500).json({error: 'Internal server error'});
-  }
+      req.session.user_id = user_id;  //set session id
+      return res.status(201).json({ message: `User ${username} registered successfully`});
+    } catch (error) {
+      console.error(`Error registering user ${username}:`, error);
+      return res.status(500).json({error: 'Internal server error'});
+    }
 }
 
 async function registerProfilePicture(req, res) {
-  const userId = req.session.user_id;   //may eventually update with security in mind
-  if (!userId) {
-    res.status(403).json({error: 'Not logged in.'});
-  }
+    const userId = req.session.user_id;   //may eventually update with security in mind
+    if (!userId) {
+      res.status(403).json({error: 'Not logged in.'});
+    }
 
-  const profilePic = req.file; // multer stores the binary file in req.file
+    const profilePic = req.file; // multer stores the binary file in req.file
 
-  if (!profilePic) {
-    return res.status(400).json({ error: 'No profile picture uploaded' });
-  }
+    if (!profilePic) {
+      return res.status(400).json({ error: 'No profile picture uploaded' });
+    }
 
-  const s3_path = await uploadToS3(profilePic, "profile-pics").path;
+    const s3_path = await uploadToS3(profilePic, "profile-pics").path;
 
-  const sql = 'UPDATE users SET profile_pic_link = ? WHERE user_id = ?';
-  const params = [s3_path, userId];
+    const sql = 'UPDATE users SET profile_pic_link = ? WHERE user_id = ?';
+    const params = [s3_path, userId];
 
-  try {
-    await querySQLDatabase(sql, params);
-  } catch (error) {
-    console.error(`Error updating profile picture for user ${userId}:`, error);
-    return res.status(500).json({ error: 'Internal server error' });
-  }
+    try {
+      await querySQLDatabase(sql, params);
+    } catch (error) {
+      console.error(`Error updating profile picture for user ${userId}:`, error);
+      return res.status(500).json({ error: 'Internal server error' });
+    }
 
-  let top_matches;
-  try {
-    const embedding = await getEmbeddingFromPath(s3_path);
-    top_matches = await chroma_db.get_items_from_table(config.chromaDbName, embedding, 5);
-  } catch (error) {
-    console.error(`Error getting top matches for user ${userId}:`, error);
-    return res.status(500).json({error: 'Internal server error'});
-  }
-  console.log("Top chroma matches: ",top_matches);
-  return res.status(200).json({ message: 'Profile picture added successfully', top_matches });
+    let top_matches;
+    try {
+      const embedding = await getEmbeddingFromPath(s3_path);
+      top_matches = await chroma_db.get_items_from_table(config.chromaDbName, embedding, 5);
+    } catch (error) {
+      console.error(`Error getting top matches for user ${userId}:`, error);
+      return res.status(500).json({error: 'Internal server error'});
+    }
+    console.log("Top chroma matches: ",top_matches);
+    return res.status(200).json({ message: 'Profile picture added successfully', top_matches });
 }
 
 // POST /login
@@ -171,25 +175,35 @@ async function postLogin(req, res) {
   } catch (err) {
       return res.status(500).json({error: 'Error querying database'});
   }
-  
-  if (results.length > 0) {
-      console.log("FIRST ELEMENT of results: ",results[0]);
-      bcrypt.compare(plain_password, results[0].hashed_password, (err, success) => {
-          if (err) {
-              console.log("BCRYPT ERROR:",err);
-          } else {
-              if (success) {
-                  req.session.user_id = results[0].user_id;    // set session id for successful login
-                  res.status(200).json({username: username});
-              } else {
-                  res.status(401).json({error: 'Username and/or password are invalid.'});
-              }
-          }
+
+  const comparePasswordPromise = (password, hash) => {
+    return new Promise((resolve, reject) => {
+      bcrypt.compare(password, hash, (err, success) => {
+        if (err) reject(err);
+        else resolve(success);
       });
+    });
+  };
+
+  let hashed_password;
+  
+  if (results.length === 0) {
+      hashed_password = "$2b$10$xxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx"; 
+      //dummy value to prevent timing attacks
   } else {
-      res.status(401).json({error: 'Username and/or password are invalid.'});
+      hashed_password = results[0].hashed_password;
+      console.log("FIRST ELEMENT of results: ",results[0]);
   }
-};
+
+  const success = await comparePasswordPromise(plain_password, hashed_password);
+  //ensure that there isn't a hash collision
+  if (success && results.length > 0) {
+      req.session.user_id = results[0].user_id;    // set session id for successful login
+      return res.status(200).json({username: username});
+  } else {
+      return res.status(401).json({error: 'Username and/or password are invalid.'});
+  }
+}
 
 
 // POST /logout
@@ -198,7 +212,7 @@ async function postLogout(req, res) {
     //update last_online timestamp
     req.session.user_id = null;
     return res.status(200).json({message: "You were successfully logged out."});
-};
+}
 
 
 // GET /friends
@@ -807,14 +821,23 @@ async function sendMessageExistingChat(req, res) {
  * Create posts with a title, content, an optional parent post, and optional image.
  */
 async function createPost(req, res) {
+    const user_id = req.session.user_id;
     console.log('Session user:', req.session.user_id);
 
-    const user_id = req.session.user_id;
-    const username = req.params.username;
-
+    //const username = req.params.username;
     if (!user_id) {
       return res.status(403).json({error: 'Not logged in.'});
     }
+
+    let username;
+
+    try {
+        username = (await querySQLDatabase("SELECT username FROM users WHERE user_id = ?", [user_id]))[0][0].username;
+    } catch (err) {
+        console.error("ERROR getting username in createPost query:", err);
+        return res.status(500).json({error: 'Error querying database'});
+    }
+
     const title = req.body.title;
     const content = req.body.content;
     const parent_id = req.body.parent_id;

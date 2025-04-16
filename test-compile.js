@@ -7,7 +7,7 @@ import * as registerRoutes from './backend/routes/register_routes.js';
 const mockRequest = {
   body: {},
   session: {
-    user_id: null
+    user_id: 305
   },
   file: null,
 };
@@ -21,16 +21,23 @@ const mockResponse = {
 
 async function runSuite() {
   try {
+    await routes.postLogin(mockRequest, mockResponse);
     await routes.createOrGetChat(mockRequest, mockResponse);
     await routes.getChatBot(mockRequest, mockResponse);
     await routes.registerUser(mockRequest, mockResponse);
-    await routes.postLogin(mockRequest, mockResponse);
-    await routes.postLogout(mockRequest, mockResponse);
     await routes.postAddFriend(mockRequest, mockResponse);
     await routes.postRemoveFriend(mockRequest, mockResponse);
     await routes.getFriends(mockRequest, mockResponse);
     await routes.createPost(mockRequest, mockResponse);
     await routes.sendMessageExistingChat(mockRequest, mockResponse);
+    await routes.registerProfilePicture(mockRequest, mockResponse);
+    await routes.getChatMessages(mockRequest, mockResponse);
+    await routes.getChatInvites(mockRequest, mockResponse);
+    await routes.sendChatInvite(mockRequest, mockResponse);
+    await routes.acceptChatInvite(mockRequest, mockResponse);
+    await routes.rejectChatInvite(mockRequest, mockResponse);
+    await routes.postLogout(mockRequest, mockResponse);
+
     // These should throw if there are syntax errors
     console.log('\n Both the routes and register routes files compiled successfully!\n');
   } catch (error) {

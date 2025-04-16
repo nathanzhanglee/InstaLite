@@ -3,7 +3,11 @@ import { get_db_connection } from './rdbms.js';
 
 // Database connection setup
 const dbaccess = get_db_connection();
-const configFile = fs.readFileSync('backend/config/config.json', 'utf8');
+// Simple approach to determine config file path
+const configPath = fs.existsSync('./config/config.json') 
+  ? './config/config.json'           // Running from backend folder
+  : 'backend/config/config.json';    // Running from root folder
+const configFile = fs.readFileSync(configPath, 'utf8');
 const config = JSON.parse(configFile);
 
 //the max length of a message, in characters (based on Discord limits)

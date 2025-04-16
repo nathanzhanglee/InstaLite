@@ -2,7 +2,11 @@ import fs from 'fs';
 import mysql from 'mysql2/promise';
 import process from 'process';
 
-const configFile = fs.readFileSync('./config/config.json', 'utf8');
+// Simple approach to determine config file path
+const configPath = fs.existsSync('./config/config.json') 
+  ? './config/config.json'           // Running from backend folder
+  : 'backend/config/config.json';    // Running from root folder
+const configFile = fs.readFileSync(configPath, 'utf8');
 const config = JSON.parse(configFile);
 
 // Dotenv reads the .env file and makes the environment variables available
