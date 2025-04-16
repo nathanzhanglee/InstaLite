@@ -5,7 +5,15 @@ import * as registerRoutes from './backend/routes/register_routes.js';
 
 //empty now
 const mockRequest = {
-  body: {},
+  body: {
+    username: 'testuser',
+    email: 'test@testuser.com',
+    fname: 'testfname',
+    lname: 'testlname',
+    password: 'testpassword',
+    birthday: '2001-09-01',
+    affiliation: 'upenn-nets'
+  },
   session: {
     user_id: 305
   },
