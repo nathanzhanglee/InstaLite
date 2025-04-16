@@ -43,9 +43,11 @@ const message_page_size = config.socialParams.messagePageSize;
 async function uploadToS3(file, filePrefix) {
   const fileExtension = file.originalname.split('.').pop(); //gets the file extension by splitting by . and taking last element
   const fileName = `${filePrefix}/${Date.now()}-${uuidv4()}.${fileExtension}`; //scalability: use uuid + time to avoid name collisions
-
+  console.log("File name: ", fileName);
   const s3_path = await s3_db.uploadBuffer(file.buffer, fileName, file.mimetype);
-  return {path: s3_path, type: file.mimetype};
+  const return_obj = {path: s3_path, type: file.mimetype};
+  console.log("Result after uploading to S3: ", return_obj);
+  return return_obj;
 }
 
 /**
@@ -92,16 +94,15 @@ async function registerUser(req, res) {
     //validate birthday here
     if (!(birthday instanceof Date) && (typeof birthday !== 'string' || !birthday.match(/^\d{4}-\d{2}-\d{2}$/))) {
       console.log(`Invalid birthday format\n birthday: ${birthday}\n`);
-      return res.status(400).json({ error: 'Invalid birthday format' });
+      return res.status(400).json({ error: 'registerUser: Invalid birthday format' });
     }
 
     if ([username, email, first_name, last_name, password, birthday, affiliation].some(field => field === undefined)) {
-      return res.status(400).json({ error: 'Missing required fields' });
+      return res.status(400).json({ error: 'registerUser: Missing required fields' });
     }
     const usernameMatches = await querySQLDatabase(`SELECT COUNT(*) AS ucount FROM users WHERE username = ?`, [username]);
-
-    if (usernameMatches[0].ucount > 0) {
-      return res.status(400).json({ error: 'Username already exists' });
+    if (usernameMatches[0][0].ucount > 0) {
+      return res.status(400).json({ error: 'registerUser: Username already exists' });
     }
 
     const hashedPassword = await bcrypt.hash(password, 10);
@@ -133,7 +134,13 @@ async function registerProfilePicture(req, res) {
       return res.status(400).json({ error: 'No profile picture uploaded' });
     }
 
-    const s3_path = await uploadToS3(profilePic, "profile-pics").path;
+    let s3_path;
+    try {
+      s3_path = (await uploadToS3(profilePic, "profile-pics")).path;
+    } catch(err) {
+      console.error("Error uploading profile picture to S3:", err);
+      return res.status(500).json({ error: 'Internal server error' });
+    }
 
     const sql = 'UPDATE users SET profile_pic_link = ? WHERE user_id = ?';
     const params = [s3_path, userId];
@@ -163,7 +170,7 @@ async function postLogin(req, res) {
   var username = req.body.username;
   var plain_password = req.body.password;
   if (!username || !plain_password) {
-      return res.status(400).json({error: 'One or more of the fields you entered was empty, please try again.'});
+      return res.status(400).json({error: 'postLogin: One or more of the fields you entered was empty, please try again.'});
   }
   let results;
   console.log('Logging in user: ' + username);
@@ -192,7 +199,6 @@ async function postLogin(req, res) {
       //dummy value to prevent timing attacks
   } else {
       hashed_password = results[0].hashed_password;
-      console.log("FIRST ELEMENT of results: ",results[0]);
   }
 
   const success = await comparePasswordPromise(plain_password, hashed_password);
@@ -768,7 +774,7 @@ async function sendMessageExistingChat(req, res) {
   const messageContent = req.body.messageContent;
 
   if (!messageContent || !chatId) {
-    return res.status(400).json({ error: 'Missing one or more fields from request: username, chat_id, messageContent' });
+    return res.status(400).json({ error: 'sendMessage: Missing one or more fields from request: username, chat_id, messageContent' });
   }
 
   //validate existence of chat
@@ -804,7 +810,12 @@ async function sendMessageExistingChat(req, res) {
 
   try {
     if (file) {
-      ({file_url, file_type} = await uploadToS3(file, 'message-files'));
+      try {
+        ({file_url, file_type} = await uploadToS3(file, 'message-files'));
+      } catch (err) {
+        console.error("ERROR uploading file in sendMessage:", err);
+        return res.status(500).json({ error: 'Error uploading file' });
+      }
     }
     await querySQLDatabase(
       "INSERT INTO messages (chat_id, sender_id, content, file_link, file_type) VALUES (?, ?, ?, ?, ?)",
@@ -848,7 +859,12 @@ async function createPost(req, res) {
     let image_path = null;
 
     if (image) {
+      try {
         image_path = await uploadToS3(image, "feed_posts").path;
+      } catch(err) {
+        console.error("ERROR uploading image in createPost:", err);
+        return res.status(500).json({error: 'Error uploading image'});
+      }
     }
 
     //we choose to prevent _any_ empty fields, rather than allowing SOME to be empty

@@ -17943,3 +17943,83 @@
 [32mINFO[0m:     [16-04-2025 03:48:32] Waiting for application startup.
 [32mINFO[0m:     [16-04-2025 03:48:32] Application startup complete.
 [32mINFO[0m:     [16-04-2025 03:48:32] Uvicorn running on [1mhttp://0.0.0.0:8000[0m (Press CTRL+C to quit)
+[33mWARNING[0m:  [16-04-2025 16:10:18] chroma_server_nofile is set to 65535, but this is less than current soft limit of 1048576. chroma_server_nofile will not be set.
+[32mINFO[0m:     [16-04-2025 16:10:18] Anonymized telemetry enabled. See                     https://docs.trychroma.com/telemetry for more information.
+[36mDEBUG[0m:    [16-04-2025 16:10:18] Starting component System
+[36mDEBUG[0m:    [16-04-2025 16:10:18] Starting component OpenTelemetryClient
+[36mDEBUG[0m:    [16-04-2025 16:10:18] Starting component SqliteDB
+[36mDEBUG[0m:    [16-04-2025 16:10:18] Starting component SimpleQuotaEnforcer
+[36mDEBUG[0m:    [16-04-2025 16:10:18] Starting component Posthog
+[36mDEBUG[0m:    [16-04-2025 16:10:18] Starting component SimpleRateLimitEnforcer
+[36mDEBUG[0m:    [16-04-2025 16:10:18] Starting component LocalSegmentManager
+[36mDEBUG[0m:    [16-04-2025 16:10:18] Starting component LocalExecutor
+[36mDEBUG[0m:    [16-04-2025 16:10:18] Starting component SegmentAPI
+[36mDEBUG[0m:    [16-04-2025 16:10:18] Starting component SimpleAsyncRateLimitEnforcer
+[32mINFO[0m:     [16-04-2025 16:10:18] Started server process [[36m22409[0m]
+[32mINFO[0m:     [16-04-2025 16:10:18] Waiting for application startup.
+[32mINFO[0m:     [16-04-2025 16:10:18] Application startup complete.
+[32mINFO[0m:     [16-04-2025 16:10:18] Uvicorn running on [1mhttp://0.0.0.0:8000[0m (Press CTRL+C to quit)
+[32mINFO[0m:     [16-04-2025 16:10:34] 127.0.0.1:36068 - "GET /api/v2/tenants/default_tenant HTTP/1.1" 200
+[32mINFO[0m:     [16-04-2025 16:10:34] 127.0.0.1:36076 - "GET /api/v2/tenants/default_tenant/databases/default_database HTTP/1.1" 200
+[36mDEBUG[0m:    [16-04-2025 16:10:34] Collection imdb_reviews2 already exists, returning existing collection.
+[32mINFO[0m:     [16-04-2025 16:10:34] 127.0.0.1:36068 - "POST /api/v2/tenants/default_tenant/databases/default_database/collections HTTP/1.1" 200
+[32mINFO[0m:     [16-04-2025 16:14:26] 127.0.0.1:38210 - "GET /api/v2/tenants/default_tenant HTTP/1.1" 200
+[32mINFO[0m:     [16-04-2025 16:14:26] 127.0.0.1:38214 - "GET /api/v2/tenants/default_tenant/databases/default_database HTTP/1.1" 200
+[36mDEBUG[0m:    [16-04-2025 16:14:26] Collection imdb_reviews2 already exists, returning existing collection.
+[32mINFO[0m:     [16-04-2025 16:14:26] 127.0.0.1:38210 - "POST /api/v2/tenants/default_tenant/databases/default_database/collections HTTP/1.1" 200
+[32mINFO[0m:     [16-04-2025 16:17:48] 127.0.0.1:47444 - "GET /api/v2/tenants/default_tenant HTTP/1.1" 200
+[32mINFO[0m:     [16-04-2025 16:17:48] 127.0.0.1:47448 - "GET /api/v2/tenants/default_tenant/databases/default_database HTTP/1.1" 200
+[36mDEBUG[0m:    [16-04-2025 16:17:48] Collection imdb_reviews2 already exists, returning existing collection.
+[32mINFO[0m:     [16-04-2025 16:17:48] 127.0.0.1:47444 - "POST /api/v2/tenants/default_tenant/databases/default_database/collections HTTP/1.1" 200
+[32mINFO[0m:     [16-04-2025 16:18:49] 127.0.0.1:37984 - "GET /api/v2/tenants/default_tenant HTTP/1.1" 200
+[32mINFO[0m:     [16-04-2025 16:18:49] 127.0.0.1:37988 - "GET /api/v2/tenants/default_tenant/databases/default_database HTTP/1.1" 200
+[36mDEBUG[0m:    [16-04-2025 16:18:49] Collection imdb_reviews2 already exists, returning existing collection.
+[32mINFO[0m:     [16-04-2025 16:18:49] 127.0.0.1:37984 - "POST /api/v2/tenants/default_tenant/databases/default_database/collections HTTP/1.1" 200
+[32mINFO[0m:     [16-04-2025 16:19:34] 127.0.0.1:46688 - "GET /api/v2/tenants/default_tenant HTTP/1.1" 200
+[32mINFO[0m:     [16-04-2025 16:19:34] 127.0.0.1:46692 - "GET /api/v2/tenants/default_tenant/databases/default_database HTTP/1.1" 200
+[36mDEBUG[0m:    [16-04-2025 16:19:34] Collection imdb_reviews2 already exists, returning existing collection.
+[32mINFO[0m:     [16-04-2025 16:19:34] 127.0.0.1:46688 - "POST /api/v2/tenants/default_tenant/databases/default_database/collections HTTP/1.1" 200
+[32mINFO[0m:     [16-04-2025 16:21:40] 127.0.0.1:54570 - "GET /api/v2/tenants/default_tenant HTTP/1.1" 200
+[32mINFO[0m:     [16-04-2025 16:21:40] 127.0.0.1:54572 - "GET /api/v2/tenants/default_tenant/databases/default_database HTTP/1.1" 200
+[36mDEBUG[0m:    [16-04-2025 16:21:40] Collection imdb_reviews2 already exists, returning existing collection.
+[32mINFO[0m:     [16-04-2025 16:21:40] 127.0.0.1:54570 - "POST /api/v2/tenants/default_tenant/databases/default_database/collections HTTP/1.1" 200
+[32mINFO[0m:     [16-04-2025 16:23:17] 127.0.0.1:40624 - "GET /api/v2/tenants/default_tenant HTTP/1.1" 200
+[32mINFO[0m:     [16-04-2025 16:23:17] 127.0.0.1:40634 - "GET /api/v2/tenants/default_tenant/databases/default_database HTTP/1.1" 200
+[36mDEBUG[0m:    [16-04-2025 16:23:17] Collection imdb_reviews2 already exists, returning existing collection.
+[32mINFO[0m:     [16-04-2025 16:23:17] 127.0.0.1:40624 - "POST /api/v2/tenants/default_tenant/databases/default_database/collections HTTP/1.1" 200
+[32mINFO[0m:     [16-04-2025 16:23:25] 127.0.0.1:43748 - "GET /api/v2/tenants/default_tenant HTTP/1.1" 200
+[32mINFO[0m:     [16-04-2025 16:23:25] 127.0.0.1:43754 - "GET /api/v2/tenants/default_tenant/databases/default_database HTTP/1.1" 200
+[36mDEBUG[0m:    [16-04-2025 16:23:25] Collection imdb_reviews2 already exists, returning existing collection.
+[32mINFO[0m:     [16-04-2025 16:23:25] 127.0.0.1:43748 - "POST /api/v2/tenants/default_tenant/databases/default_database/collections HTTP/1.1" 200
+[32mINFO[0m:     [16-04-2025 16:23:54] 127.0.0.1:42676 - "GET /api/v2/tenants/default_tenant HTTP/1.1" 200
+[32mINFO[0m:     [16-04-2025 16:23:54] 127.0.0.1:42682 - "GET /api/v2/tenants/default_tenant/databases/default_database HTTP/1.1" 200
+[36mDEBUG[0m:    [16-04-2025 16:23:54] Collection imdb_reviews2 already exists, returning existing collection.
+[32mINFO[0m:     [16-04-2025 16:23:54] 127.0.0.1:42676 - "POST /api/v2/tenants/default_tenant/databases/default_database/collections HTTP/1.1" 200
+[32mINFO[0m:     [16-04-2025 16:25:48] 127.0.0.1:47646 - "GET /api/v2/tenants/default_tenant HTTP/1.1" 200
+[32mINFO[0m:     [16-04-2025 16:25:48] 127.0.0.1:47652 - "GET /api/v2/tenants/default_tenant/databases/default_database HTTP/1.1" 200
+[36mDEBUG[0m:    [16-04-2025 16:25:48] Collection imdb_reviews2 already exists, returning existing collection.
+[32mINFO[0m:     [16-04-2025 16:25:48] 127.0.0.1:47646 - "POST /api/v2/tenants/default_tenant/databases/default_database/collections HTTP/1.1" 200
+[32mINFO[0m:     [16-04-2025 16:26:31] 127.0.0.1:52010 - "GET /api/v2/tenants/default_tenant HTTP/1.1" 200
+[32mINFO[0m:     [16-04-2025 16:26:31] 127.0.0.1:52026 - "GET /api/v2/tenants/default_tenant/databases/default_database HTTP/1.1" 200
+[36mDEBUG[0m:    [16-04-2025 16:26:31] Collection imdb_reviews2 already exists, returning existing collection.
+[32mINFO[0m:     [16-04-2025 16:26:31] 127.0.0.1:52010 - "POST /api/v2/tenants/default_tenant/databases/default_database/collections HTTP/1.1" 200
+[32mINFO[0m:     [16-04-2025 16:27:13] 127.0.0.1:53350 - "GET /api/v2/tenants/default_tenant HTTP/1.1" 200
+[32mINFO[0m:     [16-04-2025 16:27:13] 127.0.0.1:53358 - "GET /api/v2/tenants/default_tenant/databases/default_database HTTP/1.1" 200
+[36mDEBUG[0m:    [16-04-2025 16:27:13] Collection imdb_reviews2 already exists, returning existing collection.
+[32mINFO[0m:     [16-04-2025 16:27:13] 127.0.0.1:53350 - "POST /api/v2/tenants/default_tenant/databases/default_database/collections HTTP/1.1" 200
+[32mINFO[0m:     [16-04-2025 16:28:25] 127.0.0.1:58656 - "GET /api/v2/tenants/default_tenant HTTP/1.1" 200
+[32mINFO[0m:     [16-04-2025 16:28:25] 127.0.0.1:58660 - "GET /api/v2/tenants/default_tenant/databases/default_database HTTP/1.1" 200
+[36mDEBUG[0m:    [16-04-2025 16:28:25] Collection imdb_reviews2 already exists, returning existing collection.
+[32mINFO[0m:     [16-04-2025 16:28:25] 127.0.0.1:58656 - "POST /api/v2/tenants/default_tenant/databases/default_database/collections HTTP/1.1" 200
+[32mINFO[0m:     [16-04-2025 16:29:11] 127.0.0.1:39482 - "GET /api/v2/tenants/default_tenant HTTP/1.1" 200
+[32mINFO[0m:     [16-04-2025 16:29:11] 127.0.0.1:39498 - "GET /api/v2/tenants/default_tenant/databases/default_database HTTP/1.1" 200
+[36mDEBUG[0m:    [16-04-2025 16:29:11] Collection imdb_reviews2 already exists, returning existing collection.
+[32mINFO[0m:     [16-04-2025 16:29:11] 127.0.0.1:39482 - "POST /api/v2/tenants/default_tenant/databases/default_database/collections HTTP/1.1" 200
+[32mINFO[0m:     [16-04-2025 16:31:46] 127.0.0.1:55728 - "GET /api/v2/tenants/default_tenant HTTP/1.1" 200
+[32mINFO[0m:     [16-04-2025 16:31:46] 127.0.0.1:55742 - "GET /api/v2/tenants/default_tenant/databases/default_database HTTP/1.1" 200
+[36mDEBUG[0m:    [16-04-2025 16:31:46] Collection imdb_reviews2 already exists, returning existing collection.
+[32mINFO[0m:     [16-04-2025 16:31:46] 127.0.0.1:55728 - "POST /api/v2/tenants/default_tenant/databases/default_database/collections HTTP/1.1" 200
+[32mINFO[0m:     [16-04-2025 16:32:44] 127.0.0.1:52196 - "GET /api/v2/tenants/default_tenant HTTP/1.1" 200
+[32mINFO[0m:     [16-04-2025 16:32:44] 127.0.0.1:52198 - "GET /api/v2/tenants/default_tenant/databases/default_database HTTP/1.1" 200
+[36mDEBUG[0m:    [16-04-2025 16:32:44] Collection imdb_reviews2 already exists, returning existing collection.
+[32mINFO[0m:     [16-04-2025 16:32:44] 127.0.0.1:52196 - "POST /api/v2/tenants/default_tenant/databases/default_database/collections HTTP/1.1" 200
