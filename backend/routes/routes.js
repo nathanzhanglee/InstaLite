@@ -870,8 +870,7 @@ async function createPost(req, res) {
     const title = req.body.title;
     const content = req.body.content;
     const parent_id = req.body.parent_id;
-    const hashtags = extractHashtags(content); // Extract hashtags from content
-    
+
     const image = req.file; // multer stores the binary file in req.file
     let image_path = null;
 
@@ -891,8 +890,9 @@ async function createPost(req, res) {
 
     //note that the mysql js driver converts a null object (like image_path) to NULL 
     try {
-        await querySQLDatabase("INSERT INTO posts (parent_post, title, content, image_link, author_username) VALUES (?, ?, ?, ?, ?);", 
-          [parent_id, title, content, image_path, username]);
+        const hashtagString = JSON.stringify(extractHashtags(content)); // Extract hashtags from content
+        await querySQLDatabase("INSERT INTO posts (parent_post, title, content, image_link, author_username, hashtags) VALUES (?, ?, ?, ?, ?, ?);", 
+          [parent_id, title, content, image_path, username, hashtagString]);
         
         // send post to Kafka
         const federatedPost = {

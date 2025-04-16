@@ -101,7 +101,7 @@ async function create_tables() {
     content VARCHAR(' + max_post_length + '), \
     author_username VARCHAR(30), \
     image_link VARCHAR(255) DEFAULT NULL, \
-    hashtags VARCHAR(255) DEFAULT NULL, \
+    hashtags VARCHAR(500) DEFAULT NULL, \
     FOREIGN KEY (parent_post) REFERENCES posts(post_id), \
     PRIMARY KEY(post_id) \
     );')
