@@ -9,26 +9,24 @@ type Message = {
   timestamp?: string;
 };
 
-const ChatGroup: React.FC = () => {
+interface ChatGroupProps {
+  username: string;
+}
+
+const ChatGroup: React.FC<ChatGroupProps> = ({ username }) => {
   const [messages, setMessages] = useState<Message[]>([]);
-  const [username, setUsername] = useState('');
   const [users, setUsers] = useState<string[]>([]);
   const socketRef = useRef<Socket>();
 
   useEffect(() => {
-    const randomUsername = `user${Math.floor(Math.random() * 1000)}`;
-    setUsername(randomUsername);
-
     socketRef.current = io('http://localhost:8080', {
       transports: ['websocket'],
       upgrade: false,
       forceNew: true
     });
 
-    // default room
-    socketRef.current.emit('join', randomUsername);
+    socketRef.current.emit('join', username);
 
-    // event listeners
     socketRef.current.on('receive-message', (message: Message) => {
       setMessages((prev) => [...prev, message]);
     });
@@ -53,13 +51,12 @@ const ChatGroup: React.FC = () => {
       setUsers(userList);
     });
 
-    // unmount cleanup for socket
     return () => {
       if (socketRef.current) {
         socketRef.current.disconnect();
       }
     };
-  }, []);
+  }, [username]);
 
   const handleSend = (content: string) => {
     if (!socketRef.current || !content.trim()) return;
