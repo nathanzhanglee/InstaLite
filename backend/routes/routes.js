@@ -263,7 +263,7 @@ async function postAddFriend(req, res) {
   try {
     // Check if they are already friends - will be stored as TWO rows (both directions) in the table
     const existingFriendship = await querySQLDatabase(
-      "SELECT COUNT(*) AS count FROM friends WHERE (follower = ? AND followed = ?)",
+      "SELECT COUNT(*) AS count FROM friends WHERE (follower = ? AND followed = ?) OR (follower = ? AND followed = ?)",
       [userId, friendId, friendId, userId]
     );
 
@@ -302,7 +302,8 @@ async function postRemoveFriend(req, res) {
     if (results.length === 0) {
       return res.status(404).json({ error: 'User not found' });
     }
-    friendId = results[0].user_id;
+    friendId = results[0][0].user_id;
+    console.log("FRIEND ID: ", friendId);
   } catch (err) {
     console.log("ERROR in removeFriend query:", err);
     return res.status(500).json({ error: 'Error querying database' });
@@ -314,6 +315,7 @@ async function postRemoveFriend(req, res) {
       "SELECT COUNT(*) AS count FROM friends WHERE (follower = ? AND followed = ?) OR (follower = ? AND followed = ?)",
       [userId, friendId, friendId, userId]
     ))[0];
+    console.log(friendId)
     console.log("EXISTING FRIENDSHIP RESULT: ", existingFriendship);
     if (existingFriendship[0].count === 0) {
       return res.status(400).json({ error: 'You are not currently friends with this user' });
@@ -324,7 +326,6 @@ async function postRemoveFriend(req, res) {
       "DELETE FROM friends WHERE (follower = ? AND followed = ?) OR (follower = ? AND followed = ?)",
       [userId, friendId, friendId, userId]
     );
-
     return res.status(200).json({ message: 'Friend removed successfully', friendUsername });
   } catch (err) {
     console.log("ERROR in removeFriend deletion:", err);

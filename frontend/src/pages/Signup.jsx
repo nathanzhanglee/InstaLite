@@ -119,6 +119,7 @@ export default function Signup() {
         event.preventDefault();
         
         try {
+            // First register the user
             const response = await axios.post(`${rootURL}/register`, {
                 username,
                 email,
@@ -130,9 +131,12 @@ export default function Signup() {
                 interests: interests.join(',')
             });
             
-            if (currentStep === 1 && profilePic) {
+            // Use response data and proceed to next step
+            if (profilePic) {
+                // If they already uploaded a photo, move to step 2
                 nextStep();
             } else {
+                // Otherwise go to homepage
                 alert('Welcome ' + username + '!');
                 navigate(`/${username}/home`);
             }
