@@ -99,9 +99,9 @@ async function create_tables() {
     parent_post BIGINT, \
     title VARCHAR(255), \
     content VARCHAR(' + max_post_length + '), \
-    author_id INT, \
+    author_username VARCHAR(30), \
     image_link VARCHAR(255) DEFAULT NULL, \
-    FOREIGN KEY (author_id) REFERENCES users(user_id), \
+    hashtags VARCHAR(500) DEFAULT NULL, \
     FOREIGN KEY (parent_post) REFERENCES posts(post_id), \
     PRIMARY KEY(post_id) \
     );')
@@ -111,7 +111,7 @@ async function create_tables() {
   await createIndex('idx_users_username', 'users', 'username');
   await createIndex('idx_chat_members_user_id_left_at', 'chat_members', 'user_id, left_at');
   await createIndex('idx_friends_follower_followed', 'friends', 'follower, followed');
-  await createIndex('idx_posts_author_id', 'posts', 'author_id');
+  await createIndex('idx_posts_author_uname', 'posts', 'author_username');
   await createIndex('idx_chat_messages_sent', 'chat_messages', 'chat_id, sent_at');
   await createIndex('idx_chat_invites_invitee', 'chat_invites', 'recipient_id');
   await createIndex('idx_chat_invites_chat', 'chat_invites', 'chat_id');
