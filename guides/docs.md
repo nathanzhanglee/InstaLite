@@ -20,3 +20,6 @@ mysql instalite < names_table_dump.sql
 Note that you can run ```service mysql stop``` to end the session, and also that you should only have to run ```mysql < setup.sql``` once overall, as the database and user creation only need to happen once.
 
 After changes are made to the schema design (or if you just want to reset the database tables), you can run ```npm run db:delete-tables``` from the project root directory. Remember to run the table creation command again after that!
+
+## Running rankings and Spark
+```mvn clean install``` in root directory.

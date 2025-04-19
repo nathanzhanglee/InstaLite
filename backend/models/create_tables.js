@@ -105,6 +105,15 @@ async function create_tables() {
     FOREIGN KEY (parent_post) REFERENCES posts(post_id), \
     PRIMARY KEY(post_id) \
     );')
+
+  //post rankings table: contains ranking for each user-post pair so server can find high-ranked
+  // posts for a given user.
+  await dbaccess.create_tables('CREATE TABLE IF NOT EXISTS post_rankings ( \
+    user_id INT NOT NULL, \
+    post_id BIGINT NOT NULL, \
+    weight FLOAT NOT NULL, \
+    PRIMARY KEY (user_id, post_id) \
+    );')
   
   //indices are useful for the 'chat-finding' queries
   // Create each index individually to allow for more flexibility based on edits
