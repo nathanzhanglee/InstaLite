@@ -5,6 +5,8 @@ import config from '../../config.json';
 
 interface Friend {
   username: string;
+  is_online: number;
+  last_online: string;
 }
 
 const FriendsList: React.FC = () => {
@@ -17,6 +19,12 @@ const FriendsList: React.FC = () => {
   useEffect(() => {
     axios.defaults.withCredentials = true;
     fetchFriends();
+    
+    // Poll for online status every 30 seconds
+    const intervalId = setInterval(fetchFriends, 30000);
+    
+    // Clean up interval on unmount
+    return () => clearInterval(intervalId);
   }, []);
 
   const fetchFriends = async () => {
@@ -26,10 +34,7 @@ const FriendsList: React.FC = () => {
         withCredentials: true 
       });
       console.log('Friends response:', response.data);
-      const friendsList = response.data.map((friend: { username: string }) => ({
-        username: friend.username
-      }));
-      setFriends(friendsList);
+      setFriends(response.data);
     } catch (error) {
       console.error('Error fetching friends:', error);
       toast.error('Failed to load friends list');
@@ -105,7 +110,17 @@ const FriendsList: React.FC = () => {
                 className="flex items-center justify-between bg-white p-3 rounded shadow"
               >
                 <div className="flex items-center gap-2">
+                  {/* Online status indicator */}
+                  <span 
+                    className={`inline-block w-3 h-3 rounded-full ${
+                      friend.is_online ? 'bg-green-500' : 'bg-gray-300'
+                    }`}
+                    title={friend.is_online ? 'Online' : `Last seen: ${new Date(friend.last_online).toLocaleString()}`}
+                  ></span>
                   <span className="font-medium">{friend.username}</span>
+                  {friend.is_online && (
+                    <span className="text-xs text-green-500 font-medium">Online</span>
+                  )}
                 </div>
                 <button
                   onClick={() => handleRemoveFriend(friend.username)}

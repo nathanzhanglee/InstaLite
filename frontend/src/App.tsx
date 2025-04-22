@@ -14,6 +14,9 @@ import FriendsList from './pages/FriendsList';
 
 // Components
 import NavigationBar from './components/NavigationBar/NavigationBar';
+import Layout from './components/Layout';
+
+import ActivityTracker from './utils/ActivityTracker';
 
 // protected route to check authentication
 const ProtectedRoute = ({ children }) => {
@@ -40,10 +43,21 @@ const ProtectedRoute = ({ children }) => {
 
 function App() {
   const [isLoaded, setIsLoaded] = useState(false);
-  
+  const [isLogedIn, setIsLogedIn] = useState(false);
   useEffect(() => {
     setIsLoaded(true);
   }, []);
+
+  useEffect(() => {
+    if (isLogedIn) {
+      ActivityTracker.startTracking();
+    } else {
+      ActivityTracker.stopTracking();
+    }
+    return () => {
+      ActivityTracker.stopTracking();
+    };
+  }, [isLogedIn]);
   
   if (!isLoaded) {
     return <div>Loading...</div>;
@@ -53,14 +67,16 @@ function App() {
     <div className="min-h-screen bg-gray-100 text-gray-900">
       <ToastContainer position="top-right" autoClose={3000} />
       <main className="p-4">
-        <Routes>
+        <Layout>
+        {<Routes>
           <Route path="/" element={<Login />} />
           <Route path="/signup" element={<Signup />} />
           <Route path=":username/chat" element={<ProtectedRoute> <ChatInterface /> </ProtectedRoute>} />
           <Route path=":username/home" element={<ProtectedRoute> <HomePage /> </ProtectedRoute>} />
           <Route path="/search" element={<ProtectedRoute> <ChatBot /> </ProtectedRoute>} />
           <Route path="/friends" element={<ProtectedRoute> <FriendsList /> </ProtectedRoute>} />
-        </Routes>
+        </Routes>}
+        </Layout>
       </main>
     </div>
   );

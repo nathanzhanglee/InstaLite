@@ -4,6 +4,7 @@ import config from '../../config.json';
 import { useNavigate } from 'react-router-dom';
 import './Login.css';
 import ReactSession from '../ReactSession';
+import ActivityTracker from '../utils/ActivityTracker';
 
 export default function Login() {
   const navigate = useNavigate(); 
@@ -18,6 +19,9 @@ export default function Login() {
         username,
         password
       }, { withCredentials: true });
+      if (response.status === 200) {
+        ActivityTracker.startTracking();
+      }
       console.log('Login successful:', response.data);
       const user = {'username': username};
       ReactSession.setUser(user);

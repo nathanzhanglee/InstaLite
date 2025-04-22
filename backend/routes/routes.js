@@ -205,6 +205,11 @@ async function postLogin(req, res) {
   //ensure that there isn't a hash collision
   if (success && results.length > 0) {
       req.session.user_id = results[0].user_id;    // set session id for successful login
+      
+      // Update last_online timestamp on login
+      await querySQLDatabase("UPDATE users SET last_online = CURRENT_TIMESTAMP WHERE user_id = ?", 
+        [results[0].user_id]);
+        
       return res.status(200).json({username: username});
   } else {
       return res.status(401).json({error: 'Username and/or password are invalid.'});
@@ -231,9 +236,14 @@ async function getFriends(req, res) {
     console.log('Getting friends for ' + currId);
     // find where the user is a FOLLOWER, take the followed's username (bidirectional edges means this choice ensures uniqueness)
     try {
-        results = (await querySQLDatabase("SELECT u_followed.username FROM users AS u_follower JOIN friends AS f ON \
-          u_follower.user_id = f.follower JOIN users AS u_followed ON u_followed.user_id = f.followed \
-          WHERE u_follower.user_id = ?;", [currId]))[0]; //remove the schema thing
+        // Modified query to include last_online and session data to determine online status
+        results = (await querySQLDatabase(
+          "SELECT u_followed.username, u_followed.last_online, " +
+          "CASE WHEN u_followed.last_online > DATE_SUB(NOW(), INTERVAL 1 MINUTE) THEN 1 ELSE 0 END AS is_online " +
+          "FROM users AS u_follower JOIN friends AS f ON " +
+          "u_follower.user_id = f.follower JOIN users AS u_followed ON u_followed.user_id = f.followed " +
+          "WHERE u_follower.user_id = ?;", [currId]))[0]; 
+        
         return res.status(200).json(results);
     } catch (err) {
         console.log("ERROR in getFriends query:",err);
@@ -321,7 +331,6 @@ async function postRemoveFriend(req, res) {
       "SELECT COUNT(*) AS count FROM friends WHERE (follower = ? AND followed = ?) OR (follower = ? AND followed = ?)",
       [userId, friendId, friendId, userId]
     ))[0];
-    console.log(friendId)
     console.log("EXISTING FRIENDSHIP RESULT: ", existingFriendship);
     if (existingFriendship[0].count === 0) {
       return res.status(400).json({ error: 'You are not currently friends with this user' });
@@ -995,6 +1004,22 @@ async function getChatBot(req, res) {
   res.status(200).send({message: result});
 }
 
+// POST /updateActivity
+async function postUpdateActivity(req, res) {
+  const userId = req.session.user_id;
+  if (!userId) {
+    return res.status(403).json({error: 'Not logged in.'});
+  }
+  
+  try {
+    await querySQLDatabase("UPDATE users SET last_online = CURRENT_TIMESTAMP WHERE user_id = ?", [userId]);
+    return res.status(200).json({success: true});
+  } catch (err) {
+    console.error("Error updating activity:", err);
+    return res.status(500).json({error: 'Internal server error'});
+  }
+}
+
 export {
   registerUser,
   registerProfilePicture,
@@ -1012,5 +1037,6 @@ export {
   postLogin,
   postLogout,
   getFriends,
-  getChatMessages
+  getChatMessages,
+  postUpdateActivity
 }

@@ -115,6 +115,7 @@ function register_routes(app) {
   app.post('/sendMessage', 
     handleFileUpload(IMAGE_CONFIG.MESSAGE, routes.sendMessageExistingChat)
   );
+  app.post('/updateActivity', routes.postUpdateActivity);
 }
 
   
