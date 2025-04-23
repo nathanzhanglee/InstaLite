@@ -132,7 +132,7 @@ async function registerUser(req, res) {
  * Middleware to authenticate requests using session token
  */
 async function authenticateRequest(req, res, next) {
-  const sessionToken = req.cookies.session_token;
+  const sessionToken = req.cookies?.session_token;
   
   const sessionResult = await getIdFromSToken(sessionToken);
   
