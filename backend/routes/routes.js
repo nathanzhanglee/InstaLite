@@ -137,7 +137,7 @@ async function authenticateRequest(req, res, next) {
   const sessionResult = await getIdFromSToken(sessionToken);
   
   if (!sessionResult.success) {
-    return res.status(sessionResult.code).json({ error: sessionResult.error });
+    return res.status(sessionResult.errCode).json({ error: sessionResult.error });
   }
   
   // Add user ID to request object for use in route handlers
@@ -158,7 +158,7 @@ async function authenticateRequest(req, res, next) {
  */
 async function getIdFromSToken(sessionToken) {
   if (sessionToken === undefined || sessionToken === null) {
-    return {success: false, userId: null};
+    return {success: false, userId: null, errCode: 401, error: 'Session token is missing'};
   }
   let results;
   try {
@@ -168,10 +168,10 @@ async function getIdFromSToken(sessionToken) {
     ))[0];
     return results.length > 0 ? 
       {success: true, userId: results[0].user_id} : 
-      {success: false, userId: null};
+      {success: false, userId: null, errCode: 401, error: 'Session token is invalid or expired'};
   } catch (err) {
     console.log("Error querying database while getting user ID:", err);
-    return {success: false, userId: null};
+    return {success: false, userId: null, errCode: 500, error: 'Internal server error'};
   }
 }
 

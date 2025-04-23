@@ -1,16 +1,28 @@
 // test-compile.js - basic file that compiles the backend code to check for syntax errors
-
+import fs from 'fs';
+import path from 'path';
+import mime from 'mime-types';
 import * as routes from './backend/routes/routes.js';
 import * as registerRoutes from './backend/routes/register_routes.js';
 
-const mockImageFile = {
-  fieldname: 'postImage',
-  originalname: 'test.jpg',
-  encoding: '7bit',
-  mimetype: 'image/jpeg',
-  buffer: Buffer.from([0xFF, 0xD8, 0xFF]), // Simple mock of JPEG header
-  size: 3
-};
+function loadImage(imagePath) {
+  const fullPath = path.resolve(process.cwd(), imagePath);
+  const img = fs.readFileSync(fullPath);
+  const stats = fs.statSync(fullPath);
+  const filename = path.basename(fullPath);
+  const imageMimeType = mime.lookup(fullPath);
+
+  return {
+    fieldname: 'postImage',
+    originalname: filename,
+    encoding: '7bit',
+    mimetype: imageMimeType,
+    buffer: img,
+    size: stats.size
+  }
+}
+
+const mockImageFile = loadImage('images/bernie.jpg');
 
 //empty now
 const mockRequest = {
