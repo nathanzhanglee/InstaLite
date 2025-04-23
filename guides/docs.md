@@ -22,4 +22,4 @@ Note that you can run ```service mysql stop``` to end the session, and also that
 After changes are made to the schema design (or if you just want to reset the database tables), you can run ```npm run db:delete-tables``` from the project root directory. Remember to run the table creation command again after that!
 
 ## Running rankings and Spark
-```mvn clean install``` in root directory.
+Run ```mvn clean install``` in root directory before running Spark. 

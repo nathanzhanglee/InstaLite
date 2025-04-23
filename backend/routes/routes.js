@@ -4,6 +4,7 @@ import S3 from '../models/s3.js';
 import FaceEmbed from '../models/face_embed.js';
 import {v4 as uuidv4} from 'uuid';
 import bcrypt from 'bcrypt';
+import crypto from 'crypto';
 import fs from 'fs';
 
 // hw4 langchain imports
@@ -17,6 +18,8 @@ import { Chroma } from "@langchain/community/vectorstores/chroma";
 
 //kafka send post function
 import { sendFederatedPost } from '../kafka/producer.js';
+import { resolve } from 'path';
+import { error } from 'console';
 
 
 // Simple approach to determine config file path
@@ -33,6 +36,8 @@ const s3_db = new S3(config.s3BucketName);
 const face = new FaceEmbed();
 var vectorStore = null;
 const message_page_size = config.socialParams.messagePageSize;
+const maxSessionCollisionsTries = config.cryptoParams.maxCollisions;
+const maxSessionCollisionTime = config.cryptoParams.maxTime;
 
 /**
  * A helper function to upload files to S3
@@ -100,18 +105,18 @@ async function registerUser(req, res) {
     if ([username, email, first_name, last_name, password, birthday, affiliation].some(field => field === undefined)) {
       return res.status(400).json({ error: 'registerUser: Missing required fields' });
     }
-    const usernameMatches = await querySQLDatabase(`SELECT COUNT(*) AS ucount FROM users WHERE username = ?`, [username]);
-    if (usernameMatches[0][0].ucount > 0) {
-      return res.status(400).json({ error: 'registerUser: Username already exists' });
-    }
-
-    const hashedPassword = await bcrypt.hash(password, 10);
-
-    const sql = 'INSERT INTO users (username, email, first_name, last_name, birthday, affiliation, hashed_password) VALUES (?, ?, ?, ?, ?, ?, ?)';
-    const params = [username, email, first_name, last_name, birthday, affiliation, hashedPassword];
 
     try {
-      await querySQLDatabase(sql, params);
+      const usernameMatches = await querySQLDatabase(`SELECT COUNT(*) AS ucount FROM users WHERE username = ?`, [username]);
+      if (usernameMatches[0][0].ucount > 0) {
+        return res.status(400).json({ error: 'registerUser: Username already exists' });
+      }
+
+      const hashedPassword = await bcrypt.hash(password, 10);
+
+      const insertCommand = 'INSERT INTO users (username, email, first_name, last_name, birthday, affiliation, hashed_password) VALUES (?, ?, ?, ?, ?, ?, ?)';
+      const params = [username, email, first_name, last_name, birthday, affiliation, hashedPassword];
+      await querySQLDatabase(insertCommand, params);
       const user_id = (await querySQLDatabase('SELECT user_id FROM users WHERE username = ?', [username]))[0].user_id;
 
       req.session.user_id = user_id;  //set session id
@@ -122,46 +127,86 @@ async function registerUser(req, res) {
     }
 }
 
-async function registerProfilePicture(req, res) {
-    const userId = req.session.user_id;   //may eventually update with security in mind
-    if (!userId) {
-      res.status(403).json({error: 'Not logged in.'});
-    }
 
-    const profilePic = req.file; // multer stores the binary file in req.file
+/**
+ * Middleware to authenticate requests using session token
+ */
+async function authenticateRequest(req, res, next) {
+  const sessionToken = req.cookies.session_token;
+  
+  const sessionResult = await getIdFromSToken(sessionToken);
+  
+  if (!sessionResult.success) {
+    return res.status(sessionResult.code).json({ error: sessionResult.error });
+  }
+  
+  // Add user ID to request object for use in route handlers
+  if (!req.session) {
+    req.session = {};   //if we aren't using express-session, req.session may not always exist
+  }
+  req.session.user_id = sessionResult.userId;
+  
+  // Continue to the route handler
+  next();
+}
 
-    if (!profilePic) {
-      return res.status(400).json({ error: 'No profile picture uploaded' });
-    }
+/**
+ * 
+ * @param {string} sessionToken 
+ * @returns success is true if the session token is valid
+ * and userId is the ID of the user associated with that session
+ */
+async function getIdFromSToken(sessionToken) {
+  if (sessionToken === undefined || sessionToken === null) {
+    return {success: false, userId: null};
+  }
+  let results;
+  try {
+    results = (await querySQLDatabase(
+      'SELECT user_id FROM users WHERE session_id = ? AND expires_at > CURRENT_TIMESTAMP',
+      [sessionToken]
+    ))[0];
+    return results.length > 0 ? 
+      {success: true, userId: results[0].user_id} : 
+      {success: false, userId: null};
+  } catch (err) {
+    console.log("Error querying database while getting user ID:", err);
+    return {success: false, userId: null};
+  }
+}
 
-    let s3_path;
+async function startSession(userID) {
+  const attemptStartTime = Date.now();
+  let retries = 0;
+  let sessionToken = null, results;
+  let success = false;
+  while (retries < maxSessionCollisionsTries && Date.now() - attemptStartTime < maxSessionCollisionTime) {
+    sessionToken = crypto.randomBytes(64).toString('base64url');
+    //console.log(`Attempt: ${retries + 1}, Milliseconds elapsed: ${Date.now() - attemptStartTime}, Session token: ${sessionToken}\n`);
     try {
-      s3_path = (await uploadToS3(profilePic, "profile-pics")).path;
-    } catch(err) {
-      console.error("Error uploading profile picture to S3:", err);
-      return res.status(500).json({ error: 'Internal server error' });
+      results = (await querySQLDatabase('SELECT COUNT(*) AS count FROM sessions WHERE session_token = ?', [sessionToken]))[0];
+    } catch (err) {
+      console.log("Error querying database while creating session:", err);
+      return {success, sessionToken: null, errCode: 500};
     }
 
-    const sql = 'UPDATE users SET profile_pic_link = ? WHERE user_id = ?';
-    const params = [s3_path, userId];
-
-    try {
-      await querySQLDatabase(sql, params);
-    } catch (error) {
-      console.error(`Error updating profile picture for user ${userId}:`, error);
-      return res.status(500).json({ error: 'Internal server error' });
+    if (results[0].count === 0) {
+      let loginTime = new Date();
+      await querySQLDatabase('INSERT INTO sessions (user_id, created_at, session_token) VALUES (?, ?, ?);', [userID, loginTime, sessionToken]);
+      //new Date() defaults to now, and is converted by the mysql2 driver to the appropriate time format
+      await querySQLDatabase('UPDATE users SET last_online = ? WHERE user_id = ?', [loginTime, userID]);
+      return {success: true, sessionToken, errCode: 201};
     }
+    retries++;
+    await sleep(20); // Sleep for 20ms before retrying
+  }
+  console.log(`Failed to create session for ${username}: timeout or max attempts reached after ${retries} attempts`);
+  return {success, sessionToken, errCode: 503};
+}
 
-    let top_matches;
-    try {
-      const embedding = await getEmbeddingFromPath(s3_path);
-      top_matches = (await chroma_db.get_items_from_table(config.chromaDbName, embedding, 5)).documents[0];
-    } catch (error) {
-      console.error(`Error getting top matches for user ${userId}:`, error);
-      return res.status(500).json({error: 'Internal server error'});
-    }
-    console.log("Top chroma matches: ",top_matches);
-    return res.status(200).json({ message: 'Profile picture added successfully', top_matches });
+//utility function to prevent server overloading with queries
+function sleep(ms) {
+  return new Promise(resolve => setTimeout(resolve, ms));
 }
 
 // POST /login
@@ -177,7 +222,7 @@ async function postLogin(req, res) {
 
   // check if user exists then match password. If appropriate, set session
   try {
-      results = (await querySQLDatabase("SELECT user_id, hashed_password FROM users WHERE username = ?;", [username]))[0];  //remove the format thing
+      results = (await querySQLDatabase("SELECT user_id, hashed_password FROM users WHERE username = ?", [username]))[0];  //remove the format thing
       console.log(results);
   } catch (err) {
       return res.status(500).json({error: 'Error querying database'});
@@ -192,37 +237,104 @@ async function postLogin(req, res) {
     });
   };
 
-  let hashed_password;
-  
-  if (results.length === 0) {
-      hashed_password = "$2b$10$xxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx"; 
-      //dummy value to prevent timing attacks
-  } else {
-      hashed_password = results[0].hashed_password;
-  }
+  const userExists = results.length > 0;
+  const hashed_password = userExists ? 
+    results[0].hashed_password : 
+    "$2b$10$xxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx";
+    //dummy value to prevent timing attacks
 
-  const success = await comparePasswordPromise(plain_password, hashed_password);
+  const passwordHashMatch = await comparePasswordPromise(plain_password, hashed_password);
+  
   //ensure that there isn't a hash collision
-  if (success && results.length > 0) {
-      req.session.user_id = results[0].user_id;    // set session id for successful login
+  if (passwordHashMatch && userExists) {
+    const user_id = results[0].user_id;
+    let sessionResult = await startSession(user_id);
+
+    if (sessionResult.success === false) {
+      console.log("Failed to create session");
+      return res.status(sessionResult.errCode).json({error: 'Failed to create session, please try again later.'});
+    }
+    res.cookie(
+      'session_token',
+      sessionResult.sessionToken,
+      {
+        httpOnly: true,
+        secure: true
+      }
+    );    
+    //Set session id for successful login
+    //Ensures that it can only be accessed via HTTPS ('secure') and not client-side JS ('httpOnly') 
       
-      // Update last_online timestamp on login
-      await querySQLDatabase("UPDATE users SET last_online = CURRENT_TIMESTAMP WHERE user_id = ?", 
-        [results[0].user_id]);
-        
-      return res.status(200).json({username: username});
+    return res.status(200).json({username: username});
   } else {
-      return res.status(401).json({error: 'Username and/or password are invalid.'});
+    return res.status(401).json({error: 'Username and/or password are invalid.'});
   }
 }
 
 
 // POST /logout
 async function postLogout(req, res) {
+  const sessionToken = req.cookies?.session_token; //if cookies is undefined, sessionToken will be undefined
+  if (!sessionToken) {
+    return res.status(400).json({error: 'No session cookie set.'});
+  }
+
+  res.clearCookie('session_token', {
+    httpOnly: true,
+    secure: true
+  });
+  
+  try {
+    await querySQLDatabase("DELETE FROM sessions WHERE session_token = ?", [sessionToken]);
     await querySQLDatabase("UPDATE users SET last_online = CURRENT_TIMESTAMP WHERE user_id = ?", [req.session.user_id]); 
     //update last_online timestamp
-    req.session.user_id = null;
-    return res.status(200).json({message: "You were successfully logged out."});
+  } catch (err) {
+    console.log("Error ending session:", err);
+    return res.status(500).json({error: 'Internal server error'});
+  }
+  return res.status(200).json({message: "You were successfully logged out."});
+}
+
+async function registerProfilePicture(req, res) {
+  const userId = req.session.user_id;   //may eventually update with security in mind
+  if (!userId) {
+    res.status(403).json({error: 'Not logged in.'});
+  }
+
+  const profilePic = req.file; // multer stores the binary file in req.file
+
+  if (!profilePic) {
+    return res.status(400).json({ error: 'No profile picture uploaded' });
+  }
+
+  let s3_path;
+  try {
+    s3_path = (await uploadToS3(profilePic, "profile-pics")).path;
+  } catch(err) {
+    console.error("Error uploading profile picture to S3:", err);
+    return res.status(500).json({ error: 'Internal server error' });
+  }
+
+  const sql = 'UPDATE users SET profile_pic_link = ? WHERE user_id = ?';
+  const params = [s3_path, userId];
+
+  try {
+    await querySQLDatabase(sql, params);
+  } catch (error) {
+    console.error(`Error updating profile picture for user ${userId}:`, error);
+    return res.status(500).json({ error: 'Internal server error' });
+  }
+
+  let top_matches;
+  try {
+    const embedding = await getEmbeddingFromPath(s3_path);
+    top_matches = (await chroma_db.get_items_from_table(config.chromaDbName, embedding, 5)).documents[0];
+  } catch (error) {
+    console.error(`Error getting top matches for user ${userId}:`, error);
+    return res.status(500).json({error: 'Internal server error'});
+  }
+  console.log("Top chroma matches: ",top_matches);
+  return res.status(200).json({ message: 'Profile picture added successfully', top_matches });
 }
 
 
@@ -1038,5 +1150,6 @@ export {
   postLogout,
   getFriends,
   getChatMessages,
-  postUpdateActivity
+  postUpdateActivity,
+  authenticateRequest
 }

@@ -17,22 +17,33 @@ const max_post_length = config.socialParams.postMaxLength;
 async function create_tables() {
 
   ////////////////// USER TABLES //////////////////
-    //user table: contains personal info and profile picture
-    await dbaccess.create_tables('CREATE TABLE IF NOT EXISTS users ( \
-      user_id INT NOT NULL AUTO_INCREMENT, \
-      username VARCHAR(30) NOT NULL, \
-      email VARCHAR(255), \
-      first_name VARCHAR(50), \
-      last_name VARCHAR(50), \
-      birthday DATE, \
-      affiliation VARCHAR(255), \
-      profile_pic_link VARCHAR(255), \
-      hashed_password VARCHAR(255) NOT NULL, \
-      last_online TIMESTAMP DEFAULT CURRENT_TIMESTAMP, \
-      linked_actor VARCHAR(255) DEFAULT NULL, \
-      FOREIGN KEY (linked_actor) REFERENCES names(nconst), \
-      PRIMARY KEY(user_id) \
-      );')
+  //user table: contains personal info and profile picture
+  await dbaccess.create_tables('CREATE TABLE IF NOT EXISTS users ( \
+    user_id INT NOT NULL AUTO_INCREMENT, \
+    username VARCHAR(30) NOT NULL, \
+    email VARCHAR(255), \
+    first_name VARCHAR(50), \
+    last_name VARCHAR(50), \
+    birthday DATE, \
+    affiliation VARCHAR(255), \
+    profile_pic_link VARCHAR(255), \
+    hashed_password VARCHAR(255) NOT NULL, \
+    last_online TIMESTAMP DEFAULT CURRENT_TIMESTAMP, \
+    linked_actor VARCHAR(255) DEFAULT NULL, \
+    FOREIGN KEY (linked_actor) REFERENCES names(nconst), \
+    PRIMARY KEY(user_id) \
+    );')
+  
+  //user sessions table: contains session info for each user
+  await dbaccess.create_tables('CREATE TABLE IF NOT EXISTS sessions ( \
+    session_id INT NOT NULL AUTO_INCREMENT, \
+    user_id INT NOT NULL, \
+    session_token VARCHAR(255) NOT NULL, \
+    created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP, \
+    expires_at TIMESTAMP DEFAULT (CURRENT_TIMESTAMP + INTERVAL 7 DAY), \
+    FOREIGN KEY (user_id) REFERENCES users(user_id), \
+    PRIMARY KEY(session_id) \
+    );')
 
   //recommendations table: contains personal recommendation info, to be populated by algorithm
   await dbaccess.create_tables('CREATE TABLE IF NOT EXISTS recommendations ( \
@@ -112,7 +123,9 @@ async function create_tables() {
     user_id INT NOT NULL, \
     post_id BIGINT NOT NULL, \
     weight FLOAT NOT NULL, \
-    PRIMARY KEY (user_id, post_id) \
+    PRIMARY KEY (user_id, post_id), \
+    FOREIGN KEY (user_id) REFERENCES users(user_id), \
+    FOREIGN KEY (post_id) REFERENCES posts(post_id) \
     );')
   
   //indices are useful for the 'chat-finding' queries
@@ -124,6 +137,7 @@ async function create_tables() {
   await createIndex('idx_chat_messages_sent', 'chat_messages', 'chat_id, sent_at');
   await createIndex('idx_chat_invites_invitee', 'chat_invites', 'recipient_id');
   await createIndex('idx_chat_invites_chat', 'chat_invites', 'chat_id');
+  await createIndex('idx_sessions_user_id', 'sessions', 'user_id');
 
   return null;
 }

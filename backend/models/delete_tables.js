@@ -25,10 +25,12 @@ console.log('Deleting tables');
 async function delete_fn() {
   await dbaccess.connect();
   await delete_tables([
+    'post_rankings',
     'posts',
     'chat_invites',
     'chat_messages',
     'chat_members',
+    'sessions',
     'friends',
     'recommendations',
     'users',

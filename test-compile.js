@@ -27,42 +27,48 @@ const mockRequest = {
     user_id: 305
   },
   file: mockImageFile,
+  cookies: {}
 };
 
 const mockResponse = {
   status: (code) => ({
-    json: (data) => console.log(`Response status: ${code}, data:`, data),
+    json: (data) => console.log(`Response status: ${code}, data:`, data)
   }),
   send: (data) => console.log('Response sent:', data),
+  clearCookie: (cookieName, options) => {
+    if (mockRequest.cookies[cookieName]) {
+      delete mockRequest.cookies[cookieName];
+      console.log(`Cookie ${cookieName} cleared`);
+    } else {
+      console.log(`Cookie ${cookieName} not found`);
+    }
+  },
+  cookie: (cookieName, cookieValue, options) => 
+    {
+      mockRequest.cookies[cookieName] = cookieValue
+    }
 }
 
-async function runSuite() {
+async function runSuite(funcArray, ...params) {
   try {
-    await routes.registerUser(mockRequest, mockResponse);
-    await routes.postLogin(mockRequest, mockResponse);
-    await routes.createOrGetChat(mockRequest, mockResponse);
-    await routes.getChatBot(mockRequest, mockResponse);
-    await routes.postAddFriend(mockRequest, mockResponse);
-    await routes.postRemoveFriend(mockRequest, mockResponse);
-    await routes.getFriends(mockRequest, mockResponse);
-    await routes.createPost(mockRequest, mockResponse);
-    await routes.sendMessageExistingChat(mockRequest, mockResponse);
-    await routes.registerProfilePicture(mockRequest, mockResponse);
-    await routes.getChatMessages(mockRequest, mockResponse);
-    await routes.getChatInvites(mockRequest, mockResponse);
-    await routes.sendChatInvite(mockRequest, mockResponse);
-    await routes.acceptChatInvite(mockRequest, mockResponse);
-    await routes.rejectChatInvite(mockRequest, mockResponse);
-    await routes.postLogout(mockRequest, mockResponse);
-
-    // These should throw if there are syntax errors
+    for (const func of funcArray) {
+      console.log("Running function:", func.name);
+      await func(...params);
+      console.log();
+    }
     console.log('\n Both the routes and register routes files compiled successfully!\n');
+    process.exit(0); //success
   } catch (error) {
     console.error('Compilation error:', error);
     process.exit(1);
   }
 }
 //you can change mock properties in between invocations of runSuite (invented jest lite, wow)
-
-await runSuite();
-process.exit(0); //success
+const testFunctions = [routes.registerUser, routes.postLogin, routes.createOrGetChat,
+  routes.getChatBot, routes.postAddFriend, routes.postRemoveFriend,
+  routes.getFriends, routes.createPost, routes.sendMessageExistingChat,
+  routes.registerProfilePicture, routes.getChatMessages,
+  routes.getChatInvites, routes.sendChatInvite, routes.acceptChatInvite,
+  routes.rejectChatInvite, routes.postLogout
+];
+await runSuite(testFunctions, mockRequest, mockResponse);

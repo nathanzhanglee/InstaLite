@@ -88,9 +88,12 @@ function handleFileUpload(imageConfig, handler) {
 }
 
 function register_routes(app) {
-  app.post('/search', routes.getChatBot);
   app.post('/register', routes.registerUser);
   app.post('/login', routes.postLogin);
+  app.use(routes.authenticateRequest);     
+  //!!! NOTE: this is middleware. anything after this will use authentication
+
+  app.post('/search', routes.getChatBot);
   app.post('/logout', routes.postLogout);
   app.post('/addFriend', routes.postAddFriend);
   app.post('/removeFriend', routes.postRemoveFriend);
@@ -110,7 +113,7 @@ function register_routes(app) {
   app.post('/createPost', 
     handleFileUpload(IMAGE_CONFIG.POST, routes.createPost)
   );
-  app.post('/:username/createPost', routes.createPost);
+
 
   app.post('/sendMessage', 
     handleFileUpload(IMAGE_CONFIG.MESSAGE, routes.sendMessageExistingChat)

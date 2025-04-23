@@ -17,6 +17,10 @@
         "chatMessageMaxLength": 3000,
         "postMaxLength": 500
     },
+    "cryptoParams": {
+        "maxCollisions": 5,
+        "maxTime": 5000
+    },
     "chroma": {
         "host": "localhost",
         "port": "8000"
