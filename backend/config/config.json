@@ -7,9 +7,9 @@
     "database": {
         "host": "localhost",
         "port": "3306",
-        "user": "admin",
+        "user": "admin1",
         "database": "instalite",
-        "password": "pwinstakann"
+        "password": "password"
     },
     "socialParams": {
         "messagePageSize" : 50,
