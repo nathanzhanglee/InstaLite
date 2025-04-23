@@ -116,6 +116,13 @@ async function create_tables() {
     PRIMARY KEY (user_id, post_id) \
     );')
 
+  //hashtags table: links users to the hashtags they've selected as interests when registering.
+  await dbaccess.create_tables('CREATE TABLE IF NOT EXISTS hashtags ( \
+    user_id INT NOT NULL, \
+    hashtag VARCHAR(255), \
+    PRIMARY KEY (user_id) \
+    );')
+
   // table to store likes; needed for rankings
   await dbaccess.create_tables('CREATE TABLE IF NOT EXISTS likes ( \
     user_id INT NOT NULL, \
