@@ -119,6 +119,7 @@ async function create_tables() {
 
   //post rankings table: contains ranking for each user-post pair so server can find high-ranked
   // posts for a given user.
+  // maybe add foreign key
   await dbaccess.create_tables('CREATE TABLE IF NOT EXISTS post_rankings ( \
     user_id INT NOT NULL, \
     post_id BIGINT NOT NULL, \
@@ -126,6 +127,19 @@ async function create_tables() {
     PRIMARY KEY (user_id, post_id), \
     FOREIGN KEY (user_id) REFERENCES users(user_id), \
     FOREIGN KEY (post_id) REFERENCES posts(post_id) \
+    );')
+
+  //hashtags table: links users to the hashtags they've selected as interests when registering.
+  await dbaccess.create_tables('CREATE TABLE IF NOT EXISTS hashtags ( \
+    user_id INT NOT NULL, \
+    hashtag VARCHAR(255), \
+    PRIMARY KEY (user_id) \
+    );')
+
+  // table to store likes; needed for rankings
+  await dbaccess.create_tables('CREATE TABLE IF NOT EXISTS likes ( \
+    user_id INT NOT NULL, \
+    post_id BIGINT NOT NULL \
     );')
   
   //indices are useful for the 'chat-finding' queries

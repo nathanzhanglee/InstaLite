@@ -12,6 +12,7 @@ import java.util.Comparator;
 import java.util.stream.Collectors;
 import java.io.BufferedWriter;
 import java.io.FileWriter;
+import java.util.Properties;
 
 import java.lang.Math;
 
@@ -47,7 +48,7 @@ public class FeedRankJob extends SparkJob<List<SerializablePair<String, Double>>
 	/**
 	 * Fetch the posts database and create a graph with the following edges:
 	 * 
-	 * TODO: how are u, h, and p strings decided from their ids?
+	 * user ids: 'u_...'; post ids: 'p_...'; hashtags: '#[hashtag]'
 	 * (u, h), (h, u) if user u has selected hashtag h as an interest
 	 * (h, p), (p, h) if post p is associated with hashtag h
 	 * (u, p), (p, u) if user u has “liked” post p
@@ -57,11 +58,29 @@ public class FeedRankJob extends SparkJob<List<SerializablePair<String, Double>>
 	 * @return JavaPairRDD: (node: String, node: String)
 	 * 
 	 * input "followers" table: (follower, followed)
+	 * 
+	 * Used this source for setup instructions.
+	 * https://spark.apache.org/docs/3.5.0/sql-data-sources-jdbc.html
+	 * 
 	 */
-	protected JavaPairRDD<String, String> getGraph(String filePath) {
-		JavaRDD<String> file = context.textFile(filePath, Config.PARTITIONS);
+	protected JavaPairRDD<String, String> getGraph(String placeholder) {
+		// Set up connection to Amazon RDS and configure with credentials.
+		Properties connectionProperties = new Properties(); // required for spark.read()
+		connectionProperties.put("user", Config.MYSQL_USER);
+		connectionProperties.put("password", Config.MYSQL_PASSWORD);
+		connectionProperties.put("driver", Config.JDBC_DRIVER);
 
-		// Change this to load and read data from MySQL. Return JavaPairRDD graph.
+		// Read data from MySQL
+		Dataset<Row> posts = spark.read().jdbc(Config.MYSQL_URL, "posts", connectionProperties);
+		Dataset<Row> likes = spark.read().jdbc(Config.MYSQL_URL, "likes", connectionProperties);
+		Dataset<Row> follows = spark.read().jdbc(Config.MYSQL_URL, "friends", connectionProperties);
+		Dataset<Row> interests = spark.read().jdbc(Config.MYSQL_URL, "hashtags", connectionProperties);
+
+		// Create JavaPairRDD from user to liked posts.
+
+		// Create JavaPairRDD from user to selected hashtag interests.
+
+		// Create JavaPairRDD from post to hashtag contained in the post content.
 
 		JavaPairRDD<String, String> network = null;
 
