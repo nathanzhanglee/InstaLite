@@ -12,6 +12,7 @@ import java.util.Comparator;
 import java.util.stream.Collectors;
 import java.io.BufferedWriter;
 import java.io.FileWriter;
+import java.util.Properties;
 
 import java.lang.Math;
 
@@ -58,8 +59,12 @@ public class FeedRankJob extends SparkJob<List<SerializablePair<String, Double>>
 	 * 
 	 * input "followers" table: (follower, followed)
 	 */
-	protected JavaPairRDD<String, String> getGraph(String filePath) {
-		JavaRDD<String> file = context.textFile(filePath, Config.PARTITIONS);
+	protected JavaPairRDD<String, String> getGraph(String placeholder) {
+		// Set up connection to Amazon RDS and configure with credentials.
+		Properties connectionProperties = new Properties(); // required for spark.read()
+		connectionProperties.put("user", Config.MYSQL_USER);
+		connectionProperties.put("password", Config.MYSQL_PASSWORD);
+		connectionProperties.put("driver", Config.JDBC_DRIVER);
 
 		// Change this to load and read data from MySQL. Return JavaPairRDD graph.
 
