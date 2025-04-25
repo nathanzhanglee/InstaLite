@@ -18,7 +18,7 @@ dotenv.config()
 /**
  * Get a connection to the ChromaDB database or a mock object
  * 
- * @returns An instance of the ChramaDB client
+ * @returns An instance of the ChromaDB client
  */
 function get_db_connection_singleton() {
   if (vectorStore) {

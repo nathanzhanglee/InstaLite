@@ -42,9 +42,14 @@ const mockRequest = {
   cookies: {}
 };
 
+let returnedResponseData; //can hold as needed
+
 const mockResponse = {
   status: (code) => ({
-    json: (data) => console.log(`Response status: ${code}, data:`, data)
+    json: (data) => {
+      console.log(`Response status: ${code}, data:`, data);
+      returnedResponseData = data;
+    }
   }),
   send: (data) => console.log('Response sent:', data),
   clearCookie: (cookieName, options) => {
@@ -69,18 +74,43 @@ async function runSuite(funcArray, ...params) {
       console.log();
     }
     console.log('\n Both the routes and register routes files compiled successfully!\n');
-    process.exit(0); //success
   } catch (error) {
     console.error('Compilation error:', error);
     process.exit(1);
   }
 }
 //you can change mock properties in between invocations of runSuite (invented jest lite, wow)
-const testFunctions = [routes.registerUser, routes.postLogin, routes.createOrGetChat,
+const testFunctions1 = [routes.registerUser, routes.postLogin, routes.createOrGetChat,
   routes.getChatBot, routes.postAddFriend, routes.postRemoveFriend,
-  routes.getFriends, routes.createPost, routes.sendMessageExistingChat,
-  routes.registerProfilePicture, routes.getChatMessages,
+  routes.getFriends, routes.createPost, routes.sendMessageExistingChat, routes.registerProfilePicture];
+const testFunctions2 = [routes.associateWithActor, routes.getChatMessages,
   routes.getChatInvites, routes.sendChatInvite, routes.acceptChatInvite,
-  routes.rejectChatInvite, routes.postLogout
-];
-await runSuite(testFunctions, mockRequest, mockResponse);
+  routes.rejectChatInvite, routes.postLogout];
+
+await runSuite(testFunctions1, mockRequest, mockResponse);
+
+// Test the pipeline between profile pic registration and actor association
+let actorNconst = 'nm0084690';
+let actorName = 'Jacques Bizeul';
+
+// hardcoded for now, note that this test may fail as long as our 'names' table 
+// and ChromaDB are somewhat mismatched
+//we can think about how to synchronize them, perhaps with the populateChroma() function
+
+/*
+const actorMatches = returnedResponseData.top_matches;
+console.log("Actor results: ",actorMatches);
+if (!actorMatches || actorMatches.length === 0) {
+  console.log("Actor results are empty, test failed");
+} else {
+  actorNconst = actorMatches[0].nconst;
+  console.log("Actor nconst:", actorNconst);
+  mockRequest.body.selectedActor = actorNconst;
+}
+*/
+
+mockRequest.body.selectedActorNconst = actorNconst;
+mockRequest.body.selectedActorName = actorName;
+
+await runSuite(testFunctions2, mockRequest, mockResponse);
+process.exit(0);

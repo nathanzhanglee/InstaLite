@@ -1,5 +1,5 @@
 {
-    "max": 100,
+    "max": 500,
     "serverPort": 8080,
     "awsRegion": "us-east-1",
     "s3BucketName": "nets2120-instakann-imagestorage",
@@ -25,6 +25,7 @@
         "host": "localhost",
         "port": "8000"
     },
+    "faceEmbedModelPath": "chroma/face_models",
     "kafka": {
         "groupId": "instakann-testing4",
         "bootstrapServers": ["localhost:9092"],

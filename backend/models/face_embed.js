@@ -15,20 +15,24 @@ const getArray = (array) => {
   }
 
 class FaceEmbed {
-  constructor() {
+  constructor(modelPath = 'models') {
     this.faceapi = faceapi;
     this.tf = tf;
     this.faceapi.env.monkeyPatch({ tf });
+    this.modelLoaded = false;
+    this.modelPath = modelPath;
   }
 
   async loadModel() {
+    const modelPath = this.modelPath;
     console.log("Initializing FaceAPI...");
 
     await tf.ready();
-    await faceapi.nets.ssdMobilenetv1.loadFromDisk('models');
+    await faceapi.nets.ssdMobilenetv1.loadFromDisk(modelPath);
     this.optionsSSDMobileNet = new faceapi.SsdMobilenetv1Options({ minConfidence: 0.5, maxResults: 1 });
-    await this.faceapi.nets.faceLandmark68Net.loadFromDisk('models');
-    return this.faceapi.nets.faceRecognitionNet.loadFromDisk('models');
+    await this.faceapi.nets.faceLandmark68Net.loadFromDisk(modelPath);
+    this.modelLoaded = true;
+    return this.faceapi.nets.faceRecognitionNet.loadFromDisk(modelPath);
   }
 
     /**
@@ -38,6 +42,9 @@ class FaceEmbed {
      * @returns List of detected faces' embeddings
      */
   async getEmbeddingsFromBuffer(buffer) {
+    if (!this.modelLoaded) {
+      await this.loadModel();  //dynamic loading: won't happen if method not called, happens only once
+    }
     const tensor = tf.node.decodeImage(buffer, 3);
   
     const faces = await faceapi.detectAllFaces(tensor, this.optionsSSDMobileNet)

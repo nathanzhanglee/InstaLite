@@ -18,9 +18,6 @@ import { Chroma } from "@langchain/community/vectorstores/chroma";
 
 //kafka send post function
 import { sendFederatedPost } from '../kafka/producer.js';
-import { resolve } from 'path';
-import { error } from 'console';
-
 
 // Simple approach to determine config file path
 const configPath = fs.existsSync('./config/config.json') 
@@ -33,8 +30,10 @@ const config = JSON.parse(configFile);
 const mysql_db = get_db_connection();
 const chroma_db = ChromaDB();
 const s3_db = new S3(config.s3BucketName);
-const face = new FaceEmbed();
+const face = new FaceEmbed(config.faceEmbedModelPath);
 var vectorStore = null;
+
+//initialize configuration variables
 const message_page_size = config.socialParams.messagePageSize;
 const maxSessionCollisionsTries = config.cryptoParams.maxCollisions;
 const maxSessionCollisionTime = config.cryptoParams.maxTime;
@@ -50,9 +49,8 @@ async function uploadToS3(file, filePrefix) {
   const fileName = `${filePrefix}/${Date.now()}-${uuidv4()}.${fileExtension}`; //scalability: use uuid + time to avoid name collisions
   console.log("File name: ", fileName);
   const s3_path = await s3_db.uploadBuffer(file.buffer, fileName, file.mimetype);
-  const return_obj = {path: s3_path, type: file.mimetype};
-  console.log("Result after uploading to S3: ", return_obj);
-  return return_obj;
+  console.log("Result after uploading to S3: ", s3_path, file.mimetype);
+  return s3_path;
 }
 
 /**
@@ -309,7 +307,7 @@ async function registerProfilePicture(req, res) {
 
   let s3_path;
   try {
-    s3_path = (await uploadToS3(profilePic, "profile-pics")).path;
+    s3_path = await uploadToS3(profilePic, "profile-pics");
   } catch(err) {
     console.error("Error uploading profile picture to S3:", err);
     return res.status(500).json({ error: 'Internal server error' });
@@ -327,14 +325,87 @@ async function registerProfilePicture(req, res) {
 
   let top_matches;
   try {
+    const chroma_db_name = config.chromaDbName;
     const embedding = await getEmbeddingFromPath(s3_path);
-    top_matches = (await chroma_db.get_items_from_table(config.chromaDbName, embedding, 5)).documents[0];
+    
+    // uncomment for local debugging
+    // await listChromaCollections(chroma_db, chroma_db_name);
+
+    top_matches = (await chroma_db.get_items_from_table(chroma_db_name, embedding, 5)).documents[0];
   } catch (error) {
     console.error(`Error getting top matches for user ${userId}:`, error);
     return res.status(500).json({error: 'Internal server error'});
   }
-  console.log("Top chroma matches: ",top_matches);
+  
+  if (!top_matches || top_matches.length === 0) {
+    // this probably means chromadb isn't loaded
+    return res.status(503).json({ error: 'Actor matching not working right now - try again later!' });
+  }
+
+  top_matches = matchesToResults(top_matches);
   return res.status(200).json({ message: 'Profile picture added successfully', top_matches });
+}
+
+//POST /associate
+async function associateWithActor(req, res) {
+  const userId = req.session.user_id;
+  if (!userId) {
+    return res.status(403).json({error: 'Not logged in.'});
+  }
+
+  let selectedActor = req.body.selectedActorNconst;
+  let actorName = req.body.selectedActorName;
+  //this could contain an nconst, chosen from the returned 5 results
+
+  if (!selectedActor) {
+    return res.status(400).json({error: 'No actor selected'});
+  }
+
+  try {
+    await querySQLDatabase("UPDATE users SET linked_actor = ? WHERE user_id = ?", [selectedActor, userId]);
+  } catch (err) {
+    console.log("Error associating user with actor:", err);
+    return res.status(500).json({error: 'Internal server error'});
+  }
+  return res.status(200).json({message: `You have been successfully associated with ${actorName}`});
+}
+
+/**
+ * Function to debug local Chroma state and print out available collections
+ * @param {*} ChromaClient the vector.js instance
+ * @param {*} selected_db_name the name of the database that will be used
+ * @returns prints to console the names and counts of all collections in the database
+ */
+async function listChromaCollections(ChromaClient, selected_db_name) {
+  const rawClient = await ChromaClient.get_client();
+  const cols = await rawClient.listCollections();
+  for (const collectionName of cols) {
+    const collection = await rawClient.getCollection({ name: collectionName });
+    const count = await collection.count();
+    console.log(`Collection: ${collectionName}, Count: ${count}`);
+  }
+  console.log("Available local collections: ",cols, "\nCollection used: ", selected_db_name);
+  return cols;
+}
+
+/**
+ * Converts an array of result strings in ChromaDB to a valid JSON object
+ * @param {*} matches 
+ * @returns 
+ */
+function matchesToResults(matches) {
+  return matches.map(row => {
+    let comma_tokens = row.slice(1,-1).split(',');
+    let death_year = comma_tokens[4] === '\\"\\"' ? "" : comma_tokens[4];
+    return {
+      id: comma_tokens[0],
+      nconst: comma_tokens[1],
+      name: comma_tokens[2],
+      birth_year: comma_tokens[3],
+      death_year: death_year,
+      image_key: comma_tokens[5]
+    }
+  });
 }
 
 
@@ -732,7 +803,7 @@ async function findChat(usernames) {
     
     return null;
   } catch (err) {
-    console.error("Error finding chat with JOIN-based query:", err);
+    console.error("Error finding chat:", err);
     return res.status(500).json({error: 'Internal server error when querying:\n' + err});
   }
 }
@@ -804,7 +875,7 @@ async function createOrGetChat(req, res) {
   }
     return res.status(201).json({ chat_id: newChatId, created : true });
   } catch (err) {
-    console.error("Error creating chat:", err);
+    console.error("Error accessing chat:", err);
     return res.status(500).json({ error: 'Internal server error' });
   }
 }
@@ -933,7 +1004,8 @@ async function sendMessageExistingChat(req, res) {
   try {
     if (file) {
       try {
-        ({file_url, file_type} = await uploadToS3(file, 'message-files'));
+        file_url = await uploadToS3(file, 'message-files');
+        file_type = file.mimetype;
       } catch (err) {
         console.error("ERROR uploading file in sendMessage:", err);
         return res.status(500).json({ error: 'Error uploading file' });
@@ -998,7 +1070,7 @@ async function createPost(req, res) {
 
     if (image) {
       try {
-        image_path = (await uploadToS3(image, "feed_posts")).path;
+        image_path = await uploadToS3(image, "feed_posts");
       } catch(err) {
         console.error("ERROR uploading image in createPost:", err);
         return res.status(500).json({error: 'Error uploading image'});
@@ -1135,6 +1207,7 @@ async function postUpdateActivity(req, res) {
 export {
   registerUser,
   registerProfilePicture,
+  associateWithActor,
   getChatBot,
   postAddFriend,
   postRemoveFriend,

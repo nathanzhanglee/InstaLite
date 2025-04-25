@@ -104,6 +104,7 @@ function register_routes(app) {
   app.post('/sendInvite', routes.sendChatInvite);
   app.post('/acceptInvite', routes.acceptChatInvite);
   app.post('/rejectInvite', routes.rejectChatInvite);
+  app.post('/associate', routes.associateWithActor);
 
   // Image upload routes
   app.post('/setProfilePic', 

@@ -25,6 +25,8 @@ console.log('Deleting tables');
 async function delete_fn() {
   await dbaccess.connect();
   await delete_tables([
+    'likes',
+    'hashtags',
     'post_rankings',
     'posts',
     'chat_invites',

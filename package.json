@@ -9,7 +9,10 @@
     "loader": "node backend/chatbot/load_text_embeddings.js",
     "test": "node --experimental-vm-modules node_modules/.bin/jest --detectOpenHandles --forceExit --outputFile=test_results.json --json",
     "db:create-tables": "node backend/models/create_tables.js",
-    "db:delete-tables": "node backend/models/delete_tables.js"
+    "db:delete-tables": "node backend/models/delete_tables.js",
+    "loadChroma": "node backend/models/populate_chroma.js",
+    "loadChromaFull": "node backend/models/populate_chroma.js --full",
+    "loadChromaSoft": "node backend/models/populate_chroma.js --soft"
   },
   "author": "",
   "license": "ISC",
