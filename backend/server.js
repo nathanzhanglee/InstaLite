@@ -17,7 +17,7 @@ const host = process.env.SITE_HOST;
 
 // Configure CORS
 app.use(cors({
-  origin: [host || 'http://localhost:4567', "http://localhost:3000", "http://127.0.0.1:3000", "http://0.0.0.0:4567"],
+  origin: [host || 'http://localhost:4567', "http://localhost:3000", 'http://127.0.0.1:4567', "http://127.0.0.1:3000", "http://0.0.0.0:4567"],
   methods: ['POST', 'PUT', 'GET', 'OPTIONS', 'HEAD'],
   credentials: true
 }));
@@ -40,7 +40,7 @@ const server = createServer(app);
 // socket.io for chat interface
 const io = new Server(server, {
   cors: {
-    origin: [host || 'http://localhost:4567', "http://localhost:3000", "http://127.0.0.1:3000"],
+    origin: [host || 'http://localhost:4567', "http://localhost:3000", "http://127.0.0.1:3000", "http://127.0.0.1:4567"],
     methods: ["GET", "POST"]
   }
 });
