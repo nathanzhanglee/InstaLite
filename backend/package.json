@@ -15,7 +15,7 @@
         "socket.io": "^4.8.1"
     },
     "scripts": {
-        "start": "concurrently \"node server.js\" \"node app.js\"",
+        "start": "node server.js",
         "server": "node server.js",
         "bluesky_test": "node tests/kafka/bluesky_test.js", 
         "federated_post_test": "node tests/kafka/federated_post_test.js",

@@ -161,7 +161,7 @@ async function getIdFromSToken(sessionToken) {
   let results;
   try {
     results = (await querySQLDatabase(
-      'SELECT user_id FROM users WHERE session_id = ? AND expires_at > CURRENT_TIMESTAMP',
+      'SELECT user_id FROM sessions WHERE session_token = ? AND (expires_at IS NULL OR expires_at > CURRENT_TIMESTAMP)',
       [sessionToken]
     ))[0];
     return results.length > 0 ? 
@@ -198,7 +198,7 @@ async function startSession(userID) {
     retries++;
     await sleep(20); // Sleep for 20ms before retrying
   }
-  console.log(`Failed to create session for ${username}: timeout or max attempts reached after ${retries} attempts`);
+  console.log(`Failed to create session for ${userID}: timeout or max attempts reached after ${retries} attempts`);
   return {success, sessionToken, errCode: 503};
 }
 
@@ -257,9 +257,10 @@ async function postLogin(req, res) {
       sessionResult.sessionToken,
       {
         httpOnly: true,
-        secure: true
+        secure: process.env.NODE_ENV === 'production',
+        sameSite: 'lax' 
       }
-    );    
+    );   
     //Set session id for successful login
     //Ensures that it can only be accessed via HTTPS ('secure') and not client-side JS ('httpOnly') 
       

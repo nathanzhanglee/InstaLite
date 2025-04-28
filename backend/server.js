@@ -8,7 +8,11 @@ import session from 'express-session';
 import dotenv from 'dotenv';
 
 dotenv.config();
-const configFile = fs.readFileSync('./config/config.json', 'utf8');
+
+const configPath = fs.existsSync('./config/config.json') 
+  ? './config/config.json'           // Running from backend folder
+  : 'backend/config/config.json';    // Running from root folder
+const configFile = fs.readFileSync(configPath, 'utf8');
 const config = JSON.parse(configFile);
 
 const app = express();
@@ -31,10 +35,10 @@ app.use(session({
   resave: true
 }));
 
-
+// Register all routes
 register_routes(app);
 
-
+// Create HTTP server using Express app
 const server = createServer(app);
 
 // socket.io for chat interface
@@ -45,6 +49,7 @@ const io = new Server(server, {
   }
 });
 
+// Chat functionality
 const roomUsers = new Map();
 
 io.on('connection', (socket) => {
@@ -93,6 +98,7 @@ io.on('connection', (socket) => {
   }
 });
 
+// Start the server
 server.listen(port, () => {
   console.log(`Server running on http://localhost:${port}`);
 });
