@@ -131,7 +131,7 @@ async function registerUser(req, res) {
  */
 async function authenticateRequest(req, res, next) {
   const sessionToken = req.cookies?.session_token;
-  
+  console.log("Session token received:", sessionToken);
   const sessionResult = await getIdFromSToken(sessionToken);
   
   if (!sessionResult.success) {
@@ -256,8 +256,8 @@ async function postLogin(req, res) {
       'session_token',
       sessionResult.sessionToken,
       {
-        httpOnly: true,
-        secure: process.env.NODE_ENV === 'production',
+        httpOnly: false,
+        secure: false, // set to true for production
         sameSite: 'lax' 
       }
     );   
@@ -279,8 +279,8 @@ async function postLogout(req, res) {
   }
 
   res.clearCookie('session_token', {
-    httpOnly: true,
-    secure: true
+    httpOnly: false,
+    secure: false
   });
   
   try {

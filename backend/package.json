@@ -5,6 +5,7 @@
         "@langchain/openai": "^0.5.5",
         "@tensorflow/tfjs-node": "^4.22.0",
         "@vladmandic/face-api": "^1.7.15",
+        "cookie-parser": "^1.4.7",
         "dotenv": "^16.4.7",
         "express": "^5.1.0",
         "kafkajs": "2.2.4",
@@ -17,7 +18,7 @@
     "scripts": {
         "start": "node server.js",
         "server": "node server.js",
-        "bluesky_test": "node tests/kafka/bluesky_test.js", 
+        "bluesky_test": "node tests/kafka/bluesky_test.js",
         "federated_post_test": "node tests/kafka/federated_post_test.js",
         "loader": "node chatbot/load_text_embeddings.js"
     },

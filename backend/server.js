@@ -5,14 +5,11 @@ import cors from 'cors';
 import fs from 'fs';
 import register_routes from './routes/register_routes.js';
 import session from 'express-session';
+import cookieParser from 'cookie-parser';
 import dotenv from 'dotenv';
 
 dotenv.config();
-
-const configPath = fs.existsSync('./config/config.json') 
-  ? './config/config.json'           // Running from backend folder
-  : 'backend/config/config.json';    // Running from root folder
-const configFile = fs.readFileSync(configPath, 'utf8');
+const configFile = fs.readFileSync('./config/config.json', 'utf8');
 const config = JSON.parse(configFile);
 
 const app = express();
@@ -26,6 +23,8 @@ app.use(cors({
   credentials: true
 }));
 
+app.use(cookieParser());
+
 // Configure middleware
 app.use(express.json());
 app.use(session({
@@ -35,10 +34,9 @@ app.use(session({
   resave: true
 }));
 
-// Register all routes
+
 register_routes(app);
 
-// Create HTTP server using Express app
 const server = createServer(app);
 
 // socket.io for chat interface
@@ -49,7 +47,6 @@ const io = new Server(server, {
   }
 });
 
-// Chat functionality
 const roomUsers = new Map();
 
 io.on('connection', (socket) => {
@@ -98,7 +95,6 @@ io.on('connection', (socket) => {
   }
 });
 
-// Start the server
 server.listen(port, () => {
   console.log(`Server running on http://localhost:${port}`);
 });
