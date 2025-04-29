@@ -48,6 +48,7 @@ const io = new Server(server, {
 });
 
 const roomUsers = new Map();
+const userSockets = new Map();
 
 io.on('connection', (socket) => {
   console.log('New connection:', socket.id);
@@ -80,6 +81,7 @@ io.on('connection', (socket) => {
   });
 
   socket.on('disconnect', () => {
+    // Existing chat room code
     const room = 'default-room';
     const username = roomUsers.get(room)?.get(socket.id);
     if (username) {
@@ -87,12 +89,69 @@ io.on('connection', (socket) => {
       io.to(room).emit('user-left', username);
       updateUserList(room);
     }
+    
+    // Find which user this socket belongs to
+    for (const [userId, userSocket] of userSockets.entries()) {
+      if (userSocket === socket) {
+        // Remove from userSockets map
+        userSockets.delete(userId);
+        
+        // Update last_online in database
+        querySQLDatabase(
+          "UPDATE users SET last_online = CURRENT_TIMESTAMP WHERE user_id = ?", 
+          [userId]
+        );
+        
+        // Notify friends that user is offline
+        querySQLDatabase(
+          "SELECT follower FROM friends WHERE followed = ?",
+          [userId]
+        ).then(friends => {
+          friends.forEach(friend => {
+            const friendSocket = userSockets.get(friend.follower);
+            if (friendSocket) {
+              friendSocket.emit('friend-status-change', {
+                username: userId,
+                is_online: 0,
+                last_online: new Date().toISOString()
+              });
+            }
+          });
+        });
+        
+        break;
+      }
+    }
   });
 
   function updateUserList(room) {
     const users = Array.from(roomUsers.get(room)?.values() || []);
     io.to(room).emit('user-list', users);
   }
+  
+  // Inside the socket.io connection handler
+  socket.on('login', async (userId) => {
+    // Store user socket mapping
+    userSockets.set(userId, socket);
+    
+    // Get user's friends
+    const friends = await querySQLDatabase(
+      "SELECT follower FROM friends WHERE followed = ?",
+      [userId]
+    );
+    
+    // Notify friends that user is online
+    friends.forEach(friend => {
+      const friendSocket = userSockets.get(friend.follower);
+      if (friendSocket) {
+        friendSocket.emit('friend-status-change', {
+          username: userId,
+          is_online: 1,
+          last_online: new Date().toISOString()
+        });
+      }
+    });
+  });
 });
 
 server.listen(port, () => {

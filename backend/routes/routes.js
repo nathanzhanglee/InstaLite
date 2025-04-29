@@ -423,7 +423,7 @@ async function getFriends(req, res) {
         // Modified query to include last_online and session data to determine online status
         results = (await querySQLDatabase(
           "SELECT u_followed.username, u_followed.last_online, " +
-          "CASE WHEN u_followed.last_online > DATE_SUB(NOW(), INTERVAL 1 MINUTE) THEN 1 ELSE 0 END AS is_online " +
+          "CASE WHEN u_followed.last_online > DATE_SUB(NOW(), INTERVAL 15 SECOND) THEN 1 ELSE 0 END AS is_online " +
           "FROM users AS u_follower JOIN friends AS f ON " +
           "u_follower.user_id = f.follower JOIN users AS u_followed ON u_followed.user_id = f.followed " +
           "WHERE u_follower.user_id = ?;", [currId]))[0]; 

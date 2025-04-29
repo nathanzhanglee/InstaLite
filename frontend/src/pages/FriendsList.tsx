@@ -1,6 +1,5 @@
-import React, { useState, useEffect } from 'react';
-import axios from 'axios';
-import { toast } from 'react-toastify';
+import { useEffect, useState, useRef } from 'react';
+import { io, Socket } from 'socket.io-client';
 import config from '../../config.json';
 
 interface Friend {
@@ -11,65 +10,43 @@ interface Friend {
 
 const FriendsList: React.FC = () => {
   const [friends, setFriends] = useState<Friend[]>([]);
-  const [newFriendUsername, setNewFriendUsername] = useState('');
-  const [loading, setLoading] = useState(false);
-  const rootURL = config.serverRootURL;
-
-  // Set up axios to always include credentials and fetch friends on component mount
+  const socketRef = useRef<Socket | null>(null);
+  
   useEffect(() => {
-    axios.defaults.withCredentials = true;
+    // Initial load of friends
     fetchFriends();
     
-    // Poll for online status every 30 seconds
-    const intervalId = setInterval(fetchFriends, 30000);
+    // Connect to WebSocket
+    socketRef.current = io(config.serverRootURL, { withCredentials: true });
     
-    // Clean up interval on unmount
-    return () => clearInterval(intervalId);
+    // Listen for friend status updates
+    socketRef.current.on('friend-status-change', (updatedFriend) => {
+      setFriends(prevFriends => 
+        prevFriends.map(friend => 
+          friend.username === updatedFriend.username ? updatedFriend : friend
+        )
+      );
+    });
+    
+    // Add polling as backup (10 second interval)
+    const intervalId = setInterval(fetchFriends, 10000);
+    
+    return () => {
+      socketRef.current?.disconnect();
+      clearInterval(intervalId);
+    };
   }, []);
 
   const fetchFriends = async () => {
-    setLoading(true);
     try {
-      const response = await axios.get(`${rootURL}/getFriends`, { 
-        withCredentials: true 
+      const response = await fetch(`${config.serverRootURL}/getFriends`, { 
+        credentials: 'include' 
       });
-      console.log('Friends response:', response.data);
-      setFriends(response.data);
+      const data = await response.json();
+      console.log('Friends response:', data);
+      setFriends(data);
     } catch (error) {
       console.error('Error fetching friends:', error);
-      toast.error('Failed to load friends list');
-    } finally {
-      setLoading(false);
-    }
-  };
-
-  const handleAddFriend = async (e: React.FormEvent) => {
-    e.preventDefault();
-    if (!newFriendUsername.trim()) return;
-    
-    try {
-      await axios.post(`${rootURL}/addFriend`, { friendUsername: newFriendUsername }, { 
-        withCredentials: true 
-      });
-      toast.success(`Added ${newFriendUsername} as a friend`);
-      setNewFriendUsername('');
-      fetchFriends();
-    } catch (error: any) {
-      console.error('Error adding friend:', error);
-      toast.error(error.response?.data?.error || 'Failed to add friend');
-    }
-  };
-
-  const handleRemoveFriend = async (username: string) => {
-    try {
-      await axios.post(`${rootURL}/removeFriend`, { friendUsername: username }, { 
-        withCredentials: true 
-      });
-      toast.success(`Removed ${username} from friends`);
-      fetchFriends();
-    } catch (error: any) {
-      console.error('Error removing friend:', error);
-      toast.error(error.response?.data?.error || 'Failed to remove friend');
     }
   };
 
@@ -77,30 +54,9 @@ const FriendsList: React.FC = () => {
     <div className="max-w-3xl mx-auto p-4">
       <h1 className="text-3xl font-bold mb-6">Friends</h1>
       
-      <div className="mb-8">
-        <h2 className="text-xl font-semibold mb-4">Add a Friend</h2>
-        <form onSubmit={handleAddFriend} className="flex gap-2">
-          <input
-            type="text"
-            value={newFriendUsername}
-            onChange={(e) => setNewFriendUsername(e.target.value)}
-            placeholder="Enter username"
-            className="flex-grow p-2 border rounded"
-          />
-          <button 
-            type="submit" 
-            className="px-4 py-2 bg-blue-500 text-white rounded hover:bg-blue-600"
-          >
-            Add Friend
-          </button>
-        </form>
-      </div>
-      
       <div>
         <h2 className="text-xl font-semibold mb-4">Your Friends</h2>
-        {loading ? (
-          <p>Loading friends...</p>
-        ) : friends.length === 0 ? (
+        {friends.length === 0 ? (
           <p>You don't have any friends yet. Add some above!</p>
         ) : (
           <ul className="space-y-2">
@@ -122,12 +78,6 @@ const FriendsList: React.FC = () => {
                     <span className="text-xs text-green-500 font-medium">Online</span>
                   )}
                 </div>
-                <button
-                  onClick={() => handleRemoveFriend(friend.username)}
-                  className="px-3 py-1 bg-red-500 text-white rounded hover:bg-red-600 text-sm"
-                >
-                  Remove
-                </button>
               </li>
             ))}
           </ul>
