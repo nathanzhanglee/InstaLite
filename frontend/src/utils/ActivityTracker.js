@@ -38,8 +38,19 @@ class ActivityTracker {
   }
 
   updateActivity() {
-    axios.post(`${rootURL}/updateActivity`, {}, { withCredentials: true })
-      .catch(err => console.error('Failed to update activity:', err));
+    axios.post(`${rootURL}/updateActivity`, {}, { 
+      withCredentials: true 
+    })
+    .then(response => {
+      // Success
+    })
+    .catch(err => {
+      console.error('Failed to update activity:', err);
+      // If this is a 403 Not logged in error, redirect to login
+      if (err.response && err.response.status === 403) {
+        window.location.href = '/login';
+      }
+    });
   }
 
   handleVisibilityChange() {

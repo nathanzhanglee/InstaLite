@@ -1,4 +1,4 @@
--- MySQL dump 10.13  Distrib 8.0.41, for Linux (x86_64)
+-- MySQL dump 10.13  Distrib 8.0.41, for Linux (aarch64)
 --
 -- Host: localhost    Database: imdb_basic
 -- ------------------------------------------------------
@@ -50,4 +50,4 @@ UNLOCK TABLES;
 /*!40101 SET COLLATION_CONNECTION=@OLD_COLLATION_CONNECTION */;
 /*!40111 SET SQL_NOTES=@OLD_SQL_NOTES */;
 
--- Dump completed on 2025-04-13  6:39:53
+-- Dump completed on 2025-04-28 23:46:56
