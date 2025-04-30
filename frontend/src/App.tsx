@@ -43,13 +43,13 @@ const ProtectedRoute = ({ children }) => {
 
 function App() {
   const [isLoaded, setIsLoaded] = useState(false);
-  const [isLogedIn, setIsLogedIn] = useState(false);
+  const [isLoggedIn, setIsLoggedIn] = useState(false);
   useEffect(() => {
     setIsLoaded(true);
   }, []);
 
   useEffect(() => {
-    if (isLogedIn) {
+    if (isLoggedIn) {
       ActivityTracker.startTracking();
     } else {
       ActivityTracker.stopTracking();
@@ -57,7 +57,7 @@ function App() {
     return () => {
       ActivityTracker.stopTracking();
     };
-  }, [isLogedIn]);
+  }, [isLoggedIn]);
   
   if (!isLoaded) {
     return <div>Loading...</div>;

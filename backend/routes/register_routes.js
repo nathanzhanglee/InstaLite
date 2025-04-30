@@ -98,13 +98,20 @@ function register_routes(app) {
   app.post('/addFriend', routes.postAddFriend);
   app.post('/removeFriend', routes.postRemoveFriend);
   app.get('/getFriends', routes.getFriends);
-  app.post('/createChat', routes.createOrGetChat);
   app.get('/messages', routes.getChatMessages);
-  app.get('/chatInvites', routes.getChatInvites);
   app.post('/sendInvite', routes.sendChatInvite);
-  app.post('/acceptInvite', routes.acceptChatInvite);
-  app.post('/rejectInvite', routes.rejectChatInvite);
   app.post('/associate', routes.associateWithActor);
+
+  // Chat Routes
+  app.post('/createChatRoom', routes.createChatRoom);
+  app.get('/chatRooms', routes.getChatRooms);
+  app.get('/chatMembers/:chatId', routes.getChatMembers);
+  app.get('/messages/:chatId', routes.getChatMessages);
+  app.post('/sendMessage', routes.sendChatMessage);
+  app.post('/sendChatInvite', routes.sendChatInvite);
+  app.get('/chatInvites', routes.getChatInvites);
+  app.post('/respondToChatInvite', routes.respondToChatInvite);
+  app.post('/leaveChatRoom', routes.leaveChatRoom);
 
   // Image upload routes
   app.post('/setProfilePic', 

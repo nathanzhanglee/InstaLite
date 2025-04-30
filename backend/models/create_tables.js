@@ -65,27 +65,38 @@ async function create_tables() {
   
   ////////////////// CHAT TABLES //////////////////
 
+  //chat rooms table: contains information about each chat room
+  await dbaccess.create_tables('CREATE TABLE IF NOT EXISTS chat_rooms ( \
+    chat_id INT NOT NULL AUTO_INCREMENT, \
+    name VARCHAR(100) NOT NULL, \
+    created_by INT NOT NULL, \
+    created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP, \
+    FOREIGN KEY (created_by) REFERENCES users(user_id), \
+    PRIMARY KEY(chat_id) \
+    );')
+
   //chat member table: contains members in each chat, has a separate row for each user in the chat
   await dbaccess.create_tables('CREATE TABLE IF NOT EXISTS chat_members ( \
-    chat_id INT NOT NULL AUTO_INCREMENT, \
-    user_id INT, \
+    chat_id INT NOT NULL, \
+    user_id INT NOT NULL, \
     joined_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP, \
     left_at TIMESTAMP NULL DEFAULT NULL, \
     FOREIGN KEY (user_id) REFERENCES users(user_id), \
+    FOREIGN KEY (chat_id) REFERENCES chat_rooms(chat_id) ON DELETE CASCADE, \
     PRIMARY KEY(chat_id, user_id) \
     );')
   
   //chat messages table: contains the actual content of chats, 1 row per message
   await dbaccess.create_tables('CREATE TABLE IF NOT EXISTS chat_messages ( \
-    chat_id INT, \
     message_id BIGINT NOT NULL AUTO_INCREMENT, \
+    chat_id INT NOT NULL, \
     sender_id INT NOT NULL, \
     content VARCHAR('+ max_message_length + '), \
     file_link VARCHAR(255) DEFAULT NULL, \
     file_type VARCHAR(100) DEFAULT NULL, \
     sent_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP, \
     FOREIGN KEY (sender_id) REFERENCES users(user_id), \
-    FOREIGN KEY (chat_id) REFERENCES chat_members(chat_id), \
+    FOREIGN KEY (chat_id) REFERENCES chat_rooms(chat_id) ON DELETE CASCADE, \
     PRIMARY KEY(message_id) \
     );')
   
@@ -93,14 +104,15 @@ async function create_tables() {
   await dbaccess.create_tables('CREATE TABLE IF NOT EXISTS chat_invites ( \
     invite_id INT NOT NULL AUTO_INCREMENT, \
     chat_id INT NOT NULL, \
-    recipient_id INT, \
-    sender_id INT, \
+    recipient_id INT NOT NULL, \
+    sender_id INT NOT NULL, \
+    status ENUM(\'pending\', \'accepted\', \'rejected\') DEFAULT \'pending\', \
     sent_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP, \
-    accepted_at TIMESTAMP DEFAULT NULL, \
-    rejected_at TIMESTAMP DEFAULT NULL, \
-    FOREIGN KEY (chat_id) REFERENCES chat_members(chat_id), \
+    responded_at TIMESTAMP DEFAULT NULL, \
+    FOREIGN KEY (chat_id) REFERENCES chat_rooms(chat_id) ON DELETE CASCADE, \
     FOREIGN KEY (sender_id) REFERENCES users(user_id), \
     FOREIGN KEY (recipient_id) REFERENCES users(user_id), \
+    UNIQUE KEY (chat_id, recipient_id), \
     PRIMARY KEY(invite_id) \
     );')
   
@@ -152,6 +164,11 @@ async function create_tables() {
   await createIndex('idx_chat_invites_invitee', 'chat_invites', 'recipient_id');
   await createIndex('idx_chat_invites_chat', 'chat_invites', 'chat_id');
   await createIndex('idx_sessions_user_id', 'sessions', 'user_id');
+  await createIndex('idx_chat_rooms_created_by', 'chat_rooms', 'created_by');
+  await createIndex('idx_chat_members_chat_id', 'chat_members', 'chat_id');
+  await createIndex('idx_chat_members_user_id', 'chat_members', 'user_id');
+  await createIndex('idx_chat_messages_chat_id', 'chat_messages', 'chat_id');
+  await createIndex('idx_chat_invites_status', 'chat_invites', 'status');
 
   return null;
 }
