@@ -1,6 +1,7 @@
 import React, { useState, useEffect } from 'react';
 import axios from 'axios';
 import { useChat } from './ChatContext';
+import config from '../../../config.json';
 
 interface CreateChatRoomProps {
   onCreated: (chatId: number) => void;
@@ -18,12 +19,14 @@ const CreateChatRoom: React.FC<CreateChatRoomProps> = ({ onCreated }) => {
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const { createChatRoom } = useChat();
-  
+  const rootURL = config.serverRootURL;
+
   // Fetch friends list
   useEffect(() => {
     const fetchFriends = async () => {
       try {
-        const response = await axios.get('/friends');
+        const response = await axios.get(`${rootURL}/getFriends`);
+        console.log('Fetched friends:', response.data);
         setFriends(response.data);
       } catch (err) {
         console.error('Error fetching friends:', err);

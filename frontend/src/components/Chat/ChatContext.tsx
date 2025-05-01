@@ -1,6 +1,7 @@
-import React, { createContext, useState, useEffect, useContext } from 'react';
+import React, { createContext, useState, useEffect, useContext, useCallback } from 'react';
 import axios from 'axios';
 import { io, Socket } from 'socket.io-client';
+import config from '../../../config.json';
 
 type ChatRoom = {
   chat_id: number;
@@ -67,12 +68,18 @@ export const ChatProvider: React.FC<{ children: React.ReactNode }> = ({ children
   const [loadingChats, setLoadingChats] = useState<boolean>(false);
   const [loadingInvites, setLoadingInvites] = useState<boolean>(false);
   const [loadingMessages, setLoadingMessages] = useState<boolean>(false);
-  
+
+  // Set axios default config for all requests
+  axios.defaults.withCredentials = true;
+
+  const rootURL = config.serverRootURL;
+
   // Initialize Socket.IO connection
   useEffect(() => {
     const newSocket = io('http://localhost:8080', {
       transports: ['websocket'],
       upgrade: false,
+      withCredentials: true,
     });
     
     setSocket(newSocket);
@@ -106,35 +113,41 @@ export const ChatProvider: React.FC<{ children: React.ReactNode }> = ({ children
   }, [socket, activeChatId]);
   
   // Fetch chat rooms
-  const fetchChatRooms = async () => {
+  const fetchChatRooms = useCallback(async () => {
     setLoadingChats(true);
     try {
-      const response = await axios.get('/chatRooms');
-      setChatRooms(response.data);
+      const response = await axios.get(`${rootURL}/chatRooms`, {
+        timeout: 1000 // 5 seconds timeout
+      });
+      setChatRooms(response.data || []); // Ensure we set an empty array if data is null
     } catch (error) {
       console.error('Error fetching chat rooms:', error);
+      setChatRooms([]); // Set empty array on error
     } finally {
       setLoadingChats(false);
     }
-  };
+  }, [rootURL]);
   
   // Fetch chat invitations
-  const fetchChatInvites = async () => {
+  const fetchChatInvites = useCallback(async () => {
     setLoadingInvites(true);
     try {
-      const response = await axios.get('/chatInvites');
-      setInvites(response.data);
+      const response = await axios.get(`${rootURL}/chatInvites`, {
+        timeout: 1000
+      });
+      setInvites(response.data || []);
     } catch (error) {
       console.error('Error fetching chat invites:', error);
+      setInvites([]);
     } finally {
       setLoadingInvites(false);
     }
-  };
+  }, [rootURL]);
   
   // Create a new chat room
   const createChatRoom = async (name: string, initialMembers: string[] = []) => {
     try {
-      const response = await axios.post('/createChatRoom', { roomName: name, initialMembers });
+      const response = await axios.post(`${rootURL}/createChatRoom`, { roomName: name, initialMembers });
       
       // Refresh the chat rooms list
       fetchChatRooms();
@@ -149,7 +162,7 @@ export const ChatProvider: React.FC<{ children: React.ReactNode }> = ({ children
   // Send a chat invitation
   const sendChatInvite = async (chatId: number, username: string) => {
     try {
-      await axios.post('/sendChatInvite', { 
+      await axios.post(`${rootURL}/sendChatInvite`, { 
         chatId, 
         recipientUsername: username 
       });
@@ -162,7 +175,7 @@ export const ChatProvider: React.FC<{ children: React.ReactNode }> = ({ children
   // Respond to a chat invitation
   const respondToInvite = async (inviteId: number, accept: boolean) => {
     try {
-      const response = await axios.post('/respondToChatInvite', { inviteId, accept });
+      const response = await axios.post(`${rootURL}/respondToChatInvite`, { inviteId, accept });
       
       // Refresh lists
       fetchChatInvites();
@@ -196,11 +209,11 @@ export const ChatProvider: React.FC<{ children: React.ReactNode }> = ({ children
       setActiveChatName(room?.name || null);
       
       // Load chat members
-      const membersResponse = await axios.get(`/chatMembers/${chatId}`);
+      const membersResponse = await axios.get(`${rootURL}/chatMembers/${chatId}`);
       setActiveChatMembers(membersResponse.data);
       
       // Load messages
-      const messagesResponse = await axios.get(`/messages/${chatId}`);
+      const messagesResponse = await axios.get(`${rootURL}/messages/${chatId}`);
       setMessages(messagesResponse.data.reverse()); // Reverse to show newest at bottom
     } catch (error) {
       console.error('Error loading chat data:', error);
@@ -214,7 +227,7 @@ export const ChatProvider: React.FC<{ children: React.ReactNode }> = ({ children
     if (!activeChatId || !content.trim()) return;
     
     try {
-      const response = await axios.post('/api/sendMessage', {
+      const response = await axios.post(`${rootURL}sendMessage`, {
         chatId: activeChatId,
         content
       });
@@ -229,7 +242,7 @@ export const ChatProvider: React.FC<{ children: React.ReactNode }> = ({ children
   // Leave a chat room
   const leaveChat = async (chatId: number) => {
     try {
-      await axios.post('/api/leaveChatRoom', { chatId });
+      await axios.post(`${rootURL}leaveChatRoom`, { chatId });
       
       // If this was the active chat, clear it
       if (activeChatId === chatId) {

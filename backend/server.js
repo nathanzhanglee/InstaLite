@@ -43,7 +43,8 @@ const server = createServer(app);
 const io = new Server(server, {
   cors: {
     origin: [host || 'http://localhost:4567', "http://localhost:3000", "http://127.0.0.1:3000", "http://127.0.0.1:4567"],
-    methods: ["GET", "POST"]
+    methods: ["GET", "POST"],
+    credentials: true
   }
 });
 

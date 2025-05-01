@@ -598,11 +598,16 @@ async function sendChatInvite(req, res) {
       return res.status(400).json({ error: 'An invitation is already pending for this user' });
     }
 
-    // Create the invitation
-    const inviteId = uuidv4();
+    // Make sure chatId is defined
+    if (!chatId) {
+      console.error("Error: chat_id is NULL");
+      return res.status(400).json({ error: 'Invalid chat ID' });
+    }
+
+    // Let MySQL auto-generate the invite_id
     await querySQLDatabase(
-      "INSERT INTO chat_invites (invite_id, chat_id, sender_id, recipient_id) VALUES (?, ?, ?, ?)",
-      [inviteId, chatId, senderId, recipientId]
+      "INSERT INTO chat_invites (chat_id, sender_id, recipient_id) VALUES (?, ?, ?)",
+      [chatId, senderId, recipientId]
     );
 
     // Get chat room name for the response
@@ -918,15 +923,16 @@ async function createChatRoom(req, res) {
   if (!roomName) {
     return res.status(400).json({ error: 'Room name is required' });
   }
-
-  const chatId = uuidv4();
   
   try {
     // Create the chat room
-    await querySQLDatabase(
-      "INSERT INTO chat_rooms (chat_id, name, created_by) VALUES (?, ?, ?)",
-      [chatId, roomName, userId]
+    const result = await querySQLDatabase(
+      "INSERT INTO chat_rooms (name, created_by) VALUES (?, ?)",
+      [roomName, userId]
     );
+    
+    // Get the auto-generated ID
+    const chatId = result[0].insertId;
 
     // Add the creator as a member
     await querySQLDatabase(
@@ -936,10 +942,10 @@ async function createChatRoom(req, res) {
 
     // If there are initial members to invite, process them
     if (initialMembers.length > 0) {
-      // Get user IDs from usernames
+      const placeholders = initialMembers.map(() => '?').join(',');
       const userResults = await querySQLDatabase(
-        "SELECT username, user_id FROM users WHERE username IN (?)",
-        [initialMembers]
+        `SELECT username, user_id FROM users WHERE username IN (${placeholders})`,
+        initialMembers
       );
       
       const userMap = {};
@@ -951,10 +957,9 @@ async function createChatRoom(req, res) {
       for (const username of initialMembers) {
         const recipientId = userMap[username];
         if (recipientId) {
-          const inviteId = uuidv4();
           await querySQLDatabase(
-            "INSERT INTO chat_invites (invite_id, chat_id, sender_id, recipient_id) VALUES (?, ?, ?, ?)",
-            [inviteId, chatId, userId, recipientId]
+            "INSERT INTO chat_invites (chat_id, sender_id, recipient_id) VALUES (?, ?, ?)",
+            [chatId, userId, recipientId]
           );
         }
       }
