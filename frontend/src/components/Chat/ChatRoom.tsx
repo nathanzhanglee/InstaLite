@@ -132,7 +132,7 @@ const ChatRoom: React.FC<ChatRoomProps> = ({ chatId, onBack }) => {
             <div className="message-list">
               {messages.map((msg) => (
                 <div 
-                  key={msg.message_id}
+                  key={`${msg.message_id}-${msg.sender_id}-${msg.sent_at}`}
                   className={`message-bubble ${
                     activeChatMembers.find(m => m.user_id === msg.sender_id)?.username === 
                     localStorage.getItem('username') ? 'sent' : 'received'
@@ -154,26 +154,24 @@ const ChatRoom: React.FC<ChatRoomProps> = ({ chatId, onBack }) => {
         </div>
         
         <div className="chat-sidebar">
-          <h3>Chat Members ({activeChatMembers.length})</h3>
+          <h3 className="sidebar-title">Chat Members ({activeChatMembers.length})</h3>
           <ul className="member-list">
             {activeChatMembers.map((member) => (
               <li 
-                key={member.user_id} 
-                className={`member ${member.is_online ? 'online' : 'offline'}`}
+                key={`member-${member.user_id}`} 
+                className={`member-item ${member.is_online ? 'online' : 'offline'}`}
               >
-                {member.profile_pic_link ? (
-                  <img 
-                    src={member.profile_pic_link} 
-                    alt={member.username}
-                    className="member-avatar" 
-                  />
-                ) : (
-                  <div className="default-avatar">
-                    {member.username.charAt(0).toUpperCase()}
-                  </div>
-                )}
-                <span className="member-name">{member.username}</span>
-                <span className="status-indicator"></span>
+                <div className="member-avatar">
+                  {member.profile_pic_link ? (
+                    <img src={member.profile_pic_link} alt={member.username} className="avatar-image" />
+                  ) : (
+                    <div className="default-avatar">
+                      {member.username.charAt(0).toUpperCase()}
+                    </div>
+                  )}
+                  <span className={`status-dot ${member.is_online ? 'online' : 'offline'}`}></span>
+                </div>
+                <span className="member-username">{member.username}</span>
               </li>
             ))}
           </ul>

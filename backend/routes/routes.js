@@ -131,7 +131,6 @@ async function registerUser(req, res) {
  */
 async function authenticateRequest(req, res, next) {
   const sessionToken = req.cookies?.session_token;
-  console.log("Session token received:", sessionToken);
   const sessionResult = await getIdFromSToken(sessionToken);
   
   if (!sessionResult.success) {
@@ -264,7 +263,10 @@ async function postLogin(req, res) {
     //Set session id for successful login
     //Ensures that it can only be accessed via HTTPS ('secure') and not client-side JS ('httpOnly') 
       
-    return res.status(200).json({username: username});
+    return res.status(200).json({
+      username: username,
+      userId: user_id  // Add the user ID to the response
+    });
   } else {
     return res.status(401).json({error: 'Username and/or password are invalid.'});
   }
@@ -888,7 +890,7 @@ async function leaveChatRoom(req, res) {
   try {
     // Verify user is a member of the chat
     const isMember = (await querySQLDatabase(
-      "SELECT COUNT(*) AS count FROM chat_members WHERE chat_id = ? AND user_id = ?",
+      "SELECT COUNT(*) AS count FROM chat_members WHERE chat_id = ? AND user_id = ? AND left_at IS NULL",
       [chatId, userId]
     ))[0][0].count > 0;
 
@@ -896,9 +898,9 @@ async function leaveChatRoom(req, res) {
       return res.status(403).json({ error: 'You are not a member of this chat' });
     }
 
-    // Remove user from chat_members
+    // Instead of deleting, update the left_at timestamp
     await querySQLDatabase(
-      "DELETE FROM chat_members WHERE chat_id = ? AND user_id = ?",
+      "UPDATE chat_members SET left_at = CURRENT_TIMESTAMP WHERE chat_id = ? AND user_id = ?",
       [chatId, userId]
     );
 

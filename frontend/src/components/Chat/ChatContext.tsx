@@ -2,6 +2,7 @@ import React, { createContext, useState, useEffect, useContext, useCallback } fr
 import axios from 'axios';
 import { io, Socket } from 'socket.io-client';
 import config from '../../../config.json';
+import ReactSession from '../../ReactSession';
 
 type ChatRoom = {
   chat_id: number;
@@ -31,8 +32,10 @@ type Message = {
   sender_id: number;
   sender_username: string;
   sender_profile_pic?: string;
+  chatId: number;
   content: string;
   sent_at: string;
+  tempId?: string;
 };
 
 type ChatContextType = {
@@ -76,42 +79,145 @@ export const ChatProvider: React.FC<{ children: React.ReactNode }> = ({ children
 
   // Initialize Socket.IO connection
   useEffect(() => {
+    const userId = localStorage.getItem('userId');
+    if (!userId) {
+      const user = ReactSession.getUser();
+      console.log("User from ReactSession:", user);
+      if (user && user.userId) {
+        localStorage.setItem('userId', user.userId.toString());
+      } else {
+        console.error("No user ID available for socket connection");
+        return;
+      }
+    }
     const newSocket = io('http://localhost:8080', {
       transports: ['websocket'],
       upgrade: false,
       withCredentials: true,
+      auth: {
+        userId: userId // Pass user ID in auth object
+      }
     });
-    
+
     setSocket(newSocket);
-    
+
     return () => {
       newSocket.disconnect();
     };
   }, []);
-  
+
+  // Handle socket disconnects/reconnects
+  useEffect(() => {
+    if (!socket) return;
+
+    const handleDisconnect = () => {
+      console.log('Socket disconnected');
+      // You might want to show a UI notification that connection was lost
+    };
+
+    const handleReconnect = () => {
+      console.log('Socket reconnected');
+
+      // Re-join active chat room if any
+      if (activeChatId) {
+        socket.emit('joinRoom', `chat-${activeChatId}`);
+      }
+
+      // You might want to refresh data that could have been missed
+    };
+
+    socket.on('disconnect', handleDisconnect);
+    socket.on('connect', handleReconnect);
+
+    return () => {
+      socket.off('disconnect', handleDisconnect);
+      socket.off('connect', handleReconnect);
+    };
+  }, [socket, activeChatId]);
+
   // Listen for real-time messages when active chat changes
   useEffect(() => {
     if (!socket || !activeChatId) return;
-    
-    // Leave previous chat room if any
-    socket.emit('leaveRoom', `chat-${activeChatId}`);
-    
-    // Join the new chat room
-    socket.emit('joinRoom', `chat-${activeChatId}`);
-    
+
+    const roomName = `chat-${activeChatId}`;
+
+    socket.emit('joinRoom', roomName);
+
+    socket.on('joinedRoom', async (room) => {
+      console.log(`Successfully joined room: ${room}`);
+
+      // After joining a room, fetch the complete member list from server
+      // instead of relying on incremental updates
+      try {
+        const membersResponse = await axios.get(`${rootURL}/chatMembers/${activeChatId}`);
+        setActiveChatMembers(membersResponse.data);
+      } catch (error) {
+        console.error('Error fetching chat members after joining room:', error);
+      }
+    });
+
     // Listen for new messages
     const handleNewMessage = (msg: Message) => {
-      setMessages((prev) => [...prev, msg]);
+      console.log('Received message:', msg);
+      console.log('Current active chat ID:', activeChatId);
+      console.log('Message chat ID:', msg.chatId);
+      setMessages((prev) => {
+        // Filter out temporary message if it exists
+        if (msg.tempId) {
+          return [...prev.filter(m => m.message_id !== msg.tempId), msg];
+        }
+        return [...prev, msg];
+      });
     };
-    
+
+    // Handle when a user joins the chat
+    const handleUserJoin = (data: { userId: number, username: string }) => {
+      // Only handle join events for other users, not ourselves
+      if (parseInt(localStorage.getItem('userId') || '0') === data.userId) {
+        return;
+      }
+
+      setActiveChatMembers(prev => {
+        // Remove any existing entries for this user
+        const filteredList = prev.filter(member => member.user_id !== data.userId);
+        
+        // Add the user back with updated info
+        return [...filteredList, {
+          user_id: data.userId,
+          username: data.username,
+          profile_pic_link: null,
+          is_online: 1,
+          joined_at: new Date().toISOString()
+        }];
+      });
+    };
+
+    // Handle when a user leaves the chat
+    const handleUserLeave = (userId: number) => {
+      setActiveChatMembers(prev =>
+        prev.filter(member => member.user_id !== userId)
+      );
+    };
+
     socket.on('receiveMessage', handleNewMessage);
-    
+    socket.on('userJoinedChat', handleUserJoin);
+    socket.on('userLeftChat', handleUserLeave);
+
     return () => {
+      console.log(`Leaving room: ${roomName}`);
+      socket.emit('leaveRoom', roomName);
+      socket.off('joinedRoom');
       socket.off('receiveMessage', handleNewMessage);
-      socket.emit('leaveRoom', `chat-${activeChatId}`);
+      socket.off('userJoinedChat', handleUserJoin);
+      socket.off('userLeftChat', handleUserLeave);
+
+      // Leave the room when component unmounts or chat changes
+      if (activeChatId) {
+        socket.emit('leaveRoom', `chat-${activeChatId}`);
+      }
     };
-  }, [socket, activeChatId]);
-  
+  }, [socket, activeChatId, rootURL]);
+
   // Fetch chat rooms
   const fetchChatRooms = useCallback(async () => {
     setLoadingChats(true);
@@ -127,7 +233,7 @@ export const ChatProvider: React.FC<{ children: React.ReactNode }> = ({ children
       setLoadingChats(false);
     }
   }, [rootURL]);
-  
+
   // Fetch chat invitations
   const fetchChatInvites = useCallback(async () => {
     setLoadingInvites(true);
@@ -143,75 +249,75 @@ export const ChatProvider: React.FC<{ children: React.ReactNode }> = ({ children
       setLoadingInvites(false);
     }
   }, [rootURL]);
-  
+
   // Create a new chat room
   const createChatRoom = async (name: string, initialMembers: string[] = []) => {
     try {
       const response = await axios.post(`${rootURL}/createChatRoom`, { roomName: name, initialMembers });
-      
+
       // Refresh the chat rooms list
       fetchChatRooms();
-      
+
       return response.data.chatId; // Make sure it returns the chatId
     } catch (error) {
       console.error('Error creating chat room:', error);
       throw error;
     }
   };
-  
+
   // Send a chat invitation
   const sendChatInvite = async (chatId: number, username: string) => {
     try {
-      await axios.post(`${rootURL}/sendChatInvite`, { 
-        chatId, 
-        recipientUsername: username 
+      await axios.post(`${rootURL}/sendChatInvite`, {
+        chatId,
+        recipientUsername: username
       });
     } catch (error) {
       console.error('Error sending chat invite:', error);
       throw error;
     }
   };
-  
+
   // Respond to a chat invitation
   const respondToInvite = async (inviteId: number, accept: boolean) => {
     try {
       const response = await axios.post(`${rootURL}/respondToChatInvite`, { inviteId, accept });
-      
+
       // Refresh lists
       fetchChatInvites();
       if (accept) {
         fetchChatRooms();
       }
-      
+
       return response.data;
     } catch (error) {
       console.error('Error responding to invite:', error);
       throw error;
     }
   };
-  
+
   // Set the active chat and load its data
-  const handleSetActiveChatId = async (chatId: number | null) => {
+  const handleSetActiveChatId = useCallback(async (chatId: number | null) => {
     setActiveChatId(chatId);
-    
+
     if (!chatId) {
       setActiveChatName(null);
       setActiveChatMembers([]);
       setMessages([]);
       return;
     }
-    
+
     setLoadingMessages(true);
-    
+
     try {
       // Find chat name
       const room = chatRooms.find(room => room.chat_id === chatId);
       setActiveChatName(room?.name || null);
-      
+
       // Load chat members
       const membersResponse = await axios.get(`${rootURL}/chatMembers/${chatId}`);
       setActiveChatMembers(membersResponse.data);
-      
+
       // Load messages
       const messagesResponse = await axios.get(`${rootURL}/messages/${chatId}`);
       setMessages(messagesResponse.data.reverse()); // Reverse to show newest at bottom
@@ -220,30 +326,45 @@ export const ChatProvider: React.FC<{ children: React.ReactNode }> = ({ children
     } finally {
       setLoadingMessages(false);
     }
-  };
-  
+  }, [chatRooms, rootURL]);
+
   // Send a message
   const sendMessage = async (content: string) => {
-    if (!activeChatId || !content.trim()) return;
-    
+    if (!activeChatId || !content.trim() || !socket) return;
+
     try {
-      const response = await axios.post(`${rootURL}sendMessage`, {
+      // Generate a temporary ID for optimistic UI updates
+      const tempId = `temp-${Date.now()}`;
+
+      // Add message to UI immediately (optimistic update)
+      const tempMessage: Message = {
+        message_id: tempId,
+        sender_id: parseInt(localStorage.getItem('userId') || '0'),
+        sender_username: localStorage.getItem('username') || 'Me',
+        content,
         chatId: activeChatId,
-        content
+        sent_at: new Date().toISOString()
+      };
+
+      setMessages(prev => [...prev, tempMessage]);
+
+      // Emit message via socket instead of HTTP request
+      socket.emit('sendMessage', {
+        chatId: activeChatId,
+        content,
+        tempId
       });
-      
-      // Real-time updates will come through socket
     } catch (error) {
       console.error('Error sending message:', error);
       throw error;
     }
   };
-  
+
   // Leave a chat room
   const leaveChat = async (chatId: number) => {
     try {
-      await axios.post(`${rootURL}leaveChatRoom`, { chatId });
-      
+      await axios.post(`${rootURL}/leaveChatRoom`, { chatId });
+
       // If this was the active chat, clear it
       if (activeChatId === chatId) {
         setActiveChatId(null);
@@ -251,7 +372,7 @@ export const ChatProvider: React.FC<{ children: React.ReactNode }> = ({ children
         setActiveChatMembers([]);
         setMessages([]);
       }
-      
+
       // Refresh chat rooms list
       fetchChatRooms();
     } catch (error) {
@@ -259,13 +380,13 @@ export const ChatProvider: React.FC<{ children: React.ReactNode }> = ({ children
       throw error;
     }
   };
-  
+
   // Initial data loading
   useEffect(() => {
     fetchChatRooms();
     fetchChatInvites();
   }, []);
-  
+
   return (
     <ChatContext.Provider value={{
       chatRooms,

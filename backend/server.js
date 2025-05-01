@@ -7,6 +7,7 @@ import register_routes from './routes/register_routes.js';
 import session from 'express-session';
 import cookieParser from 'cookie-parser';
 import dotenv from 'dotenv';
+import { get_db_connection } from './models/rdbms.js';
 
 dotenv.config();
 const configFile = fs.readFileSync('./config/config.json', 'utf8');
@@ -34,7 +35,6 @@ app.use(session({
   resave: true
 }));
 
-
 register_routes(app);
 
 const server = createServer(app);
@@ -47,6 +47,17 @@ const io = new Server(server, {
     credentials: true
   }
 });
+
+const dbaccess = get_db_connection();
+
+const querySQLDatabase = async (query, params = []) => {
+  try {
+    return await dbaccess.send_sql(query, params);
+  } catch (error) {
+    console.error('Database query error:', error);
+    throw error;
+  }
+};
 
 const roomUsers = new Map();
 const userSockets = new Map();
@@ -152,6 +163,121 @@ io.on('connection', (socket) => {
         });
       }
     });
+  });
+
+  // Join a specific chat room
+  socket.on('joinRoom', async (room) => {
+    // Leave previous rooms (except the user's personal room)
+    for (const [roomName, _] of socket.rooms.entries()) {
+      if (roomName !== socket.id && roomName.startsWith('chat-')) {
+        socket.leave(roomName);
+      }
+    }
+    
+    socket.join(room);
+    console.log(`Socket ${socket.id} joined room: ${room}`);
+    
+    // Add this line to emit the joinedRoom event back to client
+    socket.emit('joinedRoom', room);
+    
+    // Get user ID from session if available
+    const userId = socket.handshake.auth.userId || socket.request?.session?.user_id;
+    if (userId) {
+      try {
+        // Check if user is already in the room members list in the database
+        const chatId = room.replace('chat-', '');
+        const isMember = (await querySQLDatabase(
+          "SELECT COUNT(*) AS count FROM chat_members WHERE chat_id = ? AND user_id = ?",
+          [chatId, userId]
+        ))[0][0].count > 0;
+        
+        // Only notify about joining if the user is a valid member
+        if (isMember) {
+          const userInfo = (await querySQLDatabase(
+            "SELECT username FROM users WHERE user_id = ?",
+            [userId]
+          ))[0][0];
+          
+          if (userInfo) {
+            // Broadcast to room that user has joined
+            socket.to(room).emit('userJoinedChat', {
+              userId: userId,
+              username: userInfo.username
+            });
+          }
+        }
+      } catch (err) {
+        console.error("Error checking room membership:", err);
+      }
+    }
+  });
+  
+  // Leave a specific chat room
+  socket.on('leaveRoom', (room) => {
+    socket.leave(room);
+    console.log(`Socket ${socket.id} left room: ${room}`);
+  });
+  
+  // Send a message to a chat room
+  socket.on('sendMessage', async (data) => {
+    const { chatId, content, tempId } = data;
+    const userId = socket.handshake.auth.userId || socket.request?.session?.user_id;
+    if (!userId || !chatId || !content) {
+      return;
+    }
+
+    try {
+      // Verify user is a member of the chat
+      const isMember = (await querySQLDatabase(
+        "SELECT COUNT(*) AS count FROM chat_members WHERE chat_id = ? AND user_id = ?",
+        [chatId, userId]
+      ))[0][0].count > 0;
+      
+      if (!isMember) {
+        // Notify sender of error
+        socket.emit('messageError', {
+          tempId,
+          error: 'You are not a member of this chat'
+        });
+        return;
+      }
+      
+      // Insert message into database
+      const result = await querySQLDatabase(
+        "INSERT INTO chat_messages (chat_id, sender_id, content) VALUES (?, ?, ?)",
+        [chatId, userId, content]
+      );
+      
+      const messageId = result[0].insertId;
+      
+      // Get sender info
+      const sender = (await querySQLDatabase(
+        "SELECT username, profile_pic_link FROM users WHERE user_id = ?",
+        [userId]
+      ))[0][0];
+      
+      const messageData = {
+        message_id: messageId,
+        sender_id: userId,
+        sender_username: sender.username,
+        sender_profile_pic: sender.profile_pic_link,
+        content: content,
+        sent_at: new Date().toISOString(),
+        chatId: parseInt(chatId),
+        tempId // Include temporary ID for client-side reconciliation
+      };
+      
+      // Broadcast to all clients in the room, including sender
+      console.log(`Broadcasting message to room: chat-${chatId}, from user: ${userId}, content: ${content.substring(0, 20)}...`);
+      io.to(`chat-${chatId}`).emit('receiveMessage', messageData);
+      
+    } catch (err) {
+      console.error("Error sending message via socket:", err);
+      socket.emit('messageError', {
+        tempId,
+        error: 'Failed to send message'
+      });
+    }
   });
 });
 

@@ -478,3 +478,78 @@
   cursor: pointer;
   color: #666;
 }
+
+/* Add these styles for the chat members sidebar */
+.chat-sidebar {
+  width: 250px;
+  padding: 16px;
+  border-left: 1px solid #dbdbdb;
+  overflow-y: auto;
+}
+
+.sidebar-title {
+  font-size: 16px;
+  font-weight: 600;
+  margin-bottom: 16px;
+  color: #262626;
+}
+
+.member-list {
+  list-style: none;
+  padding: 0;
+  margin: 0;
+}
+
+.member-item {
+  display: flex;
+  align-items: center;
+  padding: 8px 0;
+  border-bottom: 1px solid #efefef;
+}
+
+.member-avatar {
+  position: relative;
+  margin-right: 12px;
+}
+
+.default-avatar {
+  background-color: #0095f6;
+  color: white;
+  width: 32px;
+  height: 32px;
+  border-radius: 50%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-weight: 600;
+}
+
+.avatar-image {
+  width: 32px;
+  height: 32px;
+  border-radius: 50%;
+  object-fit: cover;
+}
+
+.status-dot {
+  position: absolute;
+  bottom: 0;
+  right: 0;
+  width: 10px;
+  height: 10px;
+  border-radius: 50%;
+  border: 2px solid white;
+}
+
+.status-dot.online {
+  background-color: #4CAF50;
+}
+
+.status-dot.offline {
+  background-color: #9e9e9e;
+}
+
+.member-username {
+  font-size: 14px;
+  color: #262626;
+}

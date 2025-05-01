@@ -1,29 +1,41 @@
-import React, { useState } from 'react';
+import React, { useState, KeyboardEvent } from 'react';
 
-type Props = {
+interface MessageInputProps {
   onSend: (message: string) => void;
-};
+}
 
-const MessageInput: React.FC<Props> = ({ onSend }) => {
+const MessageInput: React.FC<MessageInputProps> = ({ onSend }) => {
   const [message, setMessage] = useState('');
-
-  const send = () => {
-    if (!message.trim()) return;
-    onSend(message);
-    setMessage('');
+  
+  const handleSend = () => {
+    if (message.trim()) {
+      onSend(message);
+      setMessage('');
+    }
   };
-
+  
+  const handleKeyDown = (e: KeyboardEvent<HTMLInputElement>) => {
+    if (e.key === 'Enter' && !e.shiftKey) {
+      e.preventDefault();
+      handleSend();
+    }
+  };
+  
   return (
-    <div className="flex gap-2 p-4">
+    <div className="message-form">
       <input
         type="text"
-        className="flex-grow border p-2 rounded"
+        className="message-input"
         placeholder="Type a message..."
         value={message}
         onChange={(e) => setMessage(e.target.value)}
-        onKeyDown={(e) => e.key === 'Enter' && send()}
+        onKeyDown={handleKeyDown}
       />
-      <button onClick={send} className="bg-blue-500 text-white px-4 py-2 rounded">
+      <button 
+        className="send-button"
+        onClick={handleSend}
+        disabled={!message.trim()}
+      >
         Send
       </button>
     </div>

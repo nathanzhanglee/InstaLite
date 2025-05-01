@@ -19,13 +19,23 @@ export default function Login() {
         username,
         password
       }, { withCredentials: true });
+      
       if (response.status === 200) {
         ActivityTracker.startTracking();
+        
+        // Store both username and userId
+        const userId = response.data.userId;
+        const user = {
+          'username': username,
+          'userId': userId
+        };
+        ReactSession.setUser(user);
+        
+        // Also store userId separately in localStorage for WebSockets
+        localStorage.setItem('userId', userId.toString());
+        
+        navigate(`/${username}/home`);
       }
-      console.log('Login successful:', response.data);
-      const user = {'username': username};
-      ReactSession.setUser(user);
-      navigate(`/${username}/home`);
     } catch (error) {
       console.error('Login failed:', error);
       alert('Login failed.');
