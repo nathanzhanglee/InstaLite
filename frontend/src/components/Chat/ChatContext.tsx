@@ -254,11 +254,12 @@ export const ChatProvider: React.FC<{ children: React.ReactNode }> = ({ children
   const createChatRoom = async (name: string, initialMembers: string[] = []) => {
     try {
       const response = await axios.post(`${rootURL}/createChatRoom`, { roomName: name, initialMembers });
-
+      
       // Refresh the chat rooms list
       fetchChatRooms();
-
-      return response.data.chatId; // Make sure it returns the chatId
+      
+      // Return the chat ID from the response
+      return response.data.chatId;
     } catch (error) {
       console.error('Error creating chat room:', error);
       throw error;

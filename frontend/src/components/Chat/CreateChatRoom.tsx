@@ -48,30 +48,24 @@ const CreateChatRoom: React.FC<CreateChatRoomProps> = ({ onCreated }) => {
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     setError(null);
+    setLoading(true);
     
     if (!roomName.trim()) {
       setError('Please enter a room name');
+      setLoading(false);
       return;
     }
     
-    setLoading(true);
-    
     try {
-      // Call createChatRoom but don't rely on its return value
-      await createChatRoom(roomName, selectedFriends);
+      const result = await createChatRoom(roomName, selectedFriends);
       
-      // Instead, fetch the latest chat rooms
-      const response = await axios.get('/chatRooms');
-      const rooms = response.data;
+      setRoomName('');
+      setSelectedFriends([]);
       
-      if (rooms && rooms.length > 0) {
-        // Assume the most recent chat room is the first one
-        const mostRecentChat = rooms[0];
-        setRoomName('');
-        setSelectedFriends([]);
-        onCreated(mostRecentChat.chat_id); // Use the ID from the fetched room
+      if (typeof result === 'number') {
+        onCreated(result);
       } else {
-        throw new Error('Failed to retrieve newly created chat room');
+        setError('Created chat room but failed to retrieve ID');
       }
     } catch (err: any) {
       setError(err?.response?.data?.error || 'Failed to create chat room');
