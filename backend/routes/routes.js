@@ -1264,14 +1264,32 @@ async function createPost(req, res) {
     return res.status(201).json({message: "Post created."});
 }
 
+// GET /Rankings
 async function getFeed(req, res) {
-  const user_id = req.session.user_id;
-  if (!user_id) {
-    return res.status(403).json({error: 'Not logged in.'});
+  const username = req.session.username;
+  if (!username) {
+    return res.status(403).json({error: 'No username found (not logged in).'});
   }
 
-  return res.status(200).json({message: "Feed retrieval not yet implemented."});
+  // query post info for in descending order based on post_rankings for logged in user
+  try {
+    const result = await querySQLDatabase(
+      `SELECT p.post_id, p.title, p.content, p.author_username, pr.weight
+       FROM post_rankings pr
+       JOIN posts p ON pr.post_id = p.post_id
+       WHERE pr.user_id = (SELECT user_id FROM users WHERE username = ?)
+       ORDER BY pr.weight DESC
+       LIMIT 100`, 
+      [username]
+    );
+
+    return res.status(200).json(result);
+  } catch (err) {
+    console.error("Error getting feed:", err);
+    return res.status(500).json({error: 'Internal server error while querying feed'});
+  }
 }
+
 
 async function getChatBot(req, res) {
   console.log('Getting movie database');
@@ -1360,6 +1378,8 @@ async function postUpdateActivity(req, res) {
     return res.status(500).json({error: 'Internal server error'});
   }
 }
+
+
 
 export {
   registerUser,
