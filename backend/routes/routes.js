@@ -900,11 +900,37 @@ async function leaveChatRoom(req, res) {
       return res.status(403).json({ error: 'You are not a member of this chat' });
     }
 
-    // Instead of deleting, update the left_at timestamp
+    // delete the user from chat_members table
     await querySQLDatabase(
-      "UPDATE chat_members SET left_at = CURRENT_TIMESTAMP WHERE chat_id = ? AND user_id = ?",
+      "UPDATE chat_members SET left_at = NOW() WHERE chat_id = ? AND user_id = ?",
       [chatId, userId]
     );
+
+    // if the user is the last member, delete the chat room
+    const remainingMembers = (await querySQLDatabase(
+      "SELECT COUNT(*) AS count FROM chat_members WHERE chat_id = ? AND left_at IS NULL",
+      [chatId]
+    ))[0][0].count;
+
+    if (remainingMembers === 0) {
+      // 1. First delete all messages in the chat
+      await querySQLDatabase(
+        "DELETE FROM chat_messages WHERE chat_id = ?",
+        [chatId]
+      );
+      
+      // 2. Then delete the members
+      await querySQLDatabase(
+        "DELETE FROM chat_members WHERE chat_id = ?",
+        [chatId]
+      );
+
+      // 3. Finally delete the chat room itself
+      await querySQLDatabase(
+        "DELETE FROM chat_rooms WHERE chat_id = ?",
+        [chatId]
+      );
+    }
 
     return res.status(200).json({
       message: 'Successfully left the chat room'
