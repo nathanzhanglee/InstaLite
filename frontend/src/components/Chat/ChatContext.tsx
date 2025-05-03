@@ -56,6 +56,7 @@ type ChatContextType = {
   setActiveChatId: (chatId: number | null) => void;
   sendMessage: (content: string) => Promise<void>;
   leaveChat: (chatId: number) => Promise<void>;
+  loadMoreMessages: (chatId: number, page: number) => Promise<Message[]>;
 };
 
 const ChatContext = createContext<ChatContextType | null>(null);
@@ -442,6 +443,23 @@ export const ChatProvider: React.FC<{ children: React.ReactNode }> = ({ children
     }
   };
 
+  // Load more messages
+  const loadMoreMessages = async (chatId: number, page: number) => {
+    try {
+      const response = await axios.get(`${rootURL}/chatMessages/${chatId}?page=${page}`, {
+        withCredentials: true
+      });
+      
+      // Prepend older messages to existing ones
+      setMessages(prev => [...response.data.messages.reverse(), ...prev]);
+      
+      return response.data.messages;
+    } catch (error) {
+      console.error("Error loading more messages:", error);
+      throw error;
+    }
+  };
+
   // Initial data loading
   useEffect(() => {
     fetchChatRooms();
@@ -466,7 +484,8 @@ export const ChatProvider: React.FC<{ children: React.ReactNode }> = ({ children
       respondToInvite,
       setActiveChatId: handleSetActiveChatId,
       sendMessage,
-      leaveChat
+      leaveChat,
+      loadMoreMessages
     }}>
       {children}
     </ChatContext.Provider>

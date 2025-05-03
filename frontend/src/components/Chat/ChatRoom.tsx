@@ -17,13 +17,18 @@ const ChatRoom: React.FC<ChatRoomProps> = ({ chatId, onBack }) => {
     setActiveChatId,
     sendMessage,
     sendChatInvite,
-    leaveChat
+    leaveChat,
+    loadMoreMessages
   } = useChat();
   
   const [showInviteForm, setShowInviteForm] = useState(false);
   const [inviteUsername, setInviteUsername] = useState('');
   const [error, setError] = useState<string | null>(null);
+  const [isNearBottom, setIsNearBottom] = useState(true);
+  const [loadingOlder, setLoadingOlder] = useState(false);
+  const [page, setPage] = useState(1);
   const messagesEndRef = useRef<HTMLDivElement>(null);
+  const messagesContainerRef = useRef<HTMLDivElement>(null);
   
   // Set the active chat when this component mounts
   useEffect(() => {
@@ -37,9 +42,40 @@ const ChatRoom: React.FC<ChatRoomProps> = ({ chatId, onBack }) => {
   
   // Scroll to bottom when new messages arrive
   useEffect(() => {
-    messagesEndRef.current?.scrollIntoView({ behavior: 'smooth' });
-  }, [messages]);
+    if (isNearBottom) {
+      messagesEndRef.current?.scrollIntoView({ behavior: 'smooth' });
+    }
+  }, [messages, isNearBottom]);
   
+  // Handle scrolling
+  const handleScroll = () => {
+    const container = messagesContainerRef.current;
+    if (container) {
+      const { scrollTop, scrollHeight, clientHeight } = container;
+      setIsNearBottom(scrollHeight - scrollTop - clientHeight < 100);
+      
+      // Check if user has scrolled to the top and isn't already loading
+      if (scrollTop === 0 && !loadingOlder) {
+        loadOlderMessages();
+      }
+    }
+  };
+
+  // Load older messages
+  const loadOlderMessages = async () => {
+    if (loadingOlder) return;
+    
+    setLoadingOlder(true);
+    try {
+      await loadMoreMessages(chatId, page + 1);
+      setPage(prev => prev + 1);
+    } catch (error) {
+      console.error("Failed to load older messages:", error);
+    } finally {
+      setLoadingOlder(false);
+    }
+  };
+
   // Handle sending a message
   const handleSendMessage = (content: string) => {
     if (content.trim()) {
@@ -126,7 +162,17 @@ const ChatRoom: React.FC<ChatRoomProps> = ({ chatId, onBack }) => {
       )}
       
       <div className="chat-layout">
-        <div className="messages-container">
+        <div 
+          ref={messagesContainerRef}
+          className="messages-container" 
+          style={{ maxHeight: "500px", overflow: "auto" }}
+          onScroll={handleScroll}
+        >
+          {loadingOlder && (
+            <div className="loading-older-messages">
+              Loading older messages...
+            </div>
+          )}
           {loadingMessages ? (
             <div className="loading-messages">Loading messages...</div>
           ) : (
@@ -149,7 +195,13 @@ const ChatRoom: React.FC<ChatRoomProps> = ({ chatId, onBack }) => {
                       <div className="message-header">
                         <span className="sender-name">{msg.sender_username}</span>
                         <span className="message-time">
-                          {new Date(msg.sent_at).toLocaleTimeString()}
+                          {new Date(msg.sent_at).toLocaleString(undefined, {
+                            month: 'short',
+                            day: 'numeric',
+                            hour: 'numeric',
+                            minute: '2-digit',
+                            hour12: true
+                          })}
                         </span>
                       </div>
                       <div className="message-content">{msg.content}</div>
