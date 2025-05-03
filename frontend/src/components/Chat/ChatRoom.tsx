@@ -16,6 +16,7 @@ const ChatRoom: React.FC<ChatRoomProps> = ({ chatId, onBack }) => {
     loadingMessages,
     setActiveChatId,
     sendMessage,
+    sendChatInvite,
     leaveChat
   } = useChat();
   
@@ -69,7 +70,7 @@ const ChatRoom: React.FC<ChatRoomProps> = ({ chatId, onBack }) => {
     }
     
     try {
-      await useChat().sendChatInvite(chatId, inviteUsername);
+      await sendChatInvite(chatId, inviteUsername);
       setInviteUsername('');
       setShowInviteForm(false);
       alert(`Invitation sent to ${inviteUsername}`);

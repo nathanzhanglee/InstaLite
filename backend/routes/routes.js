@@ -582,33 +582,39 @@ async function sendChatInvite(req, res) {
       return res.status(403).json({ error: 'You must be a member of the chat to send invites' });
     }
 
-    // Check if recipient is already a member
-    const isAlreadyMember = (await querySQLDatabase(
-      "SELECT COUNT(*) AS count FROM chat_members WHERE chat_id = ? AND user_id = ?",
+    // Check if ANY invitation already exists (regardless of status)
+    const existingInvite = (await querySQLDatabase(
+      "SELECT invite_id, status FROM chat_invites WHERE chat_id = ? AND recipient_id = ?",
       [chatId, recipientId]
-    ))[0][0].count > 0;
+    ))[0];
 
-    if (isAlreadyMember) {
-      return res.status(400).json({ error: 'User is already a member of this chat' });
+    if (existingInvite.length > 0) {
+      // If there's an existing invite that's not pending, update it to pending
+      if (existingInvite[0].status !== 'pending') {
+        await querySQLDatabase(
+          "UPDATE chat_invites SET status = 'pending', sender_id = ? WHERE invite_id = ?",
+          [senderId, existingInvite[0].invite_id]
+        );
+        
+        // Get chat room name for the response
+        const chatNameResult = (await querySQLDatabase(
+          "SELECT name FROM chat_rooms WHERE chat_id = ?",
+          [chatId]
+        ))[0][0].name;
+
+        return res.status(200).json({
+          message: 'Chat invitation updated to pending',
+          chatId,
+          chatName: chatNameResult,
+          recipientUsername
+        });
+      } else {
+        // Invitation is already pending
+        return res.status(400).json({ error: 'An invitation is already pending for this user' });
+      }
     }
 
-    // Check if an invitation is already pending
-    const pendingInvite = (await querySQLDatabase(
-      "SELECT COUNT(*) AS count FROM chat_invites WHERE chat_id = ? AND recipient_id = ? AND status = 'pending'",
-      [chatId, recipientId]
-    ))[0][0].count > 0;
-
-    if (pendingInvite) {
-      return res.status(400).json({ error: 'An invitation is already pending for this user' });
-    }
-
-    // Make sure chatId is defined
-    if (!chatId) {
-      console.error("Error: chat_id is NULL");
-      return res.status(400).json({ error: 'Invalid chat ID' });
-    }
-
-    // Let MySQL auto-generate the invite_id
+    // If no existing invite is found, proceed with creating a new one...
     await querySQLDatabase(
       "INSERT INTO chat_invites (chat_id, sender_id, recipient_id) VALUES (?, ?, ?)",
       [chatId, senderId, recipientId]
@@ -693,10 +699,25 @@ async function respondToChatInvite(req, res) {
 
     // If accepted, add user to chat members
     if (accept) {
-      await querySQLDatabase(
-        "INSERT INTO chat_members (chat_id, user_id) VALUES (?, ?)",
+      // Check if user was previously a member
+      const formerMember = (await querySQLDatabase(
+        "SELECT COUNT(*) AS count FROM chat_members WHERE chat_id = ? AND user_id = ? AND left_at IS NOT NULL",
         [chatId, userId]
-      );
+      ))[0][0].count > 0;
+
+      if (formerMember) {
+        // Re-activate the former member by setting left_at to NULL
+        await querySQLDatabase(
+          "UPDATE chat_members SET left_at = NULL WHERE chat_id = ? AND user_id = ?",
+          [chatId, userId]
+        );
+      } else {
+        // Add as a new member if they weren't a member before
+        await querySQLDatabase(
+          "INSERT INTO chat_members (chat_id, user_id) VALUES (?, ?)",
+          [chatId, userId]
+        );
+      }
       
       // Get chat details for response
       const chatDetails = (await querySQLDatabase(
@@ -770,14 +791,14 @@ async function getChatMembers(req, res) {
       return res.status(403).json({ error: 'You are not a member of this chat' });
     }
 
-    // Get members with online status
+    // Get members with online status - ADD THE LEFT_AT IS NULL CONDITION
     const members = (await querySQLDatabase(
       "SELECT u.user_id, u.username, u.profile_pic_link, " +
       "CASE WHEN u.last_online > DATE_SUB(NOW(), INTERVAL 15 SECOND) THEN 1 ELSE 0 END AS is_online, " +
       "cm.joined_at " +
       "FROM chat_members cm " +
       "JOIN users u ON cm.user_id = u.user_id " +
-      "WHERE cm.chat_id = ? " +
+      "WHERE cm.chat_id = ? AND cm.left_at IS NULL " +
       "ORDER BY cm.joined_at",
       [chatId]
     ))[0];
@@ -918,7 +939,7 @@ async function leaveChatRoom(req, res) {
       userId: userId,
       username: userInfo.username
     });
-
+    
     // if the user is the last member, delete the chat room
     const remainingMembers = (await querySQLDatabase(
       "SELECT COUNT(*) AS count FROM chat_members WHERE chat_id = ? AND left_at IS NULL",
