@@ -77,6 +77,7 @@ public class FeedRankJob extends SparkJob<List<SerializablePair<String, Double>>
 		Dataset<Row> interests = spark.read().jdbc(Config.MYSQL_URL, "hashtags", connectionProperties);
 
 		// Create JavaPairRDD from user to liked posts.
+		
 
 		// Create JavaPairRDD from user to selected hashtag interests.
 
