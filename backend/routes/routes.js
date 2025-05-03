@@ -1308,7 +1308,6 @@ async function getFeed(req, res) {
        LIMIT 100`, 
       [username]
     );
-
     return res.status(200).json(result);
   } catch (err) {
     console.error("Error getting feed:", err);
