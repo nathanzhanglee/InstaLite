@@ -135,6 +135,22 @@ export const ChatProvider: React.FC<{ children: React.ReactNode }> = ({ children
     };
   }, [socket, activeChatId]);
 
+  // Ensure unique members by user_id
+  const loadChatMembers = async (chatId: number) => {
+    try {
+      const membersResponse = await axios.get(`${rootURL}/chatMembers/${chatId}`);
+      
+      const uniqueMembers: { [key: number]: ChatMember } = {};
+      membersResponse.data.forEach((member: ChatMember) => {
+        uniqueMembers[member.user_id] = member;
+      });
+      
+      setActiveChatMembers(Object.values(uniqueMembers));
+    } catch (error) {
+      console.error('Error fetching chat members:', error);
+    }
+  };
+
   // Listen for real-time messages when active chat changes
   useEffect(() => {
     if (!socket || !activeChatId) return;
@@ -148,12 +164,7 @@ export const ChatProvider: React.FC<{ children: React.ReactNode }> = ({ children
 
       // After joining a room, fetch the complete member list from server
       // instead of relying on incremental updates
-      try {
-        const membersResponse = await axios.get(`${rootURL}/chatMembers/${activeChatId}`);
-        setActiveChatMembers(membersResponse.data);
-      } catch (error) {
-        console.error('Error fetching chat members after joining room:', error);
-      }
+      await loadChatMembers(activeChatId);
     });
 
     // Listen for new messages
@@ -172,18 +183,44 @@ export const ChatProvider: React.FC<{ children: React.ReactNode }> = ({ children
 
     // Handle when a user joins the chat
     const handleUserJoin = (data: { userId: number, username: string }) => {
+      // Convert userId to number for consistent comparison
+      const joinedUserId = typeof data.userId === 'string' ? 
+        parseInt(data.userId, 10) : data.userId;
+          
+      // Get our own userId for comparison
+      const myUserId = parseInt(localStorage.getItem('userId') || '0', 10);
+          
       // Only handle join events for other users, not ourselves
-      if (parseInt(localStorage.getItem('userId') || '0') === data.userId) {
+      if (myUserId === joinedUserId) {
         return;
       }
 
+      // Add a system message about the user joining
+      const systemMessage: Message = {
+        message_id: `system-join-${Date.now()}`,
+        sender_id: -1, // Use -1 to indicate system message
+        sender_username: 'System',
+        content: `${data.username} joined the chat`,
+        chatId: activeChatId || 0,
+        sent_at: new Date().toISOString()
+      };
+      
+      setMessages(prev => [...prev, systemMessage]);
+
+      // Update members list avoiding duplicates
       setActiveChatMembers(prev => {
-        // Remove any existing entries for this user
-        const filteredList = prev.filter(member => member.user_id !== data.userId);
-        
-        // Add the user back with updated info
-        return [...filteredList, {
-          user_id: data.userId,
+        // Check if user already exists with strict number comparison
+        const exists = prev.some(member => 
+          parseInt(String(member.user_id), 10) === joinedUserId
+        );
+            
+        if (exists) {
+          return prev; // No changes if user exists
+        }
+            
+        // Add the new user to the list
+        return [...prev, {
+          user_id: joinedUserId,
           username: data.username,
           profile_pic_link: null,
           is_online: 1,
@@ -193,9 +230,33 @@ export const ChatProvider: React.FC<{ children: React.ReactNode }> = ({ children
     };
 
     // Handle when a user leaves the chat
-    const handleUserLeave = (userId: number) => {
+    const handleUserLeave = (data: { userId: number | string, username: string }) => {
+      console.log('User leaving chat:', data);
+      
+      // No need to search for the user since we get the username directly
+      const username = data.username;
+      
+      // Add system message for user leaving
+      const systemMessage: Message = {
+        message_id: `system-leave-${Date.now()}`,
+        sender_id: -1, // Use -1 to indicate system message
+        sender_username: 'System',
+        content: `${username} left the chat`,
+        chatId: activeChatId || 0,
+        sent_at: new Date().toISOString()
+      };
+      
+      setMessages(prev => [...prev, systemMessage]);
+      
+      // Convert userId to number for consistent comparison
+      const leavingUserId = typeof data.userId === 'string' ? 
+        parseInt(data.userId, 10) : data.userId;
+      
+      // Remove from member list
       setActiveChatMembers(prev =>
-        prev.filter(member => member.user_id !== userId)
+        prev.filter(member => 
+          parseInt(String(member.user_id), 10) !== leavingUserId
+        )
       );
     };
 
@@ -206,15 +267,12 @@ export const ChatProvider: React.FC<{ children: React.ReactNode }> = ({ children
     return () => {
       console.log(`Leaving room: ${roomName}`);
       socket.emit('leaveRoom', roomName);
+      
+      // Clean up all event listeners
       socket.off('joinedRoom');
       socket.off('receiveMessage', handleNewMessage);
       socket.off('userJoinedChat', handleUserJoin);
       socket.off('userLeftChat', handleUserLeave);
-
-      // Leave the room when component unmounts or chat changes
-      if (activeChatId) {
-        socket.emit('leaveRoom', `chat-${activeChatId}`);
-      }
     };
   }, [socket, activeChatId, rootURL]);
 
@@ -315,9 +373,8 @@ export const ChatProvider: React.FC<{ children: React.ReactNode }> = ({ children
       const room = chatRooms.find(room => room.chat_id === chatId);
       setActiveChatName(room?.name || null);
 
-      // Load chat members
-      const membersResponse = await axios.get(`${rootURL}/chatMembers/${chatId}`);
-      setActiveChatMembers(membersResponse.data);
+      // Load chat members using the dedicated function
+      await loadChatMembers(chatId);
 
       // Load messages
       const messagesResponse = await axios.get(`${rootURL}/messages/${chatId}`);
@@ -374,7 +431,10 @@ export const ChatProvider: React.FC<{ children: React.ReactNode }> = ({ children
         setMessages([]);
       }
 
-      // Refresh chat rooms list
+      // Immediately remove this room from local state
+      setChatRooms(prev => prev.filter(room => room.chat_id !== chatId));
+      
+      // Then refresh the full list from the server
       fetchChatRooms();
     } catch (error) {
       console.error('Error leaving chat:', error);

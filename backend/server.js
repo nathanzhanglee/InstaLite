@@ -48,6 +48,8 @@ const io = new Server(server, {
   }
 });
 
+app.set('io', io);
+
 const dbaccess = get_db_connection();
 
 const querySQLDatabase = async (query, params = []) => {

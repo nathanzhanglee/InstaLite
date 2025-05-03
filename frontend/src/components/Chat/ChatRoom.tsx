@@ -134,17 +134,26 @@ const ChatRoom: React.FC<ChatRoomProps> = ({ chatId, onBack }) => {
                 <div 
                   key={`${msg.message_id}-${msg.sender_id}-${msg.sent_at}`}
                   className={`message-bubble ${
+                    msg.sender_id === -1 ? 'system-message' :
                     activeChatMembers.find(m => m.user_id === msg.sender_id)?.username === 
                     localStorage.getItem('username') ? 'sent' : 'received'
                   }`}
                 >
-                  <div className="message-header">
-                    <span className="sender-name">{msg.sender_username}</span>
-                    <span className="message-time">
-                      {new Date(msg.sent_at).toLocaleTimeString()}
-                    </span>
-                  </div>
-                  <div className="message-content">{msg.content}</div>
+                  {msg.sender_id === -1 ? (
+                    // System message
+                    <div className="system-message-content">{msg.content}</div>
+                  ) : (
+                    // Regular message
+                    <>
+                      <div className="message-header">
+                        <span className="sender-name">{msg.sender_username}</span>
+                        <span className="message-time">
+                          {new Date(msg.sent_at).toLocaleTimeString()}
+                        </span>
+                      </div>
+                      <div className="message-content">{msg.content}</div>
+                    </>
+                  )}
                 </div>
               ))}
               <div ref={messagesEndRef} />

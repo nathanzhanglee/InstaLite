@@ -1,0 +1,17 @@
+.system-message {
+  text-align: center;
+  background: none;
+  padding: 5px 0;
+  margin: 10px 0;
+  box-shadow: none;
+}
+
+.system-message-content {
+  display: inline-block;
+  background-color: rgba(180, 180, 180, 0.3);
+  padding: 5px 12px;
+  border-radius: 12px;
+  font-style: italic;
+  font-size: 0.9em;
+  color: #555;
+}

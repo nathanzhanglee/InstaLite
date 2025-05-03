@@ -731,10 +731,10 @@ async function getChatRooms(req, res) {
   try {
     const chatRooms = (await querySQLDatabase(
       "SELECT cr.chat_id, cr.name, cr.created_at, " +
-      "(SELECT COUNT(*) FROM chat_members WHERE chat_id = cr.chat_id) AS member_count " +
+      "(SELECT COUNT(*) FROM chat_members WHERE chat_id = cr.chat_id AND left_at IS NULL) AS member_count " +
       "FROM chat_rooms cr " +
       "JOIN chat_members cm ON cr.chat_id = cm.chat_id " +
-      "WHERE cm.user_id = ? " +
+      "WHERE cm.user_id = ? AND cm.left_at IS NULL " + // Add this condition to filter out rooms the user has left
       "ORDER BY cr.created_at DESC",
       [userId]
     ))[0];
@@ -905,6 +905,19 @@ async function leaveChatRoom(req, res) {
       "UPDATE chat_members SET left_at = NOW() WHERE chat_id = ? AND user_id = ?",
       [chatId, userId]
     );
+
+    // Get username before emitting the leave event
+    const userInfo = (await querySQLDatabase(
+      "SELECT username FROM users WHERE user_id = ?", 
+      [userId]
+    ))[0][0];
+
+    // Emit an event with both userId and username
+    const io = req.app.get('io');
+    io.to(`chat-${chatId}`).emit('userLeftChat', {
+      userId: userId,
+      username: userInfo.username
+    });
 
     // if the user is the last member, delete the chat room
     const remainingMembers = (await querySQLDatabase(
