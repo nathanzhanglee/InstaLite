@@ -104,6 +104,8 @@ async function registerUser(req, res) {
       return res.status(400).json({ error: 'registerUser: Missing required fields' });
     }
 
+    // Need to add comma-separated hashtag interests that they specify when registering!
+
     try {
       const usernameMatches = await querySQLDatabase(`SELECT COUNT(*) AS ucount FROM users WHERE username = ?`, [username]);
       if (usernameMatches[0][0].ucount > 0) {

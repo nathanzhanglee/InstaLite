@@ -73,17 +73,63 @@ public class FeedRankJob extends SparkJob<List<SerializablePair<String, Double>>
 		// Read data from MySQL
 		Dataset<Row> posts = spark.read().jdbc(Config.MYSQL_URL, "posts", connectionProperties);
 		Dataset<Row> likes = spark.read().jdbc(Config.MYSQL_URL, "likes", connectionProperties);
-		Dataset<Row> follows = spark.read().jdbc(Config.MYSQL_URL, "friends", connectionProperties);
-		Dataset<Row> interests = spark.read().jdbc(Config.MYSQL_URL, "hashtags", connectionProperties);
+		Dataset<Row> friends = spark.read().jdbc(Config.MYSQL_URL, "friends", connectionProperties);
+		Dataset<Row> hashtags = spark.read().jdbc(Config.MYSQL_URL, "hashtags", connectionProperties);
+
+		// Create JavaPairRDD between users with at least one following the other.
+		JavaPairRDD<String, String> friendEdges = friends.javaRDD()
+			.flatMapToPair(row -> {
+					String followed = row.getAs("followed"); // returns user_id
+					String follower = row.getAs("follower"); // returns user_id
+					return Arrays.asList(
+							new Tuple2<>(followed, follower),
+							new Tuple2<>(follower, followed)
+					).iterator();
+			});
 
 		// Create JavaPairRDD from user to liked posts.
-		
+		JavaPairRDD<String, String> likeEdges = likes.javaRDD()
+			.flatMapToPair(row -> {
+					String user = row.getAs("user_id");
+					String post = "post:" + row.getAs("post_id"); // add "post:" to avoid id collisions
+					return Arrays.asList(
+							new Tuple2<>(user, post),
+							new Tuple2<>(post, user)
+					).iterator();
+			});
 
 		// Create JavaPairRDD from user to selected hashtag interests.
+		JavaPairRDD<String, String> hashtagEdges = hashtags.javaRDD()
+			.flatMapToPair(row -> {
+					String user = row.getAs("user_id");
+					String hashtagRow = row.getAs("hashtag");
+					String[] hashtags = hashtagRow.split(",");
+					List<Tuple2<String, String>> tuples = new ArrayList<>();
+					for (String hashtag: hashtags) {
+						edges.add(new Tuple2<>(user, "hashtag:" + hashtag)); // use "hashtag:" to avoid id collisions
+						edges.add(new Tuple2<>("hashtag:" + hashtag, user));
+					}
+					return tuples.iterator();
+			});
 
 		// Create JavaPairRDD from post to hashtag contained in the post content.
+		JavaPairRDD<String, String> hashtagPostEdges = posts.javaRDD()
+			.flatMapToPair(row -> {
+					String post_id = row.getAs("post_id");
+					String hashtagRow = row.getAs("hash_tags");
+					String[] hashtags = hashtagRow.split(",");
+					List<Tuple2<String, String>> tuples = new ArrayList<>();
+					for (String hashtag: hashtags) {
+						edges.add(new Tuple2<>("post:" + post_id, "hashtag:" + hashtag));
+						edges.add(new Tuple2<>("hashtag:" + hashtag, "post:" + post_id));
+					}
+					return tuples.iterator();
+			});
 
-		JavaPairRDD<String, String> network = null;
+		JavaPairRDD<String, String> network = friendEdges
+			.union(hashtagEdges)
+			.union(likeEdges)
+			.union(hashtagPostEdges);;
 
 		return network;
 	}
