@@ -90,9 +90,7 @@ function handleFileUpload(imageConfig, handler) {
 function register_routes(app) {
   app.post('/register', routes.registerUser);
   app.post('/login', routes.postLogin);
-  app.post('/getActorMatches', 
-    handleFileUpload(IMAGE_CONFIG.PROFILE, routes.getActorMatches)
-  );
+  app.post('/getActorMatches', routes.getActorMatches);
 
 
   app.use(routes.authenticateRequest);     

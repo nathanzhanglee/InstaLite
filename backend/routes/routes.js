@@ -6,6 +6,7 @@ import {v4 as uuidv4} from 'uuid';
 import bcrypt from 'bcrypt';
 import crypto from 'crypto';
 import fs from 'fs';
+import multer from 'multer';
 
 // hw4 langchain imports
 import { ChatOpenAI } from "@langchain/openai";
@@ -92,6 +93,8 @@ async function registerUser(req, res) {
     const password = req.body.password;
     const birthday = req.body.birthday;   
     const affiliation = req.body.affiliation;
+    const hashtags = req.body.hashtags || [];  // Default to empty array if not provided
+    const profile_pic_link = req.body.profilePicUrl || null;  // Default to null if not provided
 
     //think about how bday would be passed in: let's assume YYYY-MM-DD because that's how SQL wants it
     //validate birthday here
@@ -104,7 +107,10 @@ async function registerUser(req, res) {
       return res.status(400).json({ error: 'registerUser: Missing required fields' });
     }
 
-    // Need to add comma-separated hashtag interests that they specify when registering!
+    // Format hashtags as JSON string if provided as array
+    const hashtags_json = Array.isArray(hashtags) ? JSON.stringify(hashtags) : (
+      typeof hashtags === 'string' ? JSON.stringify(hashtags.split(',').map(tag => tag.trim())) : '[]'
+    );
 
     try {
       const usernameMatches = await querySQLDatabase(`SELECT COUNT(*) AS ucount FROM users WHERE username = ?`, [username]);
@@ -114,8 +120,9 @@ async function registerUser(req, res) {
 
       const hashedPassword = await bcrypt.hash(password, 10);
 
-      const insertCommand = 'INSERT INTO users (username, email, first_name, last_name, birthday, affiliation, hashed_password) VALUES (?, ?, ?, ?, ?, ?, ?)';
-      const params = [username, email, first_name, last_name, birthday, affiliation, hashedPassword];
+      // Add hashtags and profile_pic_link to the SQL query
+      const insertCommand = 'INSERT INTO users (username, email, first_name, last_name, birthday, affiliation, hashed_password, interests, profile_pic_link) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?)';
+      const params = [username, email, first_name, last_name, birthday, affiliation, hashedPassword, hashtags_json, profile_pic_link];
       await querySQLDatabase(insertCommand, params);
       const userResult = (await querySQLDatabase('SELECT user_id FROM users WHERE username = ?', [username]))[0];
       const user_id = userResult[0].user_id;
@@ -134,7 +141,11 @@ async function registerUser(req, res) {
           );
       }
       
-      return res.status(201).json({ message: `User ${username} registered successfully`});
+      return res.status(201).json({ 
+        message: `User ${username} registered successfully`,
+        userId: user_id,
+        profilePicUrl: profile_pic_link
+      });
     } catch (error) {
       console.error(`Error registering user ${username}:`, error);
       return res.status(500).json({error: 'Internal server error'});
@@ -386,41 +397,68 @@ async function registerProfilePicture(req, res) {
  * Used during the signup process
  */
 async function getActorMatches(req, res) {
-  const profilePic = req.file;
-  
-  if (!profilePic) {
-    return res.status(400).json({ error: 'No profile picture uploaded' });
-  }
+  // Set up multer for this specific route
+  const storage = multer.memoryStorage();
+  const upload = multer({
+    storage: storage,
+    limits: { fileSize: 2 * 1024 * 1024 }, // 2MB max size
+    fileFilter: (req, file, cb) => {
+      if (file.mimetype.startsWith('image/')) {
+        cb(null, true);
+      } else {
+        cb(new Error('Only images are allowed'), false);
+      }
+    }
+  }).single('profilePic');
 
-  let s3_path;
-  try {
-    // Upload to S3 with a temporary identifier
-    s3_path = await uploadToS3(profilePic, "temp-profile-pics");
-  } catch(err) {
-    console.error("Error uploading profile picture to S3:", err);
-    return res.status(500).json({ error: 'Error uploading image' });
-  }
-
-  let matches;
-  try {
-    const chroma_db_name = config.chromaDbName;
-    const embedding = await getEmbeddingFromPath(s3_path);
+  // Handle the file upload directly in the route handler
+  upload(req, res, async (err) => {
+    if (err) {
+      if (err instanceof multer.MulterError) {
+        if (err.code === 'LIMIT_FILE_SIZE') {
+          return res.status(413).json({ error: 'File is too large. Maximum size is 2MB.' });
+        }
+        return res.status(400).json({ error: `Upload error: ${err.message}` });
+      }
+      return res.status(400).json({ error: err.message });
+    }
     
-    matches = (await chroma_db.get_items_from_table(chroma_db_name, embedding, 5)).documents[0];
-  } catch (error) {
-    console.error(`Error getting top matches:`, error);
-    return res.status(500).json({error: 'Error processing image'});
-  }
-  
-  if (!matches || matches.length === 0) {
-    return res.status(503).json({ error: 'Actor matching not working right now - try again later!' });
-  }
+    const profilePic = req.file;
+    
+    if (!profilePic) {
+      return res.status(400).json({ error: 'No profile picture uploaded' });
+    }
 
-  matches = matchesToResults(matches);
-  return res.status(200).json({ 
-    message: 'Successfully found matches', 
-    matches: matches,
-    profilePicUrl: s3_path 
+    let s3_path;
+    try {
+      // Upload to S3 with a temporary identifier
+      s3_path = await uploadToS3(profilePic, "temp-profile-pics");
+    } catch(err) {
+      console.error("Error uploading profile picture to S3:", err);
+      return res.status(500).json({ error: 'Error uploading image' });
+    }
+
+    let matches;
+    try {
+      const chroma_db_name = config.chromaDbName;
+      const embedding = await getEmbeddingFromPath(s3_path);
+      
+      matches = (await chroma_db.get_items_from_table(chroma_db_name, embedding, 5)).documents[0];
+    } catch (error) {
+      console.error(`Error getting top matches:`, error);
+      return res.status(500).json({error: 'Error processing image'});
+    }
+    
+    if (!matches || matches.length === 0) {
+      return res.status(503).json({ error: 'Actor matching not working right now - try again later!' });
+    }
+
+    matches = matchesToResults(matches);
+    return res.status(200).json({ 
+      message: 'Successfully found matches', 
+      matches: matches,
+      profilePicUrl: s3_path 
+    });
   });
 }
 
