@@ -117,9 +117,23 @@ async function registerUser(req, res) {
       const insertCommand = 'INSERT INTO users (username, email, first_name, last_name, birthday, affiliation, hashed_password) VALUES (?, ?, ?, ?, ?, ?, ?)';
       const params = [username, email, first_name, last_name, birthday, affiliation, hashedPassword];
       await querySQLDatabase(insertCommand, params);
-      const user_id = (await querySQLDatabase('SELECT user_id FROM users WHERE username = ?', [username]))[0].user_id;
+      const userResult = (await querySQLDatabase('SELECT user_id FROM users WHERE username = ?', [username]))[0];
+      const user_id = userResult[0].user_id;
 
-      req.session.user_id = user_id;  //set session id
+      // Start a session with proper cookie
+      let sessionResult = await startSession(user_id);
+      if (sessionResult.success) {
+          res.cookie(
+              'session_token',
+              sessionResult.sessionToken,
+              {
+                  httpOnly: false,
+                  secure: false, // set to true for production
+                  sameSite: 'lax' 
+              }
+          );
+      }
+      
       return res.status(201).json({ message: `User ${username} registered successfully`});
     } catch (error) {
       console.error(`Error registering user ${username}:`, error);
@@ -299,13 +313,28 @@ async function postLogout(req, res) {
 }
 
 async function registerProfilePicture(req, res) {
-  const userId = req.session.user_id;   //may eventually update with security in mind
+  // Try to get userId from session first
+  let userId = req.session.user_id;
+  
+  // For new registrations, allow username as an alternative
+  if (!userId && req.body.username) {
+    try {
+      // Look up the user by username
+      const results = await querySQLDatabase('SELECT user_id FROM users WHERE username = ?', [req.body.username]);
+      if (results[0] && results[0].length > 0) {
+        userId = results[0][0].user_id;
+      }
+    } catch (err) {
+      console.error("Error looking up user by username:", err);
+    }
+  }
+  
   if (!userId) {
-    res.status(403).json({error: 'Not logged in.'});
+    return res.status(403).json({error: 'Not logged in or invalid username.'});
   }
 
-  const profilePic = req.file; // multer stores the binary file in req.file
-
+  const profilePic = req.file;
+  
   if (!profilePic) {
     return res.status(400).json({ error: 'No profile picture uploaded' });
   }
@@ -349,6 +378,50 @@ async function registerProfilePicture(req, res) {
 
   top_matches = matchesToResults(top_matches);
   return res.status(200).json({ message: 'Profile picture added successfully', top_matches });
+}
+
+
+/**
+ * Get actor matches for a profile picture without requiring an authenticated user
+ * Used during the signup process
+ */
+async function getActorMatches(req, res) {
+  const profilePic = req.file;
+  
+  if (!profilePic) {
+    return res.status(400).json({ error: 'No profile picture uploaded' });
+  }
+
+  let s3_path;
+  try {
+    // Upload to S3 with a temporary identifier
+    s3_path = await uploadToS3(profilePic, "temp-profile-pics");
+  } catch(err) {
+    console.error("Error uploading profile picture to S3:", err);
+    return res.status(500).json({ error: 'Error uploading image' });
+  }
+
+  let matches;
+  try {
+    const chroma_db_name = config.chromaDbName;
+    const embedding = await getEmbeddingFromPath(s3_path);
+    
+    matches = (await chroma_db.get_items_from_table(chroma_db_name, embedding, 5)).documents[0];
+  } catch (error) {
+    console.error(`Error getting top matches:`, error);
+    return res.status(500).json({error: 'Error processing image'});
+  }
+  
+  if (!matches || matches.length === 0) {
+    return res.status(503).json({ error: 'Actor matching not working right now - try again later!' });
+  }
+
+  matches = matchesToResults(matches);
+  return res.status(200).json({ 
+    message: 'Successfully found matches', 
+    matches: matches,
+    profilePicUrl: s3_path 
+  });
 }
 
 //POST /associate
@@ -1442,6 +1515,8 @@ async function postUpdateActivity(req, res) {
 
 export {
   registerUser,
+  registerProfilePicture,
+  getActorMatches,
   postLogin,
   authenticateRequest,
   associateWithActor,
@@ -1463,5 +1538,6 @@ export {
   createPost,
   getChatBot,
   sendMessageExistingChat,
-  postUpdateActivity
+  postUpdateActivity,
+  listChromaCollections
 }

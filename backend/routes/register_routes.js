@@ -90,6 +90,11 @@ function handleFileUpload(imageConfig, handler) {
 function register_routes(app) {
   app.post('/register', routes.registerUser);
   app.post('/login', routes.postLogin);
+  app.post('/getActorMatches', 
+    handleFileUpload(IMAGE_CONFIG.PROFILE, routes.getActorMatches)
+  );
+
+
   app.use(routes.authenticateRequest);     
   //!!! NOTE: this is middleware. anything after this will use authentication
 

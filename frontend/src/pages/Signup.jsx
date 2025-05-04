@@ -79,14 +79,21 @@ export default function Signup() {
                 alert('Passwords do not match');
                 return;
             }
+            
+            // Move to profile picture step
+            setCurrentStep(2);
+        } else if (currentStep === 2) {
+            if (!profilePic) {
+                alert('Please upload a profile picture');
+                return;
+            }
+            
+            uploadProfilePic();
+            // Step 3 is handled in uploadProfilePic() when it receives a response
+        } else if (currentStep === 3) {
+            // Move to interests step after selecting actor (or skipping)
+            setCurrentStep(4);
         }
-        
-        if (currentStep === 2 && !profilePic) {
-            alert('Please upload a profile picture');
-            return;
-        }
-        
-        setCurrentStep(currentStep + 1);
     };
 
     const prevStep = () => {
@@ -98,48 +105,58 @@ export default function Signup() {
         try {
             const formData = new FormData();
             formData.append('profilePic', profilePic);
+
+            // Show loading state
+            alert("Processing your image...");
             
-            const response = await axios.post(`${rootURL}/setProfilePic`, formData, {
+            // Just get the actor matches without registering the user
+            const response = await axios.post(`${rootURL}/getActorMatches`, formData, {
                 headers: {
                     'Content-Type': 'multipart/form-data'
-                },
-                withCredentials: true
+                }
             });
             
-            setTopMatches(response.data.top_matches || []);
+            setTopMatches(response.data.matches || []);
             setCurrentStep(3);
         } catch (error) {
-            console.error('Error uploading profile picture:', error);
-            alert('Failed to upload profile picture: ' + (error.response?.data?.error || 'Unknown error'));
+            console.error('Error processing profile picture:', error);
+            alert('Failed to process profile picture: ' + (error.response?.data?.error || 'Unknown error'));
         }
     };
 
     // form submission
     const handleSubmit = async (event) => {
         event.preventDefault();
-        
+
         try {
-            // First register the user
-            const response = await axios.post(`${rootURL}/register`, {
-                username,
-                email,
-                fname: firstName,
-                lname: lastName,
-                password,
-                birthday,
-                affiliation,
-                interests: interests.join(',')
-            });
-            
-            // Use response data and proceed to next step
-            if (profilePic) {
-                // If they already uploaded a photo, move to step 2
-                nextStep();
-            } else {
-                // Otherwise go to homepage
-                alert('Welcome ' + username + '!');
-                navigate(`/${username}/home`);
+            // Create form data for the full registration
+            const formData = new FormData();
+
+            // Add all user data
+            formData.append('username', username);
+            formData.append('email', email);
+            formData.append('fname', firstName);
+            formData.append('lname', lastName);
+            formData.append('password', password);
+            formData.append('birthday', birthday);
+            formData.append('affiliation', affiliation);
+            formData.append('interests', interests.join(','));
+            formData.append('profilePic', profilePic);
+
+            // Add selected actor if any
+            if (selectedActor) {
+                formData.append('actorId', selectedActor);
             }
+
+            // Register user with all data in one step
+            await axios.post(`${rootURL}/register`, formData, {
+                headers: {
+                    'Content-Type': 'multipart/form-data'
+                }
+            });
+
+            alert('Registration complete! Welcome ' + username + '!');
+            navigate(`/${username}/home`);
         } catch (error) {
             console.error('Registration error:', error);
             alert('Registration failed: ' + (error.response?.data?.error || 'Unknown error'));
@@ -147,21 +164,8 @@ export default function Signup() {
     };
 
     // Select an actor from matches
-    const selectActor = async (actorId) => {
-        try {
-            setSelectedActor(actorId);
-            
-            await axios.post(`${rootURL}/linkActor`, {
-                actorId
-            }, {
-                withCredentials: true
-            });
-            alert('Registration complete! Welcome ' + username + '!');
-            navigate(`/${username}/home`);
-        } catch (error) {
-            console.error('Error linking actor:', error);
-            alert('Failed to link actor: ' + (error.response?.data?.error || 'Unknown error'));
-        }
+    const selectActor = (actorId) => {
+        setSelectedActor(actorId);
     };
 
     // Signup Step 1: basic info
@@ -266,7 +270,7 @@ export default function Signup() {
                 />
             </div>
             
-            <button type="button" className='signup-button' onClick={handleSubmit}>
+            <button type="button" className='signup-button' onClick={nextStep}>
                 Continue
             </button>
         </div>
@@ -299,7 +303,7 @@ export default function Signup() {
                 >
                     {previewUrl ? 'Change Picture' : 'Select Picture'}
                 </button>
-                
+                    
                 <p className='text-sm text-gray-500'>Upload a picture to find similar actors</p>
             </div>
             
@@ -325,12 +329,9 @@ export default function Signup() {
                     <button 
                         type="button" 
                         className='px-4 py-2 bg-blue-500 text-white rounded-md mt-4'
-                        onClick={() => {
-                            alert('Welcome ' + username + '!');
-                            navigate(`/${username}/home`);
-                        }}
+                        onClick={() => setCurrentStep(4)}
                     >
-                        Continue to Homepage
+                        Continue to Interests
                     </button>
                 </div>
             ) : (
@@ -354,19 +355,21 @@ export default function Signup() {
                 <button type="button" className='px-4 py-2 bg-gray-300 rounded-md' onClick={prevStep}>
                     Back
                 </button>
-                <button 
-                    type="button" 
-                    className='px-4 py-2 bg-blue-500 text-white rounded-md' 
-                    onClick={() => {
-                        if (selectedActor) {
-                            navigate(`/${username}/home`);
-                        } else {
-                            alert('Please select a celebrity or skip');
-                        }
-                    }}
-                >
-                    {selectedActor ? 'Continue' : 'Skip'}
-                </button>
+                {topMatches.length > 0 && (
+                    <button 
+                        type="button" 
+                        className='px-4 py-2 bg-blue-500 text-white rounded-md' 
+                        onClick={() => {
+                            if (selectedActor) {
+                                setCurrentStep(4);
+                            } else {
+                                alert('Please select a celebrity look-alike to continue');
+                            }
+                        }}
+                    >
+                        Continue
+                    </button>
+                )}
             </div>
         </div>
     );
@@ -434,21 +437,7 @@ export default function Signup() {
                 <button 
                     type="button" 
                     className='px-4 py-2 bg-blue-500 text-white rounded-md'
-                    onClick={async () => {
-                        try {
-                            await axios.post(`${rootURL}/updateInterests`, {
-                                interests: interests.join(',')
-                            }, {
-                                withCredentials: true
-                            });
-                            
-                            alert('Profile complete! Welcome ' + username + '!');
-                            navigate(`/${username}/home`);
-                        } catch (error) {
-                            console.error('Error updating interests:', error);
-                            alert('Failed to update interests: ' + (error.response?.data?.error || 'Unknown error'));
-                        }
-                    }}
+                    onClick={handleSubmit}
                 >
                     Finish
                 </button>
