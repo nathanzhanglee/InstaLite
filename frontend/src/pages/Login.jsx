@@ -34,7 +34,7 @@ export default function Login() {
         // Also store userId separately in localStorage for WebSockets
         localStorage.setItem('userId', userId.toString());
         
-        navigate(`/${username}/home`);
+        navigate('/feed');
       }
     } catch (error) {
       console.error('Login failed:', error);

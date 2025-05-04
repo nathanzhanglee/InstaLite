@@ -1549,9 +1549,133 @@ async function postUpdateActivity(req, res) {
   }
 }
 
+// GET user profile
+async function getUserProfile(req, res) {
+  const requestedUsername = req.params.username;
+  const userId = req.session.user_id; // The logged-in user
+  
+  if (!userId) {
+    return res.status(403).json({error: 'Not logged in.'});
+  }
 
+  try {
+    // First get the basic user profile
+    const profile = (await querySQLDatabase(
+      "SELECT u.user_id, u.username, u.email, u.first_name, u.last_name, u.profile_pic_link, u.birthday, u.affiliation, " +
+      "(SELECT COUNT(*) FROM friends WHERE followed = u.user_id) AS followers_count, " +
+      "(SELECT COUNT(*) FROM friends WHERE follower = u.user_id) AS following_count " +
+      "FROM users u WHERE u.username = ?",
+      [requestedUsername]
+    ))[0][0];
+
+    if (!profile) {
+      return res.status(404).json({error: 'User not found'});
+    }
+
+    // Now get the interests (hashtags) for this user
+    const hashtags = (await querySQLDatabase(
+      "SELECT hashtag FROM hashtags WHERE user_id = ?",
+      [profile.user_id]
+    ))[0];
+    
+    // Add interests to the profile object as an array
+    profile.interests = hashtags.map(tag => tag.hashtag);
+
+    return res.status(200).json(profile);
+  } catch (err) {
+    console.error("Error fetching user profile:", err);
+    return res.status(500).json({error: 'Internal server error'});
+  }
+}
+
+async function getUserPosts(req, res) {
+  const requestedUsername = req.params.username;
+  const userId = req.session.user_id; // The logged-in user
+  
+  if (!userId) {
+    return res.status(403).json({error: 'Not logged in.'});
+  }
+
+  try {
+    const posts = (await querySQLDatabase(
+      "SELECT p.post_id, p.title, p.content, p.author_username, p.image_link " +
+      "FROM posts p WHERE p.author_username = ? ORDER BY p.post_id DESC",
+      [requestedUsername]
+    ))[0];
+
+    return res.status(200).json(posts || []);
+  } catch (err) {
+    console.error("Error fetching user posts:", err);
+    return res.status(500).json({error: 'Internal server error'});
+  }
+}
+
+async function updateProfile(req, res) {
+  const userId = req.session.user_id;
+  if (!userId) {
+    return res.status(403).json({error: 'Not logged in.'});
+  }
+
+  // Extract data from form - note field names match what frontend sends
+  const { first_name, last_name, email, birthday, affiliation } = req.body;
+  let interests = [];
+  
+  try {
+    // Parse interests from JSON string
+    if (req.body.interests) {
+      interests = JSON.parse(req.body.interests);
+    }
+    
+    // First update the user profile in the users table
+    await querySQLDatabase(
+      "UPDATE users SET first_name = ?, last_name = ?, email = ?, birthday = ?, affiliation = ? WHERE user_id = ?",
+      [first_name, last_name, email, birthday, affiliation, userId]
+    );
+    
+    // Handle profile picture if provided
+    if (req.file) {
+      const s3_path = await uploadToS3(req.file, "profile-pics");
+      await querySQLDatabase(
+        "UPDATE users SET profile_pic_link = ? WHERE user_id = ?",
+        [s3_path, userId]
+      );
+    }
+    
+    // Handle interests/hashtags separately
+    // First, remove all existing hashtags for the user
+    await querySQLDatabase(
+      "DELETE FROM hashtags WHERE user_id = ?",
+      [userId]
+    );
+    
+    // Then insert new hashtags
+    if (interests.length > 0) {
+      const placeholders = interests.map(() => "(?, ?)").join(", ");
+      const params = [];
+      
+      interests.forEach(hashtag => {
+        // Remove # symbol if present
+        const tag = hashtag.startsWith('#') ? hashtag.slice(1) : hashtag;
+        params.push(userId, tag);
+      });
+      
+      await querySQLDatabase(
+        `INSERT INTO hashtags (user_id, hashtag) VALUES ${placeholders}`,
+        params
+      );
+    }
+    
+    return res.status(200).json({message: 'Profile updated successfully'});
+  } catch (err) {
+    console.error("Error updating profile:", err);
+    return res.status(500).json({error: 'Internal server error'});
+  }
+}
 
 export {
+  getUserProfile,
+  getUserPosts,
+  updateProfile,
   registerUser,
   registerProfilePicture,
   getActorMatches,

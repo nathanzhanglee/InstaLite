@@ -35,7 +35,7 @@ const NavigationBar = () => {
     return (
         <nav className="navigation-bar">
             <div className="nav-logo">
-                <Link to={`/${username}/home`}>Pennstagram</Link>
+                <Link to={`/feed`}>Pennstagram</Link>
             </div>
             <ul className="nav-links">
                 <li>
@@ -52,13 +52,13 @@ const NavigationBar = () => {
                     )}
                 </li>
                 <li>
-                    <Link to="/chatbot">Chatbot</Link>
+                    <Link to="/createPost">Create Post</Link>
                 </li>
                 <li>
                     <Link to="/friends">Friends</Link>
                 </li>
                 <li>
-                    <Link to="/profile">Profile</Link>
+                    <Link to={`/profile/${username}`}>Profile</Link>
                 </li>
                 <li>
                     <button onClick={handleLogout} className="logout-button">Logout</button>

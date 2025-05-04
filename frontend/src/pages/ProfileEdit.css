@@ -1,0 +1,294 @@
+.profile-edit-container {
+  max-width: 800px;
+  margin: 0 auto;
+  padding: 20px;
+}
+
+.profile-edit-header {
+  display: flex;
+  align-items: center;
+  margin-bottom: 30px;
+}
+
+.profile-edit-header h1 {
+  margin: 0;
+  font-size: 1.8rem;
+  color: #333;
+  margin-left: 20px;
+}
+
+.back-button {
+  display: flex;
+  align-items: center;
+  background: none;
+  border: none;
+  color: #0095f6;
+  cursor: pointer;
+  font-size: 1rem;
+  padding: 0;
+}
+
+.back-button svg {
+  margin-right: 8px;
+}
+
+.profile-edit-form {
+  background-color: white;
+  padding: 30px;
+  border-radius: 8px;
+  box-shadow: 0 1px 3px rgba(0, 0, 0, 0.1);
+}
+
+.profile-pic-edit {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  margin-bottom: 30px;
+}
+
+.profile-pic-preview {
+  width: 120px;
+  height: 120px;
+  border-radius: 50%;
+  overflow: hidden;
+  margin-bottom: 15px;
+}
+
+.profile-pic-preview img {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+}
+
+.profile-pic-placeholder {
+  width: 100%;
+  height: 100%;
+  background-color: #0095f6;
+  color: white;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 50px;
+  font-weight: bold;
+}
+
+.hidden-file-input {
+  display: none;
+}
+
+.secondary-button {
+  background-color: #f0f0f0;
+  color: #333;
+  border: none;
+  padding: 8px 16px;
+  border-radius: 4px;
+  cursor: pointer;
+  font-size: 0.9rem;
+}
+
+.secondary-button:hover {
+  background-color: #e0e0e0;
+}
+
+.form-group {
+  margin-bottom: 20px;
+}
+
+.form-group label {
+  display: block;
+  margin-bottom: 8px;
+  font-weight: 500;
+  color: #333;
+}
+
+.form-group input, 
+.form-group select, 
+.form-group textarea {
+  width: 100%;
+  padding: 10px;
+  border: 1px solid #ddd;
+  border-radius: 4px;
+  font-size: 1rem;
+}
+
+.form-group input:focus, 
+.form-group select:focus, 
+.form-group textarea:focus {
+  outline: none;
+  border-color: #0095f6;
+  box-shadow: 0 0 0 2px rgba(0, 149, 246, 0.2);
+}
+
+.interests-container {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 10px;
+  margin-bottom: 15px;
+}
+
+.interest-tag {
+  background-color: #e1f5fe;
+  color: #0277bd;
+  padding: 5px 12px;
+  border-radius: 16px;
+  display: flex;
+  align-items: center;
+  font-size: 0.9rem;
+}
+
+.remove-interest {
+  background: none;
+  border: none;
+  color: #0277bd;
+  margin-left: 5px;
+  cursor: pointer;
+  padding: 0 5px;
+  font-size: 1.2rem;
+  line-height: 1;
+}
+
+.remove-interest:hover {
+  color: #01579b;
+}
+
+.add-interest {
+  display: flex;
+  gap: 10px;
+}
+
+.add-interest input {
+  flex-grow: 1;
+}
+
+.add-interest-button {
+  background-color: #0095f6;
+  color: white;
+  border: none;
+  padding: 8px 16px;
+  border-radius: 4px;
+  cursor: pointer;
+}
+
+.add-interest-button:hover {
+  background-color: #0077cc;
+}
+
+.form-error {
+  color: #d32f2f;
+  margin-bottom: 15px;
+  padding: 10px;
+  background-color: #ffebee;
+  border-radius: 4px;
+}
+
+.form-success {
+  color: #388e3c;
+  margin-bottom: 15px;
+  padding: 10px;
+  background-color: #e8f5e9;
+  border-radius: 4px;
+}
+
+.form-actions {
+  display: flex;
+  justify-content: flex-end;
+  gap: 15px;
+  margin-top: 30px;
+}
+
+.cancel-button {
+  background-color: #f0f0f0;
+  color: #333;
+  border: none;
+  padding: 10px 20px;
+  border-radius: 4px;
+  cursor: pointer;
+  font-size: 1rem;
+}
+
+.cancel-button:hover {
+  background-color: #e0e0e0;
+}
+
+.save-button {
+  background-color: #0095f6;
+  color: white;
+  border: none;
+  padding: 10px 20px;
+  border-radius: 4px;
+  cursor: pointer;
+  font-size: 1rem;
+}
+
+.save-button:hover {
+  background-color: #0077cc;
+}
+
+.save-button:disabled {
+  opacity: 0.7;
+  cursor: not-allowed;
+}
+
+.profile-edit-loading {
+  text-align: center;
+  padding: 50px;
+  color: #666;
+}
+
+/* Actor selection section */
+.actor-selection-heading {
+  font-size: 1.2rem;
+  font-weight: 500;
+  margin-bottom: 15px;
+  color: #333;
+}
+
+.actor-matches {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(120px, 1fr));
+  gap: 15px;
+  margin-bottom: 20px;
+}
+
+.actor-card {
+  border: 2px solid transparent;
+  border-radius: 8px;
+  overflow: hidden;
+  cursor: pointer;
+  transition: all 0.2s ease;
+}
+
+.actor-card.selected {
+  border-color: #0095f6;
+  background-color: rgba(0, 149, 246, 0.1);
+}
+
+.actor-image {
+  width: 100%;
+  aspect-ratio: 1;
+  object-fit: cover;
+}
+
+.actor-name {
+  padding: 8px;
+  text-align: center;
+  font-size: 0.9rem;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+/* Responsive adjustments */
+@media (max-width: 768px) {
+  .profile-edit-form {
+    padding: 20px;
+  }
+  
+  .form-actions {
+    flex-direction: column;
+  }
+  
+  .save-button, .cancel-button {
+    width: 100%;
+  }
+}

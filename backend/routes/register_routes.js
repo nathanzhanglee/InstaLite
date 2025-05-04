@@ -87,11 +87,17 @@ function handleFileUpload(imageConfig, handler) {
   };
 }
 
+// Setup multer for profile picture uploads
+const profilePicStorage = multer.memoryStorage();
+const profilePicUpload = multer({
+  storage: profilePicStorage,
+  limits: { fileSize: 5 * 1024 * 1024 }
+}).single('profilePic');
+
 function register_routes(app) {
   app.post('/register', routes.registerUser);
   app.post('/login', routes.postLogin);
   app.post('/getActorMatches', routes.getActorMatches);
-
 
   app.use(routes.authenticateRequest);     
   //!!! NOTE: this is middleware. anything after this will use authentication
@@ -104,6 +110,9 @@ function register_routes(app) {
   app.get('/messages', routes.getChatMessages);
   app.post('/sendInvite', routes.sendChatInvite);
   app.post('/associate', routes.associateWithActor);
+  app.get('/getUserProfile/:username', routes.getUserProfile);
+  app.get('/getUserPosts/:username', routes.getUserPosts);
+  app.post('/updateProfile', profilePicUpload, routes.updateProfile);
 
   // Chat Routes
   app.post('/createChatRoom', routes.createChatRoom);
