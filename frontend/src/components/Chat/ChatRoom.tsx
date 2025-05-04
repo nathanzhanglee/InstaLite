@@ -105,12 +105,23 @@ const ChatRoom: React.FC<ChatRoomProps> = ({ chatId, onBack }) => {
       return;
     }
     
+    // Check if user is already in the chat room
+    const isAlreadyMember = activeChatMembers.some(
+      member => member.username.toLowerCase() === inviteUsername.toLowerCase()
+    );
+    
+    if (isAlreadyMember) {
+      setError(`${inviteUsername} is already a member of this chat`);
+      return;
+    }
+    
     try {
       await sendChatInvite(chatId, inviteUsername);
       setInviteUsername('');
       setShowInviteForm(false);
       alert(`Invitation sent to ${inviteUsername}`);
     } catch (err: any) {
+      // Display the error message from the server response
       setError(err?.response?.data?.error || 'Failed to send invitation');
     }
   };
