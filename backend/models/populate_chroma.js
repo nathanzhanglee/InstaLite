@@ -9,6 +9,7 @@
 import ChromaDB from './vector.js';
 import fs from 'fs';
 import S3KeyValueStore from './s3.js';
+import {get_db_connection} from './rdbms.js';
 import FaceEmbed from './face_embed.js';
 
 // Simple approach to determine config file path
@@ -20,6 +21,7 @@ const config = JSON.parse(configFile);
 
 const chroma = new ChromaDB();
 const s3 = new S3KeyValueStore("nets2120-images", "default"); //to read in the images
+const sql_db = get_db_connection();
 const face = new FaceEmbed(config.faceEmbedModelPath);
 
 const args = process.argv.slice(2);
@@ -89,6 +91,13 @@ async function populate_chroma() {
     console.log("embedding:",autoEmbedding);
     count++;
     await chroma.put_item_into_table(config.chromaDbName, row_id, autoEmbedding, row);
+
+    const death_year = tokens[4] === '""' ? null : parseInt(tokens[4]);
+
+    await sql_db.connect();
+    await sql_db.send_sql("INSERT IGNORE INTO names(nconst, primaryName, birthYear, deathYear) VALUES (?, ?, ?, ?)", 
+      [tokens[1], tokens[2], parseInt(tokens[3]), death_year]
+    );
 
     if (!fullLoad && count > config.max) {
       console.log(`Embedded max count of ${config.max}, stopping...`);

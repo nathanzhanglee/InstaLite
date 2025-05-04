@@ -401,7 +401,7 @@ async function listChromaCollections(ChromaClient, selected_db_name) {
 function matchesToResults(matches) {
   return matches.map(row => {
     let comma_tokens = row.slice(1,-1).split(',');
-    let death_year = comma_tokens[4] === '\\"\\"' ? "" : comma_tokens[4];
+    let death_year = (comma_tokens[4] === '\\"\\"' || comma_tokens[4] === null) ? "" : comma_tokens[4];
     return {
       id: comma_tokens[0],
       nconst: comma_tokens[1],
