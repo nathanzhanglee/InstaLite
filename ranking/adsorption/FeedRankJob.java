@@ -30,7 +30,7 @@ import ranking.spark.SparkJob;
 
 import scala.Tuple2;
 
-public class FeedRankJob extends SparkJob<List<SerializablePair<String, Double>>> {
+public class FeedRankJob extends SparkJob<List<SerializablePair<String, SerializablePair<String, Double>>>> {
 	// Convergence condition variables
 	double d_max; // largest change in a node's rank from iteration i to iteration i+1
 	int i_max; // max number of iterations
@@ -75,6 +75,8 @@ public class FeedRankJob extends SparkJob<List<SerializablePair<String, Double>>
 		Dataset<Row> likes = spark.read().jdbc(Config.MYSQL_URL, "likes", connectionProperties);
 		Dataset<Row> friends = spark.read().jdbc(Config.MYSQL_URL, "friends", connectionProperties);
 		Dataset<Row> hashtags = spark.read().jdbc(Config.MYSQL_URL, "hashtags", connectionProperties);
+
+		logger.info("Creating graph");
 
 		// Create JavaPairRDD between users with at least one following the other.
 		JavaPairRDD<String, String> friendEdges = friends.javaRDD()
@@ -137,26 +139,162 @@ public class FeedRankJob extends SparkJob<List<SerializablePair<String, Double>>
 	/**
 	 * 
 	 * Main functionality in the program: read and process the social network
-	 * Runs the FeedRankJob and stores final (u, p) weights in RDS.
+	 * Runs the FeedRankJob and stores final (user_id, post_id, ranking) weights in rankings table in RDS.
 	 *
 	 * @param debug a boolean indicating whether to enable debug mode
 	 * @return a list of SerializablePair objects representing the top 10 nodes with their corresponding SocialRank values
 	 * @throws IOException if there is an error reading the social network file
 	 * @throws InterruptedException if the execution is interrupted
 	 */
-	public List<SerializablePair<String, Double>> run(boolean debug) throws IOException, InterruptedException {
-		logger.info("Running");
+	public List<SerializablePair<String, SerializablePair<String, Double>> run(boolean debug)
+		throws IOException, InterruptedException {
+		logger.info("Running rankings");
 
 		// Load the social network (e.g. from MySQL, RDS)
-		JavaPairRDD<String, String> edgeRDD = getSocialNetwork(Config.SOCIAL_NET_PATH);
+		JavaPairRDD<String, String> edgeRDD = getGraph(Config.SOCIAL_NET_PATH);
 
-		return null;
+		// Group by source node of edge (note that edges are bidirectional)
+		JavaPairRDD<String, Iterable<String>> edgesGroupedBySource = edgeRDD.groupByKey();
+
+		// Calculate weights for all edges
+    JavaPairRDD<String, Tuple2<String, Double>> weightedEdges = edgesGroupedBySource.flatMapToPair(tuple -> {
+			String source = tuple._1();
+			Iterable<String> destinations = tuple._2();
+			
+			// Count number of edges for each destination type (hashtags, posts, users)
+			List<String> destList = new ArrayList<>();
+			for (String dest: destinations) {
+				destList.add(dest);
+			}
+			
+			int userEdges = 0;
+			int hashtagEdges = 0;
+			int postEdges = 0;
+			
+			for (String dest : destList) {
+				if (dest.startsWith("hashtag:")) hashtagEdges++;
+				else if (dest.startsWith("post:")) postEdges++;
+				else userEdges++;
+			}
+			
+			// Calculate weights based on node type: (sourceNode, (destNode, edgeWeight))
+			List<Tuple2<String, Tuple2<String, Double>>> weightedEdgeList = new ArrayList<>();
+			for (String dest : destList) {
+				double weight = 0.0;
+				if (source.startsWith("hashtag:")) {
+					// Outgoing edges from hashtags have equal weights that sum to 1
+					weight = 1.0 / destList.size();
+				} 
+				else if (source.startsWith("post:")) {
+					// Outgoing edges from posts have equal weights that sum to 1
+					weight = 1.0 / destList.size();
+				} 
+				else {
+					// Outgoing edges from users
+					if (dest.startsWith("hashtag:")) {
+						weight = 0.3 / hashtagEdges;
+					} else if (dest.startsWith("post:")) {
+						weight = 0.4 / postEdges;
+					} else {
+						weight = 0.3 / userEdges;
+					}
+				}
+				Tuple2<String, Double> pair = new Tuple2<>(dest, weight);
+				weightedEdgeList.add(new Tuple2<>(source, pair));
+			}
+
+			return weightedEdgeList.iterator();
+		});
+
+		// Start with user labels equal to 1.0; tuples are (sourceNodeLabel, (destNode, labelWeight))
+		JavaPairRDD<String, Tuple2<String, Double>> labels = edgeRDD.mapToPair(edge -> edge._1()) 
+			.distinct() // source nodes only
+			.flatMapToPair(node -> {
+				List<Tuple2<String, Tuple2<String, Double>>> initialLabels = new ArrayList<>();
+				if (!node.startsWith("hashtag:") && !node.startsWith("post:")) {
+					initialLabels.add(new Tuple2<>(node, new Tuple2<>(node, 1.0)));
+				}
+				return initialLabels.iterator();
+			});
+
+		// Adsorption
+		int maxLabelDifference = 0;
+		for (int i = 0; i < i_max; i++) {
+			// Join labels with weighted edges to propagate
+			JavaPairRDD<String, Tuple2<String, Double>> newLabels = labels
+				.join(weightedEdges)
+				.mapToPair(tuple -> {
+					// tuple structure: (sourceNodeLabel, ((destNode, labelWeight), (destNode, edgeWeight)))
+					String neighbor = tuple._2()._2()._1();
+					double oldLabelWeight = tuple._2()._1()._2();
+					double newWeight = oldLabelWeight * tuple._2()._2()._2();
+					labelDifference = Math.abs(oldLabelWeight - newWeight);
+					if (labelDifference > maxLabelDifference) maxLabelDifference = labelDifference;
+					return new Tuple2<>(neighbor, new Tuple2<>(tuple._2()._1()._1(), newWeight));
+				})
+				.reduceByKey((a, b) -> {
+					// For the same node and label, sum the weights
+					if (a._1().equals(b._1())) {
+						return new Tuple2<>(a._1(), a._2() + b._2());
+					} else {
+						// This shouldn't happen in this step, but handle just in case
+						return a._2() > b._2() ? a : b;
+					}
+				});
+				
+			// Check for convergence
+			if (d_max > maxLabelDifference) break;
+			
+			labels = newLabels;
+
+			// Sum weights per node for normalization
+			JavaPairRDD<String, Double> nodeSums = labels
+				.mapValues(pair -> pair._2()) // extract label weight only
+				.reduceByKey((a, b) -> a + b); // sum label weights
+
+			// Divide each label by its node's sum
+			labels = labels
+				.join(nodeSums) // (sourceNode, ((destNode, labelWeight), sum))
+				.mapToPair(tuple -> {
+					String node = tuple._1();
+					String label = tuple._2()._1()._1();
+					double weight = tuple._2()._1()._2();
+					double sum = tuple._2()._2();
+					return new Tuple2<>(node, new Tuple2<>(label, weight / sum));
+				});
+		}
+
+		return getTopRecommendations(labels);;
 	}
 
 	@Override
 	public List<SerializablePair<String, Double>> call(JobContext arg0) throws Exception {
 		initialize();
 		return run(false);
+	}
+
+	// Get list of posts with weights for rankings database (for feed)
+	public List<SerializablePair<String, SerializablePair<String, Double>>> getTopRecommendations(
+    JavaPairRDD<String, Tuple2<String, Double>> labels) {
+
+    // 1) Filter for post nodes and map to (user, (post, weight)) tuples
+    JavaPairRDD<String, Tuple2<String, Double>> userPostWeights = labels
+			.filter(pair -> pair._1().startsWith("post:"))  // Keep only post nodes
+			.flatMap(tuple -> {
+				String post = tuple._1();
+				String user = tuple._2()._1();  // Original user who propagated the label
+				double weight = tuple._2()._2();
+				return Arrays.asList(new Tuple2<>(user, new Tuple2<>(post, weight))).iterator();
+			});
+
+    // 2) Turn Tuple2s to SerializablePairs to work with Livy
+		List<SerializablePair<String, SerializablePair<String, Double>> postList = userPostWeights
+			.map(pair -> {
+				SerializablePair<String, Double> postWeightPair = new SerializablePair<>(pair._2()._1(), pair._2()._1());
+				return new SerializablePair<>(pair._1(), postWeightPair);
+			});
+
+		return postList;
 	}
 
 }
