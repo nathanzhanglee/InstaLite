@@ -20,8 +20,8 @@ import javax.security.auth.login.ConfigurationSpi;
 import java.sql.Connection;
 import java.sql.DriverManager;
 import java.sql.PreparedStatement;
-import java.sql.ResultSet;  // If you're reading results
-import java.sql.SQLException;  // For exception handling
+import java.sql.ResultSet;  // to read results
+import java.sql.SQLException;
 
 public class ComputeRanksLocal {
     static Logger logger = LogManager.getLogger(ComputeRanksLocal.class);
@@ -61,9 +61,9 @@ public class ComputeRanksLocal {
         logger.info("*** Finished social network ranking! ***");
 
         // MySQL connection setup
-        String url = Config.MYSQL_HOST + ":" + Config.MYSQL_PORT + "/" + Config.MYSQL_DATABASE;
+        String url = "jdbc:mysql://" + Config.MYSQL_HOST + ":" + Config.MYSQL_PORT + "/" + Config.MYSQL_DATABASE;
 
-        String query = "INSERT INTO post_rankings (user_id, post_id, weight) VALUES (?, ?, ?, NOW()) "
+        String query = "INSERT INTO post_rankings (user_id, post_id, weight) VALUES (?, ?, ?) "
             + "ON DUPLICATE KEY UPDATE weight = VALUES(weight)";
 
         try {
@@ -71,13 +71,14 @@ public class ComputeRanksLocal {
             PreparedStatement statement = conn.prepareStatement(query);
 
             for (SerializablePair<String, SerializablePair<String, Double>> item : topPosts) {
-                String userId = item.getLeft();
-                String postId = item.getRight().getLeft().substring(5); // will be "post:[postId]" --> postId;
-                double weight = item.getRight().getRight();
+                logger.info("post item: " + item.getLeft() + "\t" + item.getRight().getLeft() + "\t" + item.getRight().getRight());
+                int postId = Integer.parseInt(item.getRight().getLeft().substring(5));  // will be "post:[postId]" --> postId
+                int userId = Integer.parseInt(item.getLeft());
+                float weight = item.getRight().getRight().floatValue();
 
-                statement.setString(1, userId);
-                statement.setString(2, postId);
-                statement.setDouble(3, weight);
+                statement.setInt(1, postId);
+                statement.setInt(2, userId);
+                statement.setFloat(3, weight);
                 statement.addBatch();
             }
             statement.executeBatch();

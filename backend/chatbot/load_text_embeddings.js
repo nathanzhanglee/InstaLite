@@ -64,14 +64,13 @@ async function getUserData() {
     SELECT \
       u1.user_id AS user_id, \
       u1.username AS username, \
-      n1.primaryName as primaryName, \
-      GROUP_CONCAT(n2.primaryName SEPARATOR ',') as follows \
+      u1.first_name as first_name, \
+      u1.last_name as last_name, \
+      GROUP_CONCAT(u2.username SEPARATOR ',') as follows \
     FROM users u1 \
-    JOIN names n1 on n1.nconst = u1.linked_actor \
     JOIN friends f on f.follower = u1.user_id \
     JOIN users u2 on f.followed = u2.user_id \
-    JOIN names n2 on n2.nconst = u2.linked_actor \
-    GROUP BY u1.username, u1.user_id, n1.primaryName \
+    GROUP BY u1.username, u1.user_id \
   ";
   try {
     return await mysql_db.send_sql(query);
@@ -80,46 +79,6 @@ async function getUserData() {
     console.log("error getting user data from mysql", err);
   }
 }
-
-/**
- * Returns MySQL results about which movies an actor is in.
- * Also include information about each movie as "movie (info)"
- */
-/* async function getActorData() {
-  const limitQuery = "SET SESSION group_concat_max_len = 1000000;";
-  await mysql_db.send_sql(limitQuery);
-
-  const query = "\
-    SELECT \
-      n.nconst AS nconst, \
-      n.primaryName AS primaryName, \
-      n.birthYear AS birthYear, \
-      n.deathYear AS deathYear, \
-      GROUP_CONCAT( \
-        CONCAT( \
-          t.primaryTitle, ' (', \
-          'as a ', p.category, ' for ', \
-          IFNULL( TRIM( \
-            LEADING '[\"' FROM( \
-              TRIM( \
-                TRAILING '\"]' FROM p.characters \
-              ) \
-            ) \
-          ), 'N/A'), \
-          ')' \
-        ) SEPARATOR ' ; '\
-      ) AS movies \
-    FROM names n \
-    JOIN principals p ON n.nconst = p.nconst \
-    JOIN titles t on p.tconst = t.tconst \
-    GROUP BY n.nconst \
-  ";
-  try {
-    return await mysql_db.send_sql(query);
-  } catch (err) {
-    console.log("error getting user data from mysql", err);
-  }
-} */
 
 async function embedAndStoreMovies() {
   const mysql_db = get_db_connection();
@@ -135,14 +94,14 @@ async function embedAndStoreMovies() {
   const posts = results[0];
   for (var i = 0; i < posts.length; i++) {
     const post = posts[i]; // JSON object
-    const text = `Post ${post.post_id}, titled ${post.title}. ${post.content}. Written by ${post.author}.`;
+    const text = `Post ${post.post_id}, titled ${post.title}. ${post.content}. Written by ${post.author_username}.`;
     const embedding = await embedText(text);
     console.log(text);
     const key = `post_${post.post_id}`; // for chromadb
     await chroma_db.put_item_into_table(COLLECTION_NAME, key, embedding, text);
   }
 
-  // Embed followed-follower user data (TODO: use public info only)
+  // Embed followed-follower user data
   results = await getUserData();
   const users = results[0];
   for (var i = 0; i < users.length; i++) {
@@ -150,19 +109,8 @@ async function embedAndStoreMovies() {
     const text = `Name of ${user.username} is ${user.first_name + ' ' + user.last_name}, who follows ${user.follows}`;
     const embedding = await embedText(text);
     const key = `user_${user.user_id}`; // for chromadb
-    //await chroma_db.put_item_into_table(COLLECTION_NAME, key, embedding, text);
+    await chroma_db.put_item_into_table(COLLECTION_NAME, key, embedding, text);
   }
-
-  // Embed data about principals (actors, directors, writers) and their roles in movies.
-  /* results = await getActorData();
-  const actors = results[0];
-  for (var i = 0; i < actors.length; i++) {
-    const actor = actors[i]; // JSON object
-    const text = JSON.stringify(actor);
-    const embedding = await embedText(text);
-    const key = `${actor.nconst}`; // for chromadb
-    //await chroma_db.put_item_into_table(COLLECTION_NAME, key, embedding, text);
-  } */
 
   console.log("Embeddings loaded into ChromaDB");
 }

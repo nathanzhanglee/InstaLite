@@ -31,12 +31,11 @@ public class Config {
     public static String SPARK_TESTING_MEMORY = "2147480000";
 
     // Used for Spark to connect to Amazon RDS and pull data from the databases.
-    public static String MYSQL_HOST = "localhost";
-    public static final String MYSQL_URL = "jdbc:mysql://your-db-name.abcdefghijk.us-west-2.rds.amazonaws.com:3306/instalite";
+    public static String MYSQL_HOST = "localhost"; // change to rds link: your-db-name.abcdefghijk.us-west-2.rds.amazonaws.com
     public static String MYSQL_PORT = "3306";
-    public static String MYSQL_USER = "admin";
-    public static String MYSQL_DATABASE = "instalite";
-    public static String MYSQL_PASSWORD = "80w9b243UBA*Xv!UnXSA%is";
+    public static String MYSQL_USER = "nets2120_hw2"; // change to admin
+    public static String MYSQL_DATABASE = "imdb_basic"; // change to instalite
+    public static String MYSQL_PASSWORD = "S25AgH15,"; // change to password
     public static final String JDBC_DRIVER = "com.mysql.cj.jdbc.Driver";
 
     public static Integer FIRST_N_ROWS = 1000;
