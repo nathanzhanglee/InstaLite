@@ -460,10 +460,8 @@ async function sendPasswordResetEmail(req, res) {
     // Create the reset URL using the frontend URL from config
     const resetUrl = `${config.frontendUrl || 'http://localhost:4567'}/reset-password?token=${resetToken}`;
     
-    // Initialize Resend with your API key
+    // Initialize Resend with API key and send email
     const resend = new resend(config.resendAPIKey);
-
-    // Send email using Resend
     const { data, error } = await resend.emails.send({
       from: 'InstaLite <armaana@sas.upenn.edu>', //we can add our email here...?
       to: email,
@@ -599,7 +597,9 @@ async function getActorMatches(req, res) {
       
       //for debugging in case the same chroma issue comes up
       //console.log("Chroma_db: ",chroma_db, "\nchroma_db_name: ", chroma_db_name);
-      //await listChromaCollections(chroma_db, chroma_db_name);
+      await listChromaCollections(chroma_db, chroma_db_name);
+      const client = await chroma_db.get_client();
+      const collection = client.getCollection({name: chroma_db_name});
       matches = (await chroma_db.get_items_from_table(chroma_db_name, embedding, 5)).documents[0];
     } catch (error) {
       console.error(`Error getting top matches:`, error);
