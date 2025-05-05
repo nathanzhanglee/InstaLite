@@ -148,7 +148,7 @@
         </pluginRepository>
     </pluginRepositories>
     <build>
-        <sourceDirectory>.</sourceDirectory>  <!-- Current directory as source root -->
+        <sourceDirectory>instalite</sourceDirectory> <!-- Point to your custom source root -->
         <pluginManagement>
             <plugins>
                 <plugin>
