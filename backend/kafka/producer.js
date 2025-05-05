@@ -1,6 +1,7 @@
 import pkg from 'kafkajs';
 const { Kafka } = pkg;
 import fs from 'fs';
+import { configDotenv } from 'dotenv';
 
 // Simple approach to determine config file path
 const configPath = fs.existsSync('./config/config.json') 
@@ -8,6 +9,8 @@ const configPath = fs.existsSync('./config/config.json')
   : 'backend/config/config.json';    // Running from root folder
 const configFile = fs.readFileSync(configPath, 'utf8');
 const config = JSON.parse(configFile, 'utf8');
+
+configDotenv({path: "../.env"})
 
 const kafka = new Kafka({
   clientId: 'instakann-producer',

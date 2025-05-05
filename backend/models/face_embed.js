@@ -1,5 +1,6 @@
 import tf from '@tensorflow/tfjs-node';
 import faceapi from '@vladmandic/face-api';
+import path from 'node:path';
 
 /**
  * Helper function, converts "descriptor" Int32Array to JavaScript array
@@ -24,14 +25,25 @@ class FaceEmbed {
   }
 
   async loadModel() {
-    const modelPath = this.modelPath;
+    let modelPath = this.modelPath;
     console.log("Initializing FaceAPI...");
 
     await tf.ready();
-    await faceapi.nets.ssdMobilenetv1.loadFromDisk(modelPath);
+    try {
+      await faceapi.nets.ssdMobilenetv1.loadFromDisk(modelPath);
+    } catch (err) {
+      if (err.code === 'ENOENT') {
+        console.log("[WARN] in face_embed.js > loadModel(): weights not found. Searching parent directory...");
+        modelPath = path.resolve("..", modelPath);                   //could be searching in backend when need to search in home dir
+        await faceapi.nets.ssdMobilenetv1.loadFromDisk(modelPath);
+      } else {
+        throw err;
+      }
+    }
     this.optionsSSDMobileNet = new faceapi.SsdMobilenetv1Options({ minConfidence: 0.5, maxResults: 1 });
     await this.faceapi.nets.faceLandmark68Net.loadFromDisk(modelPath);
     this.modelLoaded = true;
+    console.log("Model loaded successfully!");
     return this.faceapi.nets.faceRecognitionNet.loadFromDisk(modelPath);
   }
 

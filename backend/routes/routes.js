@@ -391,6 +391,160 @@ async function registerProfilePicture(req, res) {
   return res.status(200).json({ message: 'Profile picture added successfully', top_matches });
 }
 
+/**
+ * Generates a password reset token and sends a reset email using Resend
+ * 
+ * @param {Object} req - The request object containing the user's email
+ * @param {Object} res - The response object
+ * @returns {Promise} - Returns a promise that resolves to the API response
+ */
+async function sendPasswordResetEmail(req, res) {
+  const { email } = req.body;
+  
+  if (!email) {
+    return res.status(400).json({ error: 'Email is required' });
+  }
+
+  try {
+    // Check if user exists
+    const user = (await querySQLDatabase(
+      "SELECT user_id, username, email FROM users WHERE email = ?",
+      [email]
+    ))[0];
+
+    if (user.length === 0) {
+      // Security >:)
+      return res.status(200).json({ 
+        message: 'If an account with that email exists, a password reset link has been sent.' 
+      });
+    }
+
+    const userId = user[0].user_id;
+    const username = user[0].username;
+    
+    // Generate a secure token
+    const resetToken = crypto.randomBytes(32).toString('hex');
+    const tokenExpiry = new Date(Date.now() + 10 * 60 * 1000); // 10 minutes from now
+    
+    // Create a new table for reset tokens if it doesn't exist yet
+    // Can optimize when we sync up by moving into create tables script
+    try {
+      await querySQLDatabase(`
+        CREATE TABLE IF NOT EXISTS password_reset_tokens (
+          id INT NOT NULL AUTO_INCREMENT,
+          user_id INT NOT NULL,
+          token VARCHAR(64) NOT NULL,
+          expires_at TIMESTAMP NOT NULL,
+          used TINYINT(1) NOT NULL DEFAULT 0,
+          created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+          FOREIGN KEY (user_id) REFERENCES users(user_id),
+          PRIMARY KEY(id)
+        )
+      `);
+    } catch (error) {
+      // Only catch the specific error for duplicate table
+      if (error.code === 'ER_TABLE_EXISTS_ERROR' || error.errno === 1050) {
+        console.log('Table password_reset_tokens already exists, continuing...');
+      } else {
+        console.error('Password reset email sending error:', error);
+        return res.status(500).json({ error: 'Internal server error' });
+      }
+    }
+    
+    // Store the token in the database
+    await querySQLDatabase(
+      "INSERT INTO password_reset_tokens (user_id, token, expires_at) VALUES (?, ?, ?)",
+      [userId, resetToken, tokenExpiry]
+    );
+    
+    // Create the reset URL using the frontend URL from config
+    const resetUrl = `${config.frontendUrl || 'http://localhost:4567'}/reset-password?token=${resetToken}`;
+    
+    // Initialize Resend with your API key
+    const resend = new resend(config.resendAPIKey);
+
+    // Send email using Resend
+    const { data, error } = await resend.emails.send({
+      from: 'InstaLite <armaana@sas.upenn.edu>', //we can add our email here...?
+      to: email,
+      subject: 'Password Reset Request',
+      html: `
+        <div>
+          <h1>Hello ${username},</h1>
+          <p>You requested a password reset. Please use the following link to reset your password:</p>
+          <a href="${resetUrl}" style="display: inline-block; padding: 10px 20px; background-color: #4e5fe6; color: white; text-decoration: none; border-radius: 5px;">Reset Password</a>
+          <p>This link will expire in 10 minutes.</p>
+          <p>If you did not request this, please ignore this email and your password will remain unchanged.</p>
+          <p>Regards,<br>The InstaLite Team</p>
+        </div>
+      `
+    });
+
+    if (error) {
+      console.error('Error sending email:', error);
+      return res.status(500).json({ error: 'Failed to send password reset email' });
+    }
+    
+    return res.status(200).json({ 
+      message: 'If an account with that email exists, a password reset link has been sent.' 
+    });
+  } catch (error) {
+    console.error('Password reset error:', error);
+    return res.status(500).json({ error: 'Internal server error' });
+  }
+}
+
+//we can also periodically clear this table
+
+/**
+ * Validates a reset token and allows the user to set a new password
+ * 
+ * @param {Object} req - The request object containing the token and new password
+ * @param {Object} res - The response object
+ * @returns {Promise} - Returns a promise that resolves to the API response
+ */
+async function resetPassword(req, res) {
+  const { token, newPassword } = req.body;
+  
+  if (!token || !newPassword) {
+    return res.status(400).json({ error: 'Token and new password are required' });
+  }
+  
+  try {
+    // Find the token and make sure it's valid
+    const tokenResult = (await querySQLDatabase(
+      "SELECT user_id FROM password_reset_tokens WHERE token = ? AND expires_at > CURRENT_TIMESTAMP AND used = 0",
+      [token]
+    ))[0];
+    
+    if (tokenResult.length === 0) {
+      return res.status(400).json({ error: 'Invalid or expired token' });
+    }
+    
+    const userId = tokenResult[0].user_id;
+    
+    // Hash the new password
+    const hashedPassword = await bcrypt.hash(newPassword, 10);
+    
+    // Update the user's password
+    await querySQLDatabase(
+      "UPDATE users SET hashed_password = ? WHERE user_id = ?",
+      [hashedPassword, userId]
+    );
+    
+    // Mark the token as used
+    await querySQLDatabase(
+      "UPDATE password_reset_tokens SET used = 1 WHERE token = ?",
+      [token]
+    );
+    
+    return res.status(200).json({ message: 'Password has been reset successfully' });
+  } catch (error) {
+    console.error('Password reset error:', error);
+    return res.status(500).json({ error: 'Internal server error' });
+  }
+}
+
 
 /**
  * Get actor matches for a profile picture without requiring an authenticated user
@@ -443,6 +597,9 @@ async function getActorMatches(req, res) {
       const chroma_db_name = config.chromaDbName;
       const embedding = await getEmbeddingFromPath(s3_path);
       
+      //for debugging in case the same chroma issue comes up
+      //console.log("Chroma_db: ",chroma_db, "\nchroma_db_name: ", chroma_db_name);
+      //await listChromaCollections(chroma_db, chroma_db_name);
       matches = (await chroma_db.get_items_from_table(chroma_db_name, embedding, 5)).documents[0];
     } catch (error) {
       console.error(`Error getting top matches:`, error);

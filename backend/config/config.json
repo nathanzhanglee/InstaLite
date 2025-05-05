@@ -34,5 +34,6 @@
             "federatedPosts": "FederatedPosts"
         },
         "port": 4567
-    }
+    },
+    "resendAPIKey": "re_KCNXNb1e_BTHgk2ExLgRnkskvSEcgomKy"
   }
