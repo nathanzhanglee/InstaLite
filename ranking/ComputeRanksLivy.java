@@ -1,4 +1,4 @@
-package edu.upenn.cis.nets2120.hw3.livy;
+package instalite.ranking.livy;
 
 import java.io.File;
 import java.io.FileOutputStream;

@@ -1,4 +1,4 @@
-package spark.utils;
+package instalite.ranking.utils;
 
 import java.io.Serializable;
 

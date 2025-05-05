@@ -1,12 +1,12 @@
-package edu.upenn.cis.nets2120.hw3.local;
+package instalite.ranking.local;
 
-import edu.upenn.cis.nets2120.config.Config;
-import edu.upenn.cis.nets2120.config.ConfigSingleton;
-import edu.upenn.cis.nets2120.hw3.spark.SocialRankJob;
-import edu.upenn.cis.nets2120.hw3.utils.SerializablePair;
+import instalite.ranking.config.Config;
+import instalite.ranking.config.ConfigSingleton;
+import instalite.ranking.adsorption.SocialRankJob;
+import instalite.ranking.utils.SerializablePair;
 
-import edu.upenn.cis.nets2120.hw3.utils.FlexibleLogger;
-import edu.upenn.cis.nets2120.spark.SparkJob;
+import instalite.ranking.utils.FlexibleLogger;
+import instalite.ranking.spark.SparkJob;
 
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
@@ -43,7 +43,7 @@ public class ComputeRanksLocal {
             debug = true;
         } else {
             d_max = 30;
-            i_max = 25;
+            i_max = 15;
             debug = false;
         }
 
@@ -51,17 +51,30 @@ public class ComputeRanksLocal {
         // No backlinks
         SocialRankJob job = new SocialRankJob(d_max, i_max, Config.FIRST_N_ROWS, false, true, debug, rankLogger, config);
 
-        List<SerializablePair<String, Double>> topK = job.mainLogic();
+        List<SerializablePair<String, SerializablePair<String, Double>>> topPosts = job.mainLogic();
         logger.info("*** Finished social network ranking! ***");
 
-        try (PrintStream out = new PrintStream(new FileOutputStream("socialrank-local.csv"))) {
-            for (SerializablePair<String, Double> item : topK) {
-                out.println(item.getLeft() + "," + item.getRight());
-                logger.info(item.getLeft() + " " + item.getRight());
-            }
-        } catch (Exception e) {
-            logger.error("Error writing to file: " + e.getMessage());
+        // MySQL connection setup
+        String url = Config.MYSQL_HOST + ":" + Config.MYSQL_PORT + "/" + Config.MYSQL_DATABASE;
+
+        String query = "INSERT INTO post_rankings (user_id, post_id, weight) VALUES (?, ?, ?, NOW()) "
+            + "ON DUPLICATE KEY UPDATE weight = VALUES(weight)";
+
+        Connection conn = DriverManager.getConnection(url, Config.MYSQL_USER, Config.MYSQL_PASSWORD);
+        PreparedStatement statement = conn.prepareStatement(query);
+
+        for (SerializablePair<String, SerializablePair<String, Double>> item : topPosts) {
+            String userId = item.getLeft();
+            String postId = item.getRight().getLeft().substring(5); // will be "post:[postId]" --> postId;
+            double weight = item.getRight().getRight();
+
+            statement.setString(1, userId);
+            statement.setString(2, postId);
+            statement.setDouble(3, weight);
+            statement.addBatch();
         }
+        statement.executeBatch();
+        logger.info("Stored " + topPosts.size() + " items in post_rankings table");
     }
 
 }

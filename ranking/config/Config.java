@@ -1,4 +1,4 @@
-package ranking.config;
+package instalite.ranking.config;
 
 /**
  * Global configuration for NETS 2120 homeworks.
@@ -18,7 +18,7 @@ public class Config {
 
     public static String LOCAL_SPARK = "local[*]";
 
-    public static String JAR = "target/nets2120-hw3-0.0.1-SNAPSHOT.jar";
+    public static String JAR = "target/instalite-0.0.1-SNAPSHOT.jar";
 
     public static String DATABASE_CONNECTION = null;
     public static String DATABASE_USERNAME = null;

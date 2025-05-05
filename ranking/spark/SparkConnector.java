@@ -1,4 +1,4 @@
-package ranking.spark;
+package instalite.ranking.spark;
 
 import java.io.File;
 

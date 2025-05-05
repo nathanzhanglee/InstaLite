@@ -3,10 +3,10 @@
          xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
          xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 http://maven.apache.org/xsd/maven-4.0.0.xsd">
     <modelVersion>4.0.0</modelVersion>
-    <groupId>edu.upenn.cis</groupId>
-    <artifactId>nets2120-hw3</artifactId>
+    <groupId>instalite</groupId>
+    <artifactId>instalite</artifactId>
     <version>0.0.1-SNAPSHOT</version>
-    <name>NETS 2120 Homework 3</name>
+    <name>NETS 2120 Instalite InstaKANN</name>
 
     <properties>
         <maven.compiler.source>11</maven.compiler.source>
@@ -148,6 +148,7 @@
         </pluginRepository>
     </pluginRepositories>
     <build>
+        <sourceDirectory>.</sourceDirectory>  <!-- Current directory as source root -->
         <pluginManagement>
             <plugins>
                 <plugin>
@@ -242,7 +243,7 @@
                             <goal>java</goal>
                         </goals>
                         <configuration>
-                            <mainClass>edu.upenn.cis.nets2120.hw3.local.ComputeRanksLocal</mainClass>
+                            <mainClass>ranking.local.ComputeRanksLocal</mainClass>
                             <arguments>
                             </arguments>
                         </configuration>
@@ -253,7 +254,7 @@
                             <goal>java</goal>
                         </goals>
                         <configuration>
-                            <mainClass>edu.upenn.cis.nets2120.hw3.livy.ComputeRanksLivy</mainClass>
+                            <mainClass>ranking.livy.ComputeRanksLivy</mainClass>
                             <arguments>
                             </arguments>
                         </configuration>

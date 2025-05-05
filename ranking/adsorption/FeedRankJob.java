@@ -1,4 +1,4 @@
-package spark;
+package instalite.ranking.adsorption;
 
 import java.io.IOException;
 import java.util.HashSet;
@@ -16,7 +16,7 @@ import java.util.Properties;
 
 import java.lang.Math;
 
-import spark.utils.FlexibleLogger;
+import instalite.ranking.utils.FlexibleLogger;
 import org.apache.livy.Job;
 import org.apache.livy.JobContext;
 import org.apache.livy.LivyClient;
@@ -24,9 +24,9 @@ import org.apache.livy.LivyClientBuilder;
 import org.apache.spark.api.java.JavaPairRDD;
 import org.apache.spark.api.java.JavaRDD;
 
-import ranking.config.Config;
-import ranking.utils.SerializablePair;
-import ranking.spark.SparkJob;
+import instalite.ranking.config.Config;
+import instalite.ranking.utils.SerializablePair;
+import instalite.ranking.spark.SparkJob;
 
 import scala.Tuple2;
 
