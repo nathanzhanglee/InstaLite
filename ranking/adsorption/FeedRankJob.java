@@ -23,6 +23,9 @@ import org.apache.livy.LivyClient;
 import org.apache.livy.LivyClientBuilder;
 import org.apache.spark.api.java.JavaPairRDD;
 import org.apache.spark.api.java.JavaRDD;
+import org.apache.spark.sql.Dataset;
+import org.apache.spark.sql.Row;
+import org.apache.spark.sql.SparkSession;
 
 import instalite.ranking.config.Config;
 import instalite.ranking.utils.SerializablePair;
@@ -39,10 +42,8 @@ public class FeedRankJob extends SparkJob<List<SerializablePair<String, Serializ
 
 	public FeedRankJob(double d_max, int i_max, boolean isLocal, boolean debug, FlexibleLogger logger, Config config) {
 		super(logger, config, isLocal, debug);
-		this.useBacklinks = useBacklinks;
 		this.d_max = d_max;
 		this.i_max = i_max;
-		this.max_answers = answers;
 	}
 
 	/**
@@ -105,11 +106,11 @@ public class FeedRankJob extends SparkJob<List<SerializablePair<String, Serializ
 			.flatMapToPair(row -> {
 					String user = row.getAs("user_id");
 					String hashtagRow = row.getAs("hashtag");
-					String[] hashtags = hashtagRow.split(",");
+					String[] hashtagArr = hashtagRow.split(",");
 					List<Tuple2<String, String>> tuples = new ArrayList<>();
-					for (String hashtag: hashtags) {
-						edges.add(new Tuple2<>(user, "hashtag:" + hashtag)); // use "hashtag:" to avoid id collisions
-						edges.add(new Tuple2<>("hashtag:" + hashtag, user));
+					for (String hashtag: hashtagArr) {
+						tuples.add(new Tuple2<>(user, "hashtag:" + hashtag)); // use "hashtag:" to avoid id collisions
+						tuples.add(new Tuple2<>("hashtag:" + hashtag, user));
 					}
 					return tuples.iterator();
 			});
@@ -119,11 +120,11 @@ public class FeedRankJob extends SparkJob<List<SerializablePair<String, Serializ
 			.flatMapToPair(row -> {
 					String post_id = row.getAs("post_id");
 					String hashtagRow = row.getAs("hash_tags");
-					String[] hashtags = hashtagRow.split(",");
+					String[] hashtagArr = hashtagRow.split(",");
 					List<Tuple2<String, String>> tuples = new ArrayList<>();
-					for (String hashtag: hashtags) {
-						edges.add(new Tuple2<>("post:" + post_id, "hashtag:" + hashtag));
-						edges.add(new Tuple2<>("hashtag:" + hashtag, "post:" + post_id));
+					for (String hashtag: hashtagArr) {
+						tuples.add(new Tuple2<>("post:" + post_id, "hashtag:" + hashtag));
+						tuples.add(new Tuple2<>("hashtag:" + hashtag, "post:" + post_id));
 					}
 					return tuples.iterator();
 			});
@@ -146,7 +147,7 @@ public class FeedRankJob extends SparkJob<List<SerializablePair<String, Serializ
 	 * @throws IOException if there is an error reading the social network file
 	 * @throws InterruptedException if the execution is interrupted
 	 */
-	public List<SerializablePair<String, SerializablePair<String, Double>> run(boolean debug)
+	public List<SerializablePair<String, SerializablePair<String, Double>>> run(boolean debug)
 		throws IOException, InterruptedException {
 		logger.info("Running rankings");
 
@@ -207,40 +208,93 @@ public class FeedRankJob extends SparkJob<List<SerializablePair<String, Serializ
 		});
 
 		// Start with user labels equal to 1.0; tuples are (sourceNodeLabel, (destNode, labelWeight))
-		JavaPairRDD<String, Tuple2<String, Double>> labels = edgeRDD.mapToPair(edge -> edge._1()) 
+		JavaPairRDD<String, Tuple2<String, Double>> labels = edgeRDD.map(edge -> edge._1()) 
 			.distinct() // source nodes only
-			.flatMapToPair(node -> {
-				List<Tuple2<String, Tuple2<String, Double>>> initialLabels = new ArrayList<>();
-				if (!node.startsWith("hashtag:") && !node.startsWith("post:")) {
-					initialLabels.add(new Tuple2<>(node, new Tuple2<>(node, 1.0)));
-				}
-				return initialLabels.iterator();
+			.mapToPair(node -> {
+				return new Tuple2<>(node, new Tuple2<>(node, 1.0));
 			});
 
 		// Adsorption
-		int maxLabelDifference = 0;
 		for (int i = 0; i < i_max; i++) {
-			// Join labels with weighted edges to propagate
-			JavaPairRDD<String, Tuple2<String, Double>> newLabels = labels
+			// Transform to (sourceNode/label, ((destNode, newWeight), difference))
+			JavaPairRDD<String, Tuple2<Tuple2<String, Double>, Double>> labeledDifferences = labels
 				.join(weightedEdges)
 				.mapToPair(tuple -> {
 					// tuple structure: (sourceNodeLabel, ((destNode, labelWeight), (destNode, edgeWeight)))
 					String neighbor = tuple._2()._2()._1();
+					String sourceNode = tuple._1();
 					double oldLabelWeight = tuple._2()._1()._2();
 					double newWeight = oldLabelWeight * tuple._2()._2()._2();
-					labelDifference = Math.abs(oldLabelWeight - newWeight);
-					if (labelDifference > maxLabelDifference) maxLabelDifference = labelDifference;
-					return new Tuple2<>(neighbor, new Tuple2<>(tuple._2()._1()._1(), newWeight));
-				})
-				.reduceByKey((a, b) -> {
-					// For the same node and label, sum the weights
-					if (a._1().equals(b._1())) {
-						return new Tuple2<>(a._1(), a._2() + b._2());
-					} else {
-						// This shouldn't happen in this step, but handle just in case
-						return a._2() > b._2() ? a : b;
-					}
+					double labelDifference = Math.abs(oldLabelWeight - newWeight);
+					return new Tuple2<>(
+						source,
+						new Tuple2<>(
+							new Tuple2<>(neighbor, newWeight),
+							labelDifference
+						)
+					);
 				});
+
+			// Aggregate to compute both sum of weights and max difference
+			JavaPairRDD<String, Tuple2<Tuple2<String, Double>, Double>> aggregated = labeledDifferences
+			.aggregateByKey(
+				// Initial zero value: ((destNode, sumWeights), maxDifference)
+				new Tuple2<>(new Tuple2<>("", 0.0), 0.0),
+				
+				// Sequence function 
+				(acc, value) -> {
+					Tuple2<String, Double> currentLabel = value._1(); // preserve dest node and label weight
+					double currentDiff = value._2();
+					
+					if (acc._1()._1().isEmpty()) {
+						return new Tuple2<>(currentLabel, currentDiff);
+					} else {
+						double sum = acc._1()._2() + currentLabel._2();
+						double maxDiff = Math.max(acc._2(), currentDiff);
+						String maxLabel = null;
+						if (acc._2() > currentDiff) {
+							maxLabel = acc._1()._1();
+						} else {
+							maxLabel = currentLabel._1();
+						}
+						return new Tuple2<>(
+							new Tuple2<>(maxLabel, sum),
+							maxDiff
+						);
+					}
+				},
+				
+				// Combiner function
+				(acc1, acc2) -> {
+					double sum = acc1._1()._2() + acc2._1()._2();
+					double maxDiff = Math.max(acc1._2(), acc2._2());
+					String maxLabel = null;
+						if (acc1._2() > acc2._2()) {
+							maxLabel = acc1._1()._1();
+						} else {
+							maxLabel = acc2._1()._1();
+						}
+					return new Tuple2<>(
+						new Tuple2<>(maxLabel, sum),
+						maxDiff
+					);
+				}
+			);
+
+			// aggregated tuple: (sourceNode/label, ((destNode, sumOfWeights), maxDifference)))
+
+			// destNode is the one with the max difference for a given source node in this iteration
+			// sumOfWeights is used for normalization.
+
+			// Extract the final labels: (sourceNode/label, (destNode, labelWeight))
+			JavaPairRDD<String, Tuple2<String, Double>> newLabels = labeledDifferences
+				.mapValues(tuple -> tuple._1());
+
+			// Extract the max differences
+			double maxLabelDifference = aggregated
+				.values()
+				.map(tuple -> tuple._2())
+				.reduce(Math::max);
 				
 			// Check for convergence
 			if (d_max > maxLabelDifference) break;
@@ -248,9 +302,8 @@ public class FeedRankJob extends SparkJob<List<SerializablePair<String, Serializ
 			labels = newLabels;
 
 			// Sum weights per node for normalization
-			JavaPairRDD<String, Double> nodeSums = labels
-				.mapValues(pair -> pair._2()) // extract label weight only
-				.reduceByKey((a, b) -> a + b); // sum label weights
+			JavaPairRDD<String, Double> nodeSums = aggregated
+				.mapValues(pair -> pair._1()._2());
 
 			// Divide each label by its node's sum
 			labels = labels
@@ -264,11 +317,11 @@ public class FeedRankJob extends SparkJob<List<SerializablePair<String, Serializ
 				});
 		}
 
-		return getTopRecommendations(labels);;
+		return getTopRecommendations(labels);
 	}
 
 	@Override
-	public List<SerializablePair<String, Double>> call(JobContext arg0) throws Exception {
+	public List<SerializablePair<String, SerializablePair<String, Double>>> call(JobContext arg0) throws Exception {
 		initialize();
 		return run(false);
 	}
@@ -280,18 +333,19 @@ public class FeedRankJob extends SparkJob<List<SerializablePair<String, Serializ
     // 1) Filter for post nodes and map to (user, (post, weight)) tuples
     JavaPairRDD<String, Tuple2<String, Double>> userPostWeights = labels
 			.filter(pair -> pair._1().startsWith("post:"))  // Keep only post nodes
-			.flatMap(tuple -> {
+			.mapToPair(tuple -> {
 				String post = tuple._1();
 				String user = tuple._2()._1();  // Original user who propagated the label
 				double weight = tuple._2()._2();
-				return Arrays.asList(new Tuple2<>(user, new Tuple2<>(post, weight))).iterator();
+				return new Tuple2<>(user, new Tuple2<>(post, weight));
 			});
 
     // 2) Turn Tuple2s to SerializablePairs to work with Livy
-		List<SerializablePair<String, SerializablePair<String, Double>> postList = userPostWeights
-			.map(pair -> {
-				SerializablePair<String, Double> postWeightPair = new SerializablePair<>(pair._2()._1(), pair._2()._1());
-				return new SerializablePair<>(pair._1(), postWeightPair);
+		List<SerializablePair<String, SerializablePair<String, Double>>> postList = new ArrayList<>();
+		userPostWeights
+			.foreach(pair -> {
+				SerializablePair<String, Double> postWeightPair = new SerializablePair<>(pair._2()._1(), pair._2()._2());
+				postList.add(new SerializablePair<>(pair._1(), postWeightPair));
 			});
 
 		return postList;

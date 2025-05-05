@@ -10,7 +10,7 @@ import org.apache.spark.sql.SparkSession.Builder;
 
 import com.amazonaws.auth.profile.ProfileCredentialsProvider;
 
-import edu.upenn.cis.nets2120.config.Config;
+import instalite.ranking.config.Config;
 
 public class SparkConnector {
     /**

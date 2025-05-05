@@ -148,7 +148,7 @@
         </pluginRepository>
     </pluginRepositories>
     <build>
-        <sourceDirectory>instalite</sourceDirectory> <!-- Point to your custom source root -->
+        <sourceDirectory>/root/nets2120/instalite</sourceDirectory> <!-- Point to your custom source root -->
         <pluginManagement>
             <plugins>
                 <plugin>
@@ -193,7 +193,7 @@
                         </lifecycleMappingMetadata>
                     </configuration>
                 </plugin>
-<plugin> 
+            <plugin> 
                 <groupId>org.apache.maven.plugins</groupId> 
                 <artifactId>maven-surefire-plugin</artifactId> 
                 <version>2.22.2</version> 
@@ -243,7 +243,7 @@
                             <goal>java</goal>
                         </goals>
                         <configuration>
-                            <mainClass>ranking.local.ComputeRanksLocal</mainClass>
+                            <mainClass>instalite.ranking.ComputeRanksLocal</mainClass>
                             <arguments>
                             </arguments>
                         </configuration>
@@ -254,14 +254,14 @@
                             <goal>java</goal>
                         </goals>
                         <configuration>
-                            <mainClass>ranking.livy.ComputeRanksLivy</mainClass>
+                            <mainClass>instalite.ranking.ComputeRanksLivy</mainClass>
                             <arguments>
                             </arguments>
                         </configuration>
                     </execution>
                 </executions>
             </plugin>
-<plugin> 
+            <plugin> 
                 <groupId>org.apache.maven.plugins</groupId> 
                 <artifactId>maven-surefire-plugin</artifactId> 
                 <version>2.22.2</version> 
