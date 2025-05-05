@@ -9,6 +9,8 @@ import ReactSession from './ReactSession';
 // Pages
 import Login from './pages/Login';
 import Signup from './pages/Signup';
+import ForgotPassword from './pages/ForgotPassword';
+import ResetPassword from './pages/ResetPassword';
 import CreatePost from './pages/CreatePost';
 import FriendsList from './pages/FriendsList';
 import Profile from './pages/Profile';
@@ -74,6 +76,9 @@ function App() {
         {<Routes>
           <Route path="/" element={<Login />} />
           <Route path="/signup" element={<Signup />} />
+          <Route path="/forgot-password" element={<ForgotPassword />} />
+          <Route path="/reset-password" element={<ResetPassword />} />
+
           <Route path=":username/chat" element={<ProtectedRoute> <ChatInterface /> </ProtectedRoute>} />
           <Route path="/feed" element={<ProtectedRoute> <Feed /> </ProtectedRoute>} />
           <Route path="/createPost" element={<ProtectedRoute> <CreatePost /> </ProtectedRoute>} />

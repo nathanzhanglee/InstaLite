@@ -156,8 +156,8 @@ export default function Signup() {
                 }
             });
 
-            alert('Registration complete! Welcome ' + username + '!');
-            navigate(`/${username}/home`);
+            alert(`Registration complete! Welcome ${username}!`);
+            navigate('/feed');
         } catch (error) {
             console.error('Registration error:', error);
             alert('Registration failed: ' + (error.response?.data?.error || 'Unknown error'));
