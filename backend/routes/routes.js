@@ -1592,6 +1592,41 @@ async function createPost(req, res) {
     return res.status(201).json({message: "Post created."});
 }
 
+
+// /**
+//  * Create posts from external sources from consumer without federating them
+//  */
+// async function createExternalPost(req, res) {
+//   const user_id = req.session.user_id;
+//   if (!user_id) {
+//     return res.status(403).json({error: 'Not logged in.'});
+//   }
+
+//   let username = "ExternalKafkaPost";
+
+//   const title = req.body.title;
+//   const content = req.body.content;
+//   const parent_id = req.body.parent_id;
+//   const image_url = req.file; // For external posts, this might come as a URL
+
+//   if (!title?.trim() || !content?.trim()) {
+//       return res.status(400).json({error: 'One or more of the fields you entered was empty'});
+//   }
+
+//   try {
+//       const hashtagString = JSON.stringify(extractHashtags(content));
+//       await querySQLDatabase("INSERT INTO posts ( \
+//         parent_post, title, content, image_link, author_username, hashtags, is_external) \
+//         VALUES (?, ?, ?, ?, ?, ?, ?);", 
+//         [parent_id, title, content, image_url, username, hashtagString, 1] // 1 indicates external post
+//       );
+//   } catch (err) {
+//       console.log("ERROR in createExternalPost ", err);
+//       return res.status(500).json({error: 'Error querying database.'});
+//   }
+//   return res.status(201).json({message: "External post created."});
+// }
+
 // GET /Rankings
 async function getFeed(req, res) {
   const username = req.session.username;
@@ -1853,6 +1888,7 @@ export {
   leaveChatRoom,
   createChatRoom,
   createOrGetChat,
+  // createExternalPost,
   getFeed,
   createPost,
   getChatBot,
