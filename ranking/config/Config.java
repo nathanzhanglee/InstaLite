@@ -32,7 +32,7 @@ public class Config {
 
     // Used for Spark to connect to Amazon RDS and pull data from the databases.
     public static String MYSQL_HOST = "localhost";
-    // public static final String MYSQL_URL = "jdbc:mysql://your-db-name.abcdefghijk.us-west-2.rds.amazonaws.com:3306/instalite";
+    public static final String MYSQL_URL = "jdbc:mysql://your-db-name.abcdefghijk.us-west-2.rds.amazonaws.com:3306/instalite";
     public static String MYSQL_PORT = "3306";
     public static String MYSQL_USER = "admin";
     public static String MYSQL_DATABASE = "instalite";

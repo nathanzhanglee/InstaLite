@@ -16,9 +16,9 @@ import org.apache.logging.log4j.Logger;
 import org.apache.spark.api.java.JavaSparkContext;
 import org.apache.spark.sql.SparkSession;
 
-import ranking.config.Config;
-import ranking.spark.SparkConnector;
-import ranking.utils.FlexibleLogger;
+import instalite.ranking.config.Config;
+import instalite.ranking.spark.SparkConnector;
+import instalite.ranking.utils.FlexibleLogger;
 
 /**
  * A basic Spark job with session info, initialize, shutdown, and run methods
