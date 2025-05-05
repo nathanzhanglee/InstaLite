@@ -85,6 +85,7 @@ async function querySQLDatabase(query, params = []) {
 }
 
 async function registerUser(req, res) {
+    console.log("REQUEST BODY:\n",req.body);
     //initialize variables from request
     const username = req.body.username;
     const email = req.body.email;
@@ -93,8 +94,8 @@ async function registerUser(req, res) {
     const password = req.body.password;
     const birthday = req.body.birthday;   
     const affiliation = req.body.affiliation;
-    const hashtags = req.body.hashtags || [];  // Default to empty array if not provided
-    const profile_pic_link = req.body.profilePicUrl || null;  // Default to null if not provided
+    const hashtags = req.body.interests || [];  // Default to empty array if not provided [passed in as INTERESTS on frontend FormData]
+    const profilePic = req.file || null;  // Default to null if not provided
 
     //think about how bday would be passed in: let's assume YYYY-MM-DD because that's how SQL wants it
     //validate birthday here
@@ -108,9 +109,11 @@ async function registerUser(req, res) {
     }
 
     // Format hashtags as JSON string if provided as array
-    const hashtags_json = Array.isArray(hashtags) ? JSON.stringify(hashtags) : (
-      typeof hashtags === 'string' ? JSON.stringify(hashtags.split(',').map(tag => tag.trim())) : '[]'
-    );
+    const hashtagString = Array.isArray(hashtags) ? hashtags.map(hashtag => {
+      hashtag.startsWith("#") ? hashtag.slice(1) : hashtag
+    }).join(",") : typeof hashtags == 'string' ? extractHashtags(hashtags).join(",") : hashtags;
+
+    let profile_pic_link;
 
     try {
       const usernameMatches = await querySQLDatabase(`SELECT COUNT(*) AS ucount FROM users WHERE username = ?`, [username]);
@@ -119,13 +122,19 @@ async function registerUser(req, res) {
       }
 
       const hashedPassword = await bcrypt.hash(password, 10);
+      profile_pic_link = await uploadToS3(profilePic, "profile-pics");
 
       // Add hashtags and profile_pic_link to the SQL query
-      const insertCommand = 'INSERT INTO users (username, email, first_name, last_name, birthday, affiliation, hashed_password, interests, profile_pic_link) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?)';
-      const params = [username, email, first_name, last_name, birthday, affiliation, hashedPassword, hashtags_json, profile_pic_link];
-      await querySQLDatabase(insertCommand, params);
-      const userResult = (await querySQLDatabase('SELECT user_id FROM users WHERE username = ?', [username]))[0];
-      const user_id = userResult[0].user_id;
+      const insertCommand = 'INSERT INTO users (username, email, first_name, last_name, birthday, affiliation, hashed_password, profile_pic_link) VALUES (?, ?, ?, ?, ?, ?, ?, ?)';
+      const params = [username, email, first_name, last_name, birthday, affiliation, hashedPassword, profile_pic_link];
+      
+      const user_id = (await querySQLDatabase(insertCommand, params))[0].insertId;
+
+      if (hashtags) {
+        console.log("Adding hashtags: ",hashtagString);
+        await querySQLDatabase("INSERT INTO hashtags(user_id, hashtag) VALUES (?, ?)",
+          [user_id, hashtagString]);
+      }
 
       // Start a session with proper cookie
       let sessionResult = await startSession(user_id);
@@ -581,28 +590,19 @@ async function getActorMatches(req, res) {
       return res.status(400).json({ error: 'No profile picture uploaded' });
     }
 
-    let s3_path;
-    try {
-      // Upload to S3 with a temporary identifier
-      s3_path = await uploadToS3(profilePic, "temp-profile-pics");
-    } catch(err) {
-      console.error("Error uploading profile picture to S3:", err);
-      return res.status(500).json({ error: 'Error uploading image' });
-    }
-
     let matches;
     try {
       const chroma_db_name = config.chromaDbName;
-      const embedding = await getEmbeddingFromPath(s3_path);
+      const embedding = (await face.getEmbeddingsFromBuffer(profilePic.buffer))[0];
       
       //for debugging in case the same chroma issue comes up
-      //console.log("Chroma_db: ",chroma_db, "\nchroma_db_name: ", chroma_db_name);
-      await listChromaCollections(chroma_db, chroma_db_name);
-      const client = await chroma_db.get_client();
-      const collection = client.getCollection({name: chroma_db_name});
+      //await listChromaCollections(chroma_db, chroma_db_name);
+      if (!embedding) {
+        return res.status(422).json({error: "Unable to find face in image. Make sure your image has a face!"}); //this is a somewhat important case
+      }
       matches = (await chroma_db.get_items_from_table(chroma_db_name, embedding, 5)).documents[0];
     } catch (error) {
-      console.error(`Error getting top matches:`, error);
+      console.error(`Error getting top matches:`, error.message);
       return res.status(500).json({error: 'Error processing image'});
     }
     
@@ -613,8 +613,7 @@ async function getActorMatches(req, res) {
     matches = matchesToResults(matches);
     return res.status(200).json({ 
       message: 'Successfully found matches', 
-      matches: matches,
-      profilePicUrl: s3_path 
+      matches
     });
   });
 }
@@ -670,13 +669,14 @@ function matchesToResults(matches) {
   return matches.map(row => {
     let comma_tokens = row.slice(1,-1).split(',');
     let death_year = (comma_tokens[4] === '\\"\\"' || comma_tokens[4] === null) ? "" : comma_tokens[4];
+    let image_key = comma_tokens[5].replace("imdb_crop/","");
     return {
       id: comma_tokens[0],
       nconst: comma_tokens[1],
       name: comma_tokens[2],
       birth_year: comma_tokens[3],
       death_year: death_year,
-      image_key: comma_tokens[5]
+      image_key
     }
   });
 }

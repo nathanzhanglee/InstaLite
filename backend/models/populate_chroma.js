@@ -4,7 +4,11 @@
  * actors/actresses in each image are not guaranteed.
  * 
  * By default, it will overwrite any database with that name, or create a new one if it doesn't exist.
- * When passing in --soft, it will only populate if the chroma database is empty. */
+ * When passing in --soft, it will only populate if the chroma database is empty.
+ * 
+ * It will also populate the `names` table, so that the names of all faces that are 
+ * successfully embedded are stored there. Be sure to have SQL/RDS running.
+ *  */
 
 import ChromaDB from './vector.js';
 import fs from 'fs';
@@ -61,7 +65,7 @@ async function populate_chroma() {
       }
     }
   } catch (error) {
-    if (error.name === 'InvalidCollectionError') {
+    if (error.name === 'InvalidCollectionError' || error.name === "ChromaNotFoundError") {
       console.log(`Collection ${collectionName} not found. Creating new collection...`);
       await chromaClient.createCollection({name: collectionName});
     } else {

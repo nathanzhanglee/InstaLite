@@ -1,3 +1,4 @@
 {
-    "serverRootURL": "http://localhost:8080"
+    "serverRootURL": "http://localhost:8080",
+    "actorImageBucket": "https://nets2120-images.s3.amazonaws.com"
 }

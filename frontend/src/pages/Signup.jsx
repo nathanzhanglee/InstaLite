@@ -34,6 +34,7 @@ export default function Signup() {
     const [currentStep, setCurrentStep] = useState(1);
 
     const rootURL = config.serverRootURL;
+    const imageBucket = config.actorImageBucket;
 
    // profile picture selection
     const handlePictureChange = (e) => {
@@ -343,7 +344,7 @@ export default function Signup() {
                             onClick={() => selectActor(match.id)}
                         >
                             <div className='w-full aspect-square overflow-hidden rounded-md'>
-                                <img src={match.image_url} alt={match.name} className='w-full h-full object-cover' />
+                                <img src={imageBucket + "/" + match.image_key} alt={match.name} className='w-full h-full object-cover' />
                             </div>
                             <p className='text-center mt-2 font-medium'>{match.name}</p>
                         </div>

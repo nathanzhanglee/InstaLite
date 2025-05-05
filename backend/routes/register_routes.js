@@ -95,7 +95,8 @@ const profilePicUpload = multer({
 }).single('profilePic');
 
 function register_routes(app) {
-  app.post('/register', routes.registerUser);
+  app.post('/register', 
+    handleFileUpload(IMAGE_CONFIG.PROFILE, routes.registerUser));   //adapt to the all-in-one registration aspect
   app.post('/login', routes.postLogin);
   app.post('/getActorMatches', routes.getActorMatches);
 

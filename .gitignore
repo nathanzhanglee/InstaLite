@@ -4,6 +4,7 @@
 .dynamodb/
 **/.env
 aws.credentials
+credentials
 **/node_modules/
 **/target/
 **/classes/
