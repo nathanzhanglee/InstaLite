@@ -291,7 +291,7 @@ async function postLogin(req, res) {
       'session_token',
       sessionResult.sessionToken,
       {
-        httpOnly: false,
+        httpOnly: true,
         secure: false, // set to true for production
         sameSite: 'lax' 
       }
@@ -317,8 +317,9 @@ async function postLogout(req, res) {
   }
 
   res.clearCookie('session_token', {
-    httpOnly: false,
-    secure: false
+    httpOnly: true,
+    secure: false,    //again, should be true for production
+    sameSite: 'lax'
   });
   
   try {
@@ -471,6 +472,8 @@ async function forgotPassword(req, res) {
     
     // Initialize Resend with API key and send email
     const resend = new resend(config.resendAPIKey);
+    console.log("RESEND instance", resend);
+
     const { data, error } = await resend.emails.send({
       from: 'InstaLite <armaana@sas.upenn.edu>', //we can add our email here...?
       to: email,
