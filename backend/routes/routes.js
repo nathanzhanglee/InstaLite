@@ -707,8 +707,55 @@ async function getFriends(req, res) {
     }
 }
 
-//POST /addFriend
-async function postAddFriend(req, res) {
+//POST /sendFriendRequest
+async function sendFriendRequest(req, res) {
+  const userId = req.session.user_id;
+  if (!userId) {
+    return res.status(403).json({error: 'Not logged in.'});
+  }
+
+  const friendUsername = req.body.friendUsername;
+  if (!friendUsername) {
+    return res.status(400).json({error: 'Missing friend username'});
+  }
+
+  let friendId;
+  try {
+    let friendResults = (await querySQLDatabase("SELECT user_id FROM users WHERE username = ?", [friendUsername]))[0];
+    if (friendResults.length === 0) {
+      return res.status(400).json({error: "User not found"});
+    }
+    friendId = friendResults[0].user_id;
+  } catch (error) {
+    return res.status(500).json({error: "Internal server error"});
+  }
+
+  try {
+    let inviteResults = await querySQLDatabase(
+      "SELECT * FROM friend_requests WHERE sender_id = ? AND recipient_id = ? AND status = 'pending'",
+      [userId, friendId]
+    );
+    if (inviteResults[0].length !== 0) {
+      return res.status(400).json({error: "There is already a pending friend request to this user"});
+    }
+  } catch (error) {
+    return res.status(500).json({error: "Internal server error"});
+  }
+
+  try {
+    await querySQLDatabase(
+      "INSERT INTO friend_requests(sender_id, recipient_id) VALUES ?, ?",
+      [userId, friendId]
+    );
+  } catch (error) {
+    return res.status(500).json({error: "Internal server error"});
+  }
+
+  return res.status(201).json(`Friend request successfully sent to ${friendUsername}`);
+}
+
+//POST /handleFriendRequest
+async function postHandleFriendRequest(req, res) {
   const userId = req.session.user_id;
   if (!userId) {
     return res.status(403).json({error: 'Not logged in.'});
@@ -721,6 +768,7 @@ async function postAddFriend(req, res) {
   }
 
   let friendId;
+  const accept = req.body.acceptRequest;
   try {
     const results = (await querySQLDatabase("SELECT user_id FROM users WHERE username = ?", [friendUsername]))[0];  
     //[0] limits to just returned results (removes schema)
@@ -743,12 +791,31 @@ async function postAddFriend(req, res) {
       return res.status(400).json({ error: 'You are already friends with this user' });
     }
 
-    // Insert bidirectional friendship
-    await querySQLDatabase("INSERT INTO friends (follower, followed) VALUES (?, ?), (?, ?)", [
-      userId, friendId, friendId, userId
-    ]);
+    const friendRequests = (await querySQLDatabase(
+      "SELECT * FROM friend_requests WHERE sender_id = ? AND recipient_id = ? AND status = 'pending'",
+      [friendId, userId]   //remember, the user is accepting/rejecting SOMEONE ELSE'S REQUEST
+    ))[0];
 
-    return res.status(201).json({ message: 'Friendship created successfully', friendUsername });
+    if (friendRequests.length === 0) {
+      return res.status(400).json({error: "No pending friend requests from this user"})
+    }
+
+    if (accept) {
+      await querySQLDatabase("UPDATE friend_requests SET status = 'accepted' WHERE sender_id = ? AND recipient_id = ?",
+        [friendId, userId]
+      );
+      // Insert bidirectional friendship
+      await querySQLDatabase("INSERT INTO friends (follower, followed) VALUES (?, ?), (?, ?)", [
+        userId, friendId, friendId, userId
+      ]);
+
+      return res.status(201).json({ message: 'Friend request accepted', friendUsername });
+    } else {
+      await querySQLDatabase("UPDATE friend_requests SET status = 'rejected' WHERE sender_id = ? AND recipient_id = ?",
+        [friendId, userId]
+      );
+      return res.status(201).json({message: 'Friend request rejected', friendUsername });
+    }
   } catch (err) {
     console.log("ERROR in addFriend insertion:", err);
     return res.status(500).json({ error: 'Error querying database' });
@@ -1570,17 +1637,17 @@ async function createPost(req, res) {
     //note that the mysql js driver converts a null object (like image_path) to NULL 
     try {
         const hashtagString = JSON.stringify(extractHashtags(content)); // Extract hashtags from content
-        await querySQLDatabase("INSERT INTO posts ( \
+        const post_id = (await querySQLDatabase("INSERT INTO posts ( \
           parent_post, title, content, image_link, author_username, hashtags) \
           VALUES (?, ?, ?, ?, ?, ?);", 
           [parent_id, title, content, image_path, username, hashtagString]
-        );
+        ))[0].insertId;
         
         // send post to Kafka
         const federatedPost = {
           username: username,
           source_site: 'instakann', 
-          post_uuid_within_site: uuidv4(), // create unique id
+          post_uuid_within_site: post_id, // create unique id
           post_text: `${content}`,
           content_type: 'text/plain'
       }
@@ -1876,7 +1943,8 @@ export {
   associateWithActor,
   getFriends,
   postLogout,
-  postAddFriend,
+  postHandleFriendRequest,
+  sendFriendRequest,
   postRemoveFriend,
   sendChatInvite,
   getChatInvites,

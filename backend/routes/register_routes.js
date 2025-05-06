@@ -109,7 +109,8 @@ function register_routes(app) {
 
   app.post('/search', routes.getChatBot);
   app.post('/logout', routes.postLogout);
-  app.post('/addFriend', routes.postAddFriend);
+  app.post('/sendFriendRequest', routes.sendFriendRequest);
+  app.post('/friendRequests', routes.postHandleFriendRequest);
   app.post('/removeFriend', routes.postRemoveFriend);
   app.get('/getFriends', routes.getFriends);
   app.get('/messages', routes.getChatMessages);

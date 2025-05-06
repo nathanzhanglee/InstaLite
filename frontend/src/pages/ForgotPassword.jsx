@@ -38,7 +38,7 @@ export default function ForgotPassword() {
   };
 
   const returnToLogin = () => {
-    navigate('/login');
+    navigate('/');
   };
 
   return (

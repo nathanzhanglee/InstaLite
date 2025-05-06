@@ -54,6 +54,17 @@ async function create_tables() {
       FOREIGN KEY (recommendation) REFERENCES users(user_id) \
       );')
   
+  await dbaccess.create_tables('CREATE TABLE IF NOT EXISTS friend_requests ( \
+      friend_request_id INT NOT NULL AUTO_INCREMENT, \
+      sender_id INT NOT NULL, \
+      recipient_id INT NOT NULL, \
+      sent_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP, \
+      status ENUM(\'pending\', \'accepted\', \'rejected\') DEFAULT \'pending\', \
+      FOREIGN KEY (sender_id) REFERENCES users(user_id), \
+      FOREIGN KEY (recipient_id) REFERENCES users(user_id), \
+      PRIMARY KEY (friend_request_id) \
+      );')
+  
   //friends table: contains current friend status
   await dbaccess.create_tables('CREATE TABLE IF NOT EXISTS friends ( \
     followed INT, \
@@ -169,6 +180,7 @@ async function create_tables() {
   await createIndex('idx_chat_members_user_id', 'chat_members', 'user_id');
   await createIndex('idx_chat_messages_chat_id', 'chat_messages', 'chat_id');
   await createIndex('idx_chat_invites_status', 'chat_invites', 'status');
+  await createIndex('idx_friend_req', 'friend_requests', 'sender_id', 'recipient_id');
 
   return null;
 }

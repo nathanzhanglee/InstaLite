@@ -34,6 +34,7 @@ async function delete_fn() {
     'chat_members',
     'chat_rooms',
     'sessions',
+    'friend_requests',
     'friends',
     'recommendations',
     'users',

@@ -2,6 +2,7 @@ apt-get install -y python3
 apt install python3-pip
 pip3 install chromadb
 
+mkdir -p chroma
 cd chroma
 mkdir -p chroma_db    # will eventually store embeddings
 
