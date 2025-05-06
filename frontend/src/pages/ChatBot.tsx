@@ -18,19 +18,21 @@ export default function ChatBot() {
     const { username } = useParams();
 
     const sendMessage = async () => {
-        // CUT HERE 
         try {
             setMessages(prev => [...prev, { sender: 'user', message: input }]);
 
             var response = await axios.post('http://localhost:8080/search', {
                 username: username,
                 question: input
-              })
-            setMessages(prev => [...prev, { sender: 'chatbot', message: response.data.message }])
+            }, {
+                withCredentials: true // Add this line to include cookies with the request
+            });
+            
+            setMessages(prev => [...prev, { sender: 'chatbot', message: response.data.message }]);
         } catch (error) {
-            setMessages(prev => [...prev, { sender: 'chatbot', message: 'Sorry, there was an issue. Please try again.' }])
+            console.error("Search error:", error);
+            setMessages(prev => [...prev, { sender: 'chatbot', message: 'Sorry, there was an issue. Please try again.' }]);
         }
-        // END CUT
     }
 
     return (
