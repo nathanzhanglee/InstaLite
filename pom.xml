@@ -259,6 +259,17 @@
                             </arguments>
                         </configuration>
                     </execution>
+                    <execution>
+                        <id>livy_recs</id>
+                        <goals>
+                            <goal>java</goal>
+                        </goals>
+                        <configuration>
+                            <mainClass>instalite.ranking.ComputeRecsLivy</mainClass>
+                            <arguments>
+                            </arguments>
+                        </configuration>
+                    </execution>
                 </executions>
             </plugin>
             <plugin> 

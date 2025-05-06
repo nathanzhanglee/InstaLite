@@ -1782,7 +1782,11 @@ async function getFeed(req, res) {
   // query post info for in descending order based on post_rankings for logged in user
   try {
     const result = await querySQLDatabase(
-      `SELECT p.post_id, p.title, p.content, p.author_username, pr.weight
+      `SELECT
+        p.post_id AS id,
+        p.title AS title,
+        p.content AS content, 
+        p.author_username AS username
        FROM post_rankings pr
        JOIN posts p ON pr.post_id = p.post_id
        WHERE pr.user_id = (SELECT user_id FROM users WHERE username = ?)
