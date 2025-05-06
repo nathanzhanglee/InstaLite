@@ -757,6 +757,81 @@ async function sendFriendRequest(req, res) {
   return res.status(201).json(`Friend request successfully sent to ${friendUsername}`);
 }
 
+// GET /getFriendRequests
+async function getFriendRequests(req, res) {
+  const userId = req.session.user_id;
+  if (!userId) {
+    return res.status(403).json({error: 'Not logged in.'});
+  }
+
+  const requestType = req.query.type; // 'incoming' or 'outgoing'
+  
+  try {
+    let results;
+    if (requestType === 'incoming') {
+      // Get requests where the current user is the recipient
+      results = await querySQLDatabase(
+        "SELECT fr.friend_request_id, u.username AS sender_username, u.profile_pic_link, fr.sent_at " +
+        "FROM friend_requests fr " +
+        "JOIN users u ON fr.sender_id = u.user_id " +
+        "WHERE fr.recipient_id = ? AND fr.status = 'pending'",
+        [userId]
+      );
+    } else {
+      // Get requests where the current user is the sender
+      results = await querySQLDatabase(
+        "SELECT fr.friend_request_id, u.username AS recipient_username, fr.sent_at " +
+        "FROM friend_requests fr " +
+        "JOIN users u ON fr.recipient_id = u.user_id " +
+        "WHERE fr.sender_id = ? AND fr.status = 'pending'",
+        [userId]
+      );
+    }
+    
+    return res.status(200).json(results[0]);
+  } catch (err) {
+    console.error("Error in getFriendRequests:", err);
+    return res.status(500).json({error: 'Error querying database'});
+  }
+}
+
+// POST /cancelFriendRequest
+async function cancelFriendRequest(req, res) {
+  const userId = req.session.user_id;
+  if (!userId) {
+    return res.status(403).json({error: 'Not logged in.'});
+  }
+  
+  const { requestId } = req.body;
+  
+  if (!requestId) {
+    return res.status(400).json({error: 'Missing request ID'});
+  }
+  
+  try {
+    // Verify the request belongs to the current user
+    const requestCheck = await querySQLDatabase(
+      "SELECT COUNT(*) AS count FROM friend_requests WHERE friend_request_id = ? AND sender_id = ?",
+      [requestId, userId]
+    );
+    
+    if (requestCheck[0][0].count === 0) {
+      return res.status(403).json({error: 'You do not have permission to cancel this request'});
+    }
+    
+    // Delete the request
+    await querySQLDatabase(
+      "DELETE FROM friend_requests WHERE friend_request_id = ?",
+      [requestId]
+    );
+    
+    return res.status(200).json({message: 'Friend request canceled successfully'});
+  } catch (err) {
+    console.error("Error in cancelFriendRequest:", err);
+    return res.status(500).json({error: 'Error querying database'});
+  }
+}
+
 //POST /handleFriendRequest
 async function postHandleFriendRequest(req, res) {
   const userId = req.session.user_id;
@@ -1961,6 +2036,8 @@ export {
   createOrGetChat,
   forgotPassword,
   resetPassword,
+  getFriendRequests,
+  cancelFriendRequest,
   // createExternalPost,
   getFeed,
   createPost,
