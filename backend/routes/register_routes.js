@@ -111,6 +111,8 @@ function register_routes(app) {
   app.post('/logout', routes.postLogout);
   app.post('/sendFriendRequest', routes.sendFriendRequest);
   app.post('/friendRequests', routes.postHandleFriendRequest);
+  app.get('/getFriendRequests', routes.getFriendRequests);
+  app.post('/cancelFriendRequest', routes.cancelFriendRequest);
   app.post('/removeFriend', routes.postRemoveFriend);
   app.get('/getFriends', routes.getFriends);
   app.get('/messages', routes.getChatMessages);

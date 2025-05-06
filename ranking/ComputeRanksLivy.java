@@ -31,15 +31,9 @@ import java.sql.ResultSet;  // If you're reading results
 import java.sql.SQLException;  // For exception handling
 
 /**
- * The `ComputeRanksLivy` class is responsible for running a social network ranking job using Apache Livy.
- * It takes command line arguments to configure the job parameters and performs the following tasks:
- * 1. Runs a SocialRankJob with backlinks set to true and writes the output to a file named "socialrank-livy-backlinks.csv".
- * 2. Runs a SocialRankJob with backlinks set to false and writes the output to a file named "socialrank-livy-nobacklinks.csv".
- * 3. Compares the top-10 results from both runs and writes the comparison to a file named "socialrank-livy-results.txt".
- * <p>
+ * ComputeRanksLivy
  * The class uses the Apache Livy library to submit and execute the jobs on a Livy server.
  * It also uses the SparkJob class to run the SocialRankJob and obtain the results.
- * <p>
  * To run the job, the `LIVY_HOST` environment variable must be set. If not set, the program will exit with an error message.
  */
 public class ComputeRanksLivy {
