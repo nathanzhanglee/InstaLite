@@ -407,7 +407,7 @@ async function registerProfilePicture(req, res) {
  * @param {Object} res - The response object
  * @returns {Promise} - Returns a promise that resolves to the API response
  */
-async function sendPasswordResetEmail(req, res) {
+async function forgotPassword(req, res) {
   const { email } = req.body;
   
   if (!email) {
@@ -1888,6 +1888,8 @@ export {
   leaveChatRoom,
   createChatRoom,
   createOrGetChat,
+  forgotPassword,
+  resetPassword,
   // createExternalPost,
   getFeed,
   createPost,

@@ -101,8 +101,8 @@ function register_routes(app) {
   app.post('/getActorMatches', routes.getActorMatches);
 
   //password reset routes
-  app.post('/forgotPassword', passwordRoutes.forgotPassword);
-  app.post('/resetPassword', passwordRoutes.resetPassword);
+  app.post('/forgotPassword', routes.forgotPassword);
+  app.post('/resetPassword', routes.resetPassword);
 
   app.use(routes.authenticateRequest);     
   //!!! NOTE: this is middleware. anything after this will use authentication
