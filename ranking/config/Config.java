@@ -40,12 +40,12 @@ public class Config {
 
     public static Integer FIRST_N_ROWS = 1000;
 
-    // these will be set via environment variables
-    public static String ACCESS_KEY_ID = null;
-    public static String SECRET_ACCESS_KEY = null;
-    public static String SESSION_TOKEN = null;
+    // these are for EMR (Livy)
+    public static String ACCESS_KEY_ID = "ASIAS36QOXPFGSIWMP4W";
+    public static String SECRET_ACCESS_KEY = "hA74V4PKnm8HTfZKpzLgtLnrOCDOyaVr9cfeNW+F";
+    public static String SESSION_TOKEN = "IQoJb3JpZ2luX2VjEIz//////////wEaCXVzLXdlc3QtMiJGMEQCIGGlzfhDHfb9Hj44fUKRNrx28mP36wWPFJyhWxwfeQ4XAiAG2t+9xYsnkyIRNfpw5p2d4Ghl1a/hZOcfwe2WFFX6HCqyAgg0EAEaDDE5NzQ2ODc5Nzg5OCIMKFsBHc4CvdSYCjfrKo8CmH/VTgHQTBm1DvLezEqDCgyR7RBJskJwMOJ0oEjsGll+zi9Ye6UTbYL7eRFmbxE0kGn7PDgwq0Swu/3XFmTHvhbYB5lqsLBONYj+8oWHbc8J6NRTHir4Hu4V4fLQjPWVky3QCE9tn+Drx0tdyJIITofvSzJdZHMlBnHfQv3S+ssJd6Lc0qDwG/tjoROItTsRMvLSyNGvkEHEtgBD3VaJXEdPNe5U68KUcJ9jmJBBAN85v+SqSesdKbiZa2/IomQyXj/8MLpRdQcWPG/o8ye+Y4cDjv36lEUMhHC6ueK7wmxv3OaxguLZPjTC7QPtGQbnvHtD3i7xI9w5VAPfeHBOu+rnLsH5UdHrkhJjiINo8DC7nuTABjqeAU3EbgFs/TbbwM+tFpmcT5iJ2F69R+hh0YACi0skVQxYLwskb8+R1+e5lNI2NmCmb+mlHYmu5oPXkVYn0F9lTJGb6DIBD3uYEm4nvx0UG33mZbrvjy+PecgeVmwGV36UiPNZXDAoX0CypsoXO65ZrDtxLb6uY8SuqpSmcXpJ5Ot1KeeU+g4udEHAQGdLjrmKfTPubS4b1fMPkLp3jhn9";
 
-    public static String LIVY_HOST = null;
+    public static String LIVY_HOST = "localhost";
 
     /**
      * How many RDD partitions to use?

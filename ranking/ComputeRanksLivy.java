@@ -11,6 +11,7 @@ import java.util.List;
 import java.util.Set;
 import java.util.concurrent.ExecutionException;
 import java.util.stream.Collectors;
+import java.lang.ClassNotFoundException;
 
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
@@ -84,7 +85,7 @@ public class ComputeRanksLivy {
             i_max = Integer.parseInt(args[1]);
             debug = true;
         } else {
-            d_max = 30;
+            d_max = 1;
             i_max = 25;
             debug = false;
         }
@@ -92,22 +93,43 @@ public class ComputeRanksLivy {
         String livy = SparkJob.getLivyUrl(args);
         FlexibleLogger logger = new FlexibleLogger(null, false, debug);
 
-        List<SerializablePair<String, SerializablePair<String, Double>>> results = callLivy(livy, logger, config, d_max, i_max, debug);
-        /* 
-        try (PrintStream out = new PrintStream(new FileOutputStream("socialrank-livy-nobacklinks.csv"))) {
-            for (SerializablePair<String, Double> item : noBacklinksResult) {
-                out.println(item.getLeft() + "," + item.getRight());
-            }
-        } catch (Exception e) {
-            logger.error("Error writing to file: " + e.getMessage());
-        }*/
-
-
-        // TODO: Add a second call to Apache Livy to run a SocialRankJob with the
-        // back-links set to false. Write the output to a file named
-        // "socialrank-livy-nobacklinks.csv"
-
+        List<SerializablePair<String, SerializablePair<String, Double>>> topPosts = callLivy(livy, logger, config, d_max, i_max, debug);
+  
         logger.info("*** Finished social network ranking! ***");
+
+        // MySQL connection setup
+        String url = "jdbc:mysql://" + Config.MYSQL_HOST + ":" + Config.MYSQL_PORT + "/" + Config.MYSQL_DATABASE;
+
+        String query = "INSERT INTO post_rankings (user_id, post_id, weight) VALUES (?, ?, ?) "
+            + "ON DUPLICATE KEY UPDATE weight = VALUES(weight)";
+
+        try {
+            // Explicitly load the MySQL JDBC driver
+            Class.forName("com.mysql.cj.jdbc.Driver");
+
+            Connection conn = DriverManager.getConnection(url, Config.MYSQL_USER, Config.MYSQL_PASSWORD);
+            PreparedStatement statement = conn.prepareStatement(query);
+
+            for (SerializablePair<String, SerializablePair<String, Double>> item : topPosts) {
+                logger.info("post item: " + item.getLeft() + "\t" + item.getRight().getLeft() + "\t" + item.getRight().getRight());
+                int postId = Integer.parseInt(item.getRight().getLeft().substring(5));  // will be "post:[postId]" --> postId
+                int userId = Integer.parseInt(item.getLeft());
+                float weight = item.getRight().getRight().floatValue();
+
+                statement.setInt(1, postId);
+                statement.setInt(2, userId);
+                statement.setFloat(3, weight);
+                statement.addBatch();
+            }
+            statement.executeBatch();
+            logger.info("Stored " + topPosts.size() + " items in post_rankings table");
+        } catch (SQLException ex) {
+            logger.info("error with sql"); 
+            ex.printStackTrace();
+        } catch(ClassNotFoundException ex) {
+            logger.info("class not found");
+            ex.printStackTrace();
+        }
 
     }
 

@@ -29,7 +29,7 @@ public class ConfigSingleton {
         config.SPARK_DRIVER_MEMORY = dotenv.get("SPARK_DRIVER_MEMORY", "10g");
         config.SPARK_TESTING_MEMORY = dotenv.get("SPARK_TESTING_MEMORY", "2147480000");
 
-        config.LIVY_HOST = dotenv.get("LIVY_HOST");
+        config.LIVY_HOST = dotenv.get("LIVY_HOST", "localhost");
         return config;
     }
 }

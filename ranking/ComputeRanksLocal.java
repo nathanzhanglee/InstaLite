@@ -48,7 +48,7 @@ public class ComputeRanksLocal {
             i_max = Integer.parseInt(args[1]);
             debug = true;
         } else {
-            d_max = 30;
+            d_max = 1;
             i_max = 15;
             debug = false;
         }
@@ -76,8 +76,8 @@ public class ComputeRanksLocal {
                 int userId = Integer.parseInt(item.getLeft());
                 float weight = item.getRight().getRight().floatValue();
 
-                statement.setInt(1, postId);
-                statement.setInt(2, userId);
+                statement.setInt(1, userId);
+                statement.setInt(2, postId);
                 statement.setFloat(3, weight);
                 statement.addBatch();
             }
