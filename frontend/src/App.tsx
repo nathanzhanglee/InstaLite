@@ -35,7 +35,7 @@ const ProtectedRoute = ({ children }) => {
   
   // redirect to current username if URL username doesn't match session
   if (username && username !== user.username) {
-    return <Navigate to={`/${user.username}/home`} replace />;
+    return <Navigate to={'/feed'} replace />;
   }
   
   return (

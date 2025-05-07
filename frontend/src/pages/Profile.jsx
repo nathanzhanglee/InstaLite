@@ -151,17 +151,17 @@ const Profile = () => {
           <div className="posts-grid">
             {posts.map(post => (
               <div key={post.post_id} className="post-card">
-                <div className="post-date">{new Date(post.created_at).toLocaleDateString('en-US', { month: 'short', day: 'numeric' })}</div>
                 {post.image_link && (
                   <div className="post-image-container">
                     <img src={post.image_link} alt="Post content" className="post-image" />
                   </div>
                 )}
                 <div className="post-footer">
+                  {post.title && <h3 className="post-title">{post.title}</h3>}
+                  <div className="post-content">{post.content}</div>
                   <div className="post-likes">
                     <FaHeart /> {post.likes_count || 0}
                   </div>
-                  <div className="post-content">{post.content}</div>
                 </div>
               </div>
             ))}
