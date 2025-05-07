@@ -3,7 +3,7 @@ import { get_db_connection } from "../models/rdbms.js";
 import ChromaDB from "../models/vector.js";
 import fs from 'fs';
 
-const configFile = fs.readFileSync('./config/config.json', 'utf8');
+const configFile = fs.readFileSync('./backend/config/config.json', 'utf8');
 const config = JSON.parse(configFile);
 
 // Database connections
@@ -12,7 +12,8 @@ await mysql_db.connect();
 const chroma_db = ChromaDB();
 
 const embeddings = new OpenAIEmbeddings({
-  modelName: "text-embedding-ada-002"
+  modelName: "text-embedding-3-small",
+  openAIApiKey: config.openaiApiKey
 });
 
 const COLLECTION_NAME = "text_embeddings";
@@ -31,7 +32,7 @@ async function embedText(paragraph) {
     return result;
   } catch (error) {
     console.error("Error embedding paragraph:", error);
-    return null;
+    throw new Error(`Failed to embed text: ${error.message}`);
   }
 }
 
@@ -81,14 +82,10 @@ async function getUserData() {
 }
 
 async function embedAndStoreMovies() {
-  const mysql_db = get_db_connection();
-  await mysql_db.connect();
   
-  const chroma_db = ChromaDB();
-
   // Clear collection before creating it.
   await chroma_db.create_table(COLLECTION_NAME);
-
+  
   // Embed posts
   var results = await getPostData(); // [{ post_id, title, content, author }, ...]
   const posts = results[0];
@@ -115,5 +112,5 @@ async function embedAndStoreMovies() {
   console.log("Embeddings loaded into ChromaDB");
 }
 
-embedAndStoreMovies();
+await embedAndStoreMovies();
 process.exit(0);

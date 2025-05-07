@@ -3,9 +3,9 @@
     "serverPort": 8080,
     "awsRegion": "us-east-1",
     "s3BucketName": "nets2120-instakann-imagestorage",
-    "chromaDbName": "imdb_photos",
+    "chromaDbName": "text_embeddings",
     "database": {
-        "host": "database-1.cwqhq00a7tws.us-east-1.rds.amazonaws.com",
+        "host": "localhost",
         "port": "3306",
         "user": "admin1",
         "database": "instalite",
