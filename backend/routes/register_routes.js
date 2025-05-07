@@ -142,6 +142,7 @@ function register_routes(app) {
     handleFileUpload(IMAGE_CONFIG.POST, routes.createPost)
   );
 
+  app.get('/getFeed', routes.getFeed);
 
   app.post('/sendMessage', 
     handleFileUpload(IMAGE_CONFIG.MESSAGE, routes.sendMessageExistingChat)
