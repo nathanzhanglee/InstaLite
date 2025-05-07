@@ -83,7 +83,7 @@ async function getUserData() {
 async function embedAndStoreMovies() {
   const mysql_db = get_db_connection();
   await mysql_db.connect();
-
+  
   const chroma_db = ChromaDB();
 
   // Clear collection before creating it.
@@ -111,7 +111,7 @@ async function embedAndStoreMovies() {
     const key = `user_${user.user_id}`; // for chromadb
     await chroma_db.put_item_into_table(COLLECTION_NAME, key, embedding, text);
   }
-
+  
   console.log("Embeddings loaded into ChromaDB");
 }
 

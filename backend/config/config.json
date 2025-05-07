@@ -5,7 +5,7 @@
     "s3BucketName": "nets2120-instakann-imagestorage",
     "chromaDbName": "imdb_photos",
     "database": {
-        "host": "localhost",
+        "host": "database-1.cwqhq00a7tws.us-east-1.rds.amazonaws.com",
         "port": "3306",
         "user": "admin1",
         "database": "instalite",
