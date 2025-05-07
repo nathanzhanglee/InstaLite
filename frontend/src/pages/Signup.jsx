@@ -122,6 +122,7 @@ export default function Signup() {
         } catch (error) {
             console.error('Error processing profile picture:', error);
             alert('Failed to process profile picture: ' + (error.response?.data?.error || 'Unknown error'));
+            setCurrentStep(3);
         }
     };
 

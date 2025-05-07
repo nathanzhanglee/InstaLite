@@ -596,6 +596,7 @@ async function getActorMatches(req, res) {
     let matches;
     try {
       const chroma_db_name = config.chromaDbName;
+      //const chroma_db_name = "imdb_photos";
       const embedding = (await face.getEmbeddingsFromBuffer(profilePic.buffer))[0];
       
       //for debugging in case the same chroma issue comes up
