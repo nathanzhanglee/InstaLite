@@ -424,7 +424,6 @@ export const ChatProvider: React.FC<{ children: React.ReactNode }> = ({ children
     try {
       await axios.post(`${rootURL}/leaveChatRoom`, { chatId });
 
-      // If this was the active chat, clear it
       if (activeChatId === chatId) {
         setActiveChatId(null);
         setActiveChatName(null);

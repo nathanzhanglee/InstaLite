@@ -747,7 +747,7 @@ async function sendFriendRequest(req, res) {
 
   try {
     await querySQLDatabase(
-      "INSERT INTO friend_requests(sender_id, recipient_id) VALUES ?, ?",
+      "INSERT INTO friend_requests(sender_id, recipient_id) VALUES (?, ?)",
       [userId, friendId]
     );
   } catch (error) {
