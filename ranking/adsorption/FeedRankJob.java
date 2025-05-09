@@ -63,7 +63,7 @@ public class FeedRankJob extends SparkJob<List<SerializablePair<String, Serializ
 	 * 
 	 * input "followers" table: (follower, followed)
 	 * 
-	 * Used this source for setup instructions.
+	 * Used this source for JDBC/MySQL setup instructions.
 	 * https://spark.apache.org/docs/3.5.0/sql-data-sources-jdbc.html
 	 * 
 	 */
@@ -108,7 +108,8 @@ public class FeedRankJob extends SparkJob<List<SerializablePair<String, Serializ
 			});
 		logger.info("[FeedRankJob getGraph()] Found " + likeEdges.count() + " likeEdges");
 
-		// Create JavaPairRDD from user to selected hashtag interests.
+		// Create JavaPairRDD from user to selected hashtag interests
+		// Assume DB string is 'garlic,vampire,...' (comma separated)
 		JavaPairRDD<String, String> hashtagEdges = hashtags.javaRDD()
 			.flatMapToPair(row -> {
 					String user = row.getAs("user_id") + "";
@@ -124,15 +125,19 @@ public class FeedRankJob extends SparkJob<List<SerializablePair<String, Serializ
 		logger.info("[FeedRankJob getGraph()] Found " + hashtagEdges.count() + " hashtagEdges");
 
 		// Create JavaPairRDD from post to hashtag contained in the post content.
+		// Assume DB string is ["garlic", "vampire"] (JSON style)
 		JavaPairRDD<String, String> hashtagPostEdges = posts.javaRDD()
 			.flatMapToPair(row -> {
 					String post_id = row.getAs("post_id") + "";
 					String hashtagRow = row.getAs("hashtags");
-					String[] hashtagArr = hashtagRow.split(",");
+					String[] hashtagArr = hashtagRow.substring(1, hashtagRow.length() - 1).split(","); // remove []
 					List<Tuple2<String, String>> tuples = new ArrayList<>();
 					for (String hashtag: hashtagArr) {
-						tuples.add(new Tuple2<>("post:" + post_id, "hashtag:" + hashtag));
-						tuples.add(new Tuple2<>("hashtag:" + hashtag, "post:" + post_id));
+						if (hashtag.length() >= 2) {
+							String formattedHashtag = hashtag.substring(1, hashtag.length() - 1); // remove quotes
+							tuples.add(new Tuple2<>("post:" + post_id, "hashtag:" + formattedHashtag));
+							tuples.add(new Tuple2<>("hashtag:" + formattedHashtag, "post:" + post_id));
+						}
 					}
 					return tuples.iterator();
 			});
