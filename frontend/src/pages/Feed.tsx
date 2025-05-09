@@ -12,6 +12,7 @@ interface Post {
   image_link?: string;
   timestamp?: string;
   likes?: number;
+  // Removed isLiked from here
 }
 
 const Feed: React.FC = () => {
@@ -28,18 +29,30 @@ const Feed: React.FC = () => {
           withCredentials: true
         });
         
-        const fetchedPosts = response.data.map((post: any) => ({
-          id: post.id,
-          title: post.title,
-          username: post.username,
-          content: post.content,
-          image_link: post.image_link || null,
-          timestamp: post.timestamp || new Date().toISOString(),
-          likes: post.likes || 0
+        const fetchedPosts = await Promise.all(response.data.map(async (post: any) => {
+          try {
+            const likeResponse = await axios.get(
+              `${config.serverRootURL}/checkLikeStatus?post_id=${post.id}`,
+              { withCredentials: true }
+            );
+          } catch (err) {
+            console.error("Error checking like status:", err);
+          }
+          
+          return {
+            id: post.id,
+            title: post.title,
+            username: post.username,
+            content: post.content,
+            image_link: post.image_link || null,
+            timestamp: post.timestamp || new Date().toISOString(),
+            likes: post.likes || 0,
+          };
         }));
         
         setPosts(fetchedPosts);
         setError(null);
+        
       } catch (err) {
         console.error("Failed to fetch posts:", err);
         setError("Failed to load posts. Please try again later.");
@@ -53,6 +66,33 @@ const Feed: React.FC = () => {
 
   const handleProfileClick = (username: string) => {
     navigate(`/profile/${username}`);
+  };
+
+  const handleLikeClick = async (postId: number) => {
+    try {
+      const response = await axios.post(
+        `${config.serverRootURL}/likePost`,
+        { post_id: postId },
+        { withCredentials: true }
+      );
+      console.log('Response from likePost:', response);  // Log the response from backend
+  
+      // Toggle the like count between 0 and 1 for each post
+      setPosts(posts.map(post => {
+        if (post.id === postId) {
+          console.log('Post updated:', { ...post, likes: post.likes === 1 ? 0 : 1 });  // Log post update
+          return {
+            ...post,
+            likes: post.likes === 1 ? 0 : 1, // Toggle between 0 and 1
+          };
+        }
+        return post;
+      }));
+      
+    } catch (err) {
+      console.error("Failed to like post:", err);
+      setError("Failed to like post. Please try again.");
+    }
   };
 
   const formatDate = (dateString: string): string => {
@@ -123,7 +163,8 @@ const Feed: React.FC = () => {
               {post.image_link && (
                 <div className="post-image-container">
                   <img 
-                    src={post.image_link} 
+                    src="https://directory.seas.upenn.edu/wp-content/uploads/2020/03/ives-zack.jpg}"
+                    // src={post.image_link} 
                     alt="Post content" 
                     className="post-image" 
                   />
@@ -131,8 +172,11 @@ const Feed: React.FC = () => {
               )}
               
               <div className="post-actions">
-                <button className="like-button">
-                  ❤️ {post.likes || 0}
+                <button 
+                  className={`like-button ${post.likes === 1 ? 'liked' : ''}`}
+                  onClick={() => handleLikeClick(post.id)}
+                >
+                  {post.likes === 1 ? '❤️' : '🤍'} {post.likes}
                 </button>
                 <button className="comment-button">
                   💬 Comment

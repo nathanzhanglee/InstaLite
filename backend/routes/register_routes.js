@@ -106,7 +106,8 @@ function register_routes(app) {
 
   app.use(routes.authenticateRequest);     
   //!!! NOTE: this is middleware. anything after this will use authentication
-
+  app.post('/likePost', routes.likePost);
+  app.get('/checkLikeStatus', routes.checkLikeStatus);
   app.post('/search', routes.getChatBot);
   app.post('/logout', routes.postLogout);
   app.post('/sendFriendRequest', routes.sendFriendRequest);

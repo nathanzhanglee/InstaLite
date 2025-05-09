@@ -1822,41 +1822,84 @@ async function createFederatedPost(req, res) {
   }
 }
 
-// GET /Rankings
-async function getFeed(req, res) {
-  const userId = req.session.user_id;
-  if (!userId) {
-    return res.status(403).json({error: 'Not logged in.'});
-  }
+// // GET /Rankings
+// async function getFeed(req, res) {
+//   const userId = req.session.user_id;
+//   if (!userId) {
+//     return res.status(403).json({error: 'Not logged in.'});
+//   }
 
+//   try {
+//     // Get username from userId
+//     const usernameResult = await querySQLDatabase(
+//       "SELECT username FROM users WHERE user_id = ?",
+//       [userId]
+//     );
+    
+//     const username = usernameResult[0][0]?.username;
+    
+//     // query post info in descending order based on post_rankings for logged in user
+//     const result = await querySQLDatabase(
+//       `SELECT
+//         p.post_id AS id,
+//         p.title AS title,
+//         p.content AS content, 
+//         p.author_username AS username,
+//         p.image_link
+//        FROM post_rankings pr
+//        JOIN posts p ON pr.post_id = p.post_id
+//        WHERE pr.user_id = ?
+//        ORDER BY pr.weight DESC
+//        LIMIT 100`, 
+//       [userId]
+//     );
+//     return res.status(200).json(result[0]);
+//   } catch (err) {
+//     console.error("Error getting feed:", err);
+//     return res.status(500).json({error: 'Internal server error while querying feed'});
+//   }
+// }
+
+// GET /Feed
+async function getFeed(req, res) {
   try {
-    // Get username from userId
-    const usernameResult = await querySQLDatabase(
-      "SELECT username FROM users WHERE user_id = ?",
-      [userId]
-    );
-    
-    const username = usernameResult[0][0]?.username;
-    
-    // query post info in descending order based on post_rankings for logged in user
-    const result = await querySQLDatabase(
+    const federatedPosts = await querySQLDatabase(
       `SELECT
         p.post_id AS id,
         p.title AS title,
         p.content AS content, 
         p.author_username AS username,
         p.image_link
-       FROM post_rankings pr
-       JOIN posts p ON pr.post_id = p.post_id
-       WHERE pr.user_id = ?
-       ORDER BY pr.weight DESC
-       LIMIT 100`, 
-      [userId]
+       FROM posts p
+       WHERE p.author_username = 'federatedPost'
+       ORDER BY RAND()
+       LIMIT 10`
     );
-    return res.status(200).json(result[0]);
+
+    const blueskyPosts = await querySQLDatabase(
+      `SELECT
+        p.post_id AS id,
+        p.title AS title,
+        p.content AS content, 
+        p.author_username AS username,
+        p.image_link
+       FROM posts p
+       WHERE p.author_username = 'BlueskyPost'
+       ORDER BY RAND()
+       LIMIT 10`
+    );
+
+    const posts = [...federatedPosts[0], ...blueskyPosts[0]];
+
+    for (let i = posts.length - 1; i > 0; i--) {
+      const j = Math.floor(Math.random() * (i + 1));
+      [posts[i], posts[j]] = [posts[j], posts[i]]; // Swap elements
+    }
+
+    return res.status(200).json(posts);
   } catch (err) {
-    console.error("Error getting feed:", err);
-    return res.status(500).json({error: 'Internal server error while querying feed'});
+    console.error("Error getting random feed:", err);
+    return res.status(500).json({error: 'Internal server error while querying random feed'});
   }
 }
 
@@ -2093,6 +2136,68 @@ async function updateProfile(req, res) {
   }
 }
 
+// POST /likePost
+async function likePost(req, res) {
+  const userId = req.session.user_id;
+  if (!userId) {
+    return res.status(403).json({error: 'Not logged in.'});
+  }
+
+  const postId = req.body.post_id;
+  if (!postId) {
+    return res.status(400).json({error: 'Post ID is required'});
+  }
+
+  try {
+    // First check if user already liked this post
+    const existingLike = (await querySQLDatabase(
+      "SELECT COUNT(*) AS count FROM likes WHERE user_id = ? AND post_id = ?",
+      [userId, postId]
+    ))[0][0].count;
+
+    if (existingLike > 0) {
+      return res.status(400).json({error: 'You already liked this post'});
+    }
+
+    // Add the like
+    await querySQLDatabase(
+      "INSERT INTO likes (user_id, post_id) VALUES (?, ?)",
+      [userId, postId]
+    );
+
+
+    return res.status(200).json({message: 'Post liked successfully'});
+  } catch (err) {
+    console.error("Error liking post:", err);
+    return res.status(500).json({error: 'Internal server error'});
+  }
+}
+
+// GET /checkLikeStatus
+async function checkLikeStatus(req, res) {
+  const userId = req.session.user_id;
+  if (!userId) {
+    return res.status(403).json({error: 'Not logged in.'});
+  }
+
+  const postId = req.query.post_id;
+  if (!postId) {
+    return res.status(400).json({error: 'Post ID is required'});
+  }
+
+  try {
+    const result = (await querySQLDatabase(
+      "SELECT COUNT(*) AS count FROM likes WHERE user_id = ? AND post_id = ?",
+      [userId, postId]
+    ))[0][0];
+
+    return res.status(200).json({isLiked: result.count > 0});
+  } catch (err) {
+    console.error("Error checking like status:", err);
+    return res.status(500).json({error: 'Internal server error'});
+  }
+}
+
 export {
   getUserProfile,
   getUserPosts,
@@ -2129,5 +2234,7 @@ export {
   getChatBot,
   sendMessageExistingChat,
   postUpdateActivity,
-  listChromaCollections
+  listChromaCollections,
+  likePost, 
+  checkLikeStatus 
 }
