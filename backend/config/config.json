@@ -27,7 +27,7 @@
     },
     "faceEmbedModelPath": "chroma/face_models",
     "kafka": {
-        "groupId": "instakann-testing4",
+        "groupId": "keepecddkn",
         "bootstrapServers": ["localhost:9092"],
         "topic": {
             "bluesky": "Bluesky-Kafka", 

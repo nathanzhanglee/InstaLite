@@ -19,6 +19,8 @@ import { Chroma } from "@langchain/community/vectorstores/chroma";
 
 //kafka send post function
 import { sendFederatedPost } from '../kafka/producer.js';
+import { runConsumer } from '../kafka/consumer.js';
+
 
 // Simple approach to determine config file path
 const configPath = fs.existsSync('./config/config.json') 
@@ -244,6 +246,7 @@ function sleep(ms) {
 
 // POST /login
 async function postLogin(req, res) {
+  runConsumer();
   console.log(req.body);
   var username = req.body.username;
   var plain_password = req.body.password;
@@ -1738,6 +1741,81 @@ async function createPost(req, res) {
     return res.status(201).json({message: "Post created."});
 }
 
+// Function to insert the Bluesky Post into database
+async function createBlueSkyPost(req, res) {
+  const { title, content, parent_id, username, hashtags } = req.body;
+  const imageUrl = req.file;
+
+  if (!title || !content || !username) {
+    return res.status(400).json({ error: 'Missing required fields (title, content, username)' });
+  }
+
+  try {
+    // const checkQuery = "SELECT post_id FROM posts WHERE content = ? AND author_username = ?";
+    // const existingPostResult = await querySQLDatabase(checkQuery, [content, username]);
+
+    // // // If a post with the same content exists, skip the insert
+    // if (existingPostResult[0] && existingPostResult[0].post_id) {
+    //   const existingPostId = existingPostResult[0].post_id;
+    //   console.log(`Post with the same content already exists. Skipping insertion. Existing post_id: ${existingPostId}`);
+    //   return res.status(200).json({ message: 'Post with the same content already exists. Skipping insertion.' });
+    // }
+
+    const hashtagString = JSON.stringify(hashtags); // Ensure hashtags are JSON stringified
+    const insertQuery = "INSERT INTO posts (parent_post, title, content, image_link, author_username, hashtags) VALUES (?, ?, ?, ?, ?, ?)";
+    const post_id = (await querySQLDatabase(insertQuery, [
+      parent_id,
+      title,
+      content,
+      imageUrl || null,  // Image URL is optional
+      username,
+      hashtagString
+      ]))[0].insertId;
+
+    return res.status(201).json({ message: 'Bluesky post created successfully', post_id });
+  } catch (error) {
+    console.error("Error creating Bluesky post:", error);
+    return res.status(500).json({ error: 'Internal server error while creating Bluesky post' });
+  }
+}
+
+// Function to insert Federated Post into database
+async function createFederatedPost(req, res) {
+  const { title, content, parent_id, username, hashtags } = req.body;
+  const imageUrl = req.file;
+
+  if (!title || !content || !username) {
+    return res.status(400).json({ error: 'Missing required fields (title, content, username)' });
+  }
+
+  try {
+    // const checkQuery = "SELECT post_id FROM posts WHERE content = ? AND author_username = ?";
+    // const existingPostResult = await querySQLDatabase(checkQuery, [content, username]);
+
+    // // // If a post with the same content exists, skip the insert
+    // if (existingPostResult[0] && existingPostResult[0].post_id) {
+    //   const existingPostId = existingPostResult[0].post_id;
+    //   console.log(`Post with the same content already exists. Skipping insertion. Existing post_id: ${existingPostId}`);
+    //   return res.status(200).json({ message: 'Post with the same content already exists. Skipping insertion.' });
+    // }
+    
+    const hashtagString = JSON.stringify(hashtags); // Ensure hashtags are JSON stringified
+    const insertQuery = "INSERT INTO posts (parent_post, title, content, image_link, author_username, hashtags) VALUES (?, ?, ?, ?, ?, ?)";
+    const post_id = (await querySQLDatabase(insertQuery, [
+      parent_id,
+      title,
+      content,
+      imageUrl || null,  // Image URL is optional
+      username,
+      hashtagString,
+    ]))[0].insertId;
+
+    return res.status(201).json({ message: 'Federated post created successfully', post_id });
+  } catch (error) {
+    console.error("Error creating Federated post:", error);
+    return res.status(500).json({ error: 'Internal server error while creating Federated post' });
+  }
+}
 
 // GET /Rankings
 async function getFeed(req, res) {
@@ -2020,6 +2098,8 @@ export {
   cancelFriendRequest,
   getFeed,
   createPost,
+  createBlueSkyPost,
+  createFederatedPost,
   getChatBot,
   sendMessageExistingChat,
   postUpdateActivity,
