@@ -70,7 +70,6 @@ export const runConsumer = async () => {
           console.error('ERROR: topic was neither Bluesky-Kafka or FederatedPosts');
         }
       } catch (error) {
-        console.error('ERROR: occured while creating post from Kafka', error);
       }
     },
   });
