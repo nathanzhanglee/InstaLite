@@ -7,9 +7,9 @@
     "database": {
         "host": "localhost",
         "port": "3306",
-        "user": "admin1",
-        "database": "instalite",
-        "password": "password"
+        "user": "nets2120_hw",
+        "database": "imdb_basic",
+        "password": "S25AgH15,"
     },
     "socialParams": {
         "messagePageSize" : 50,

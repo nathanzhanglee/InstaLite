@@ -16,7 +16,8 @@ const embeddings = new OpenAIEmbeddings({
   openAIApiKey: config.openaiApiKey
 });
 
-const COLLECTION_NAME = "text_embeddings";
+//const COLLECTION_NAME = "text_embeddings";
+const COLLECTION_NAME = "text_embeddings2";
 
 // Cut off some text in case it's too long for OpenAI embedding.
 function shortenText(text, maxTokens = 8192) {
@@ -91,8 +92,9 @@ async function embedAndStoreMovies() {
   const posts = results[0];
   for (var i = 0; i < posts.length; i++) {
     const post = posts[i]; // JSON object
-    const text = `Post ${post.post_id}, titled ${post.title}. ${post.content}. Written by ${post.author_username}.`;
+    const text = `${post.author} wrote a post titled ${post.title}, that says: ${post.content}.`;
     const embedding = await embedText(text);
+    console.log(embedding);
     console.log(text);
     const key = `post_${post.post_id}`; // for chromadb
     await chroma_db.put_item_into_table(COLLECTION_NAME, key, embedding, text);
@@ -103,7 +105,7 @@ async function embedAndStoreMovies() {
   const users = results[0];
   for (var i = 0; i < users.length; i++) {
     const user = users[i]; // JSON object
-    const text = `Name of ${user.username} is ${user.first_name + ' ' + user.last_name}, who follows ${user.follows}`;
+    const text = `Full name of ${user.username} is ${user.first_name + ' ' + user.last_name}, who follows ${user.follows}`;
     const embedding = await embedText(text);
     const key = `user_${user.user_id}`; // for chromadb
     await chroma_db.put_item_into_table(COLLECTION_NAME, key, embedding, text);

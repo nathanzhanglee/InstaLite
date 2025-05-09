@@ -8,6 +8,11 @@ import crypto from 'crypto';
 import fs from 'fs';
 import multer from 'multer';
 
+// for .env
+import dotenv from 'dotenv';
+dotenv.config({path: './.env'});
+console.log('OpenAI API Key:', process.env.OPENAI_API_KEY);
+
 // hw4 langchain imports
 import { ChatOpenAI } from "@langchain/openai";
 import { PromptTemplate } from "@langchain/core/prompts";
@@ -1789,11 +1794,11 @@ async function getChatBot(req, res) {
     PromptTemplate.fromTemplate('Given that {context}, answer the following question. {question}');
   
   const llm = new ChatOpenAI({
-    modelName: "gpt-3.5-turbo", temperature: 0
+    modelName: "gpt-4.1-nano", temperature: 0
   });
 
   const embeddings = new OpenAIEmbeddings({
-    modelName: "text-embedding-ada-002"
+    modelName: "text-embedding-3-small"
   });
 
   // Get embedding of question
@@ -1812,10 +1817,15 @@ async function getChatBot(req, res) {
   }
 
   // Get top k matches from ChromaDB.
-  const collectionName = "text_embeddings";
+  const collectionName = "text_embeddings2";
   const topK = 3;
   const results = await chroma_db.get_items_from_table(collectionName, embedding, topK);
-  const matchContext = (results.documents[0]).join('\n');
+  let matchContext = (results.documents[0]).join('\n');
+  matchContext = `Here is some information from the social network posts 
+    and users about the question. Do not reference the posts themselves, just
+    use the information in them to answer the question! Don't mention specific
+    users or post titles. You can mention related hashtags if it makes sense. 
+  ` + matchContext;
 
   // Get match from imdb reviews.
   const ragChainImdb = RunnableSequence.from([
@@ -1845,7 +1855,23 @@ async function getChatBot(req, res) {
     llm,
     new StringOutputParser(),
   ]);
-  const result = await ragChain.invoke(req.body.question);
+
+  let result = await ragChain.invoke(req.body.question);
+
+  // Get post recommendations from embedding matches to add to result, if there are any.
+  const postTitleLines = (results.documents[0]).filter(line => line.includes("post titled"));
+  if (postTitleLines.length > 0) {
+    result += "\n You might want to check out these posts for more info: ";
+    postTitleLines.forEach(line => {
+      const regex = /^(.*?) wrote a post titled (.*?), that says:/; // check if post
+      const match = line.match(regex);
+      if (match) {
+        const author = match[1];
+        const title = match[2];
+        result += `"${title}", posted by ${author}". `;
+      }
+    });
+  }
 
   res.status(200).send({message: result});
 }
