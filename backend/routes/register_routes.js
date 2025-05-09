@@ -104,6 +104,8 @@ function register_routes(app) {
   app.post('/forgotPassword', routes.forgotPassword);
   app.post('/resetPassword', routes.resetPassword);
 
+  app.get('/getUserProfile/:username', routes.getUserProfile);
+
   app.use(routes.authenticateRequest);     
   //!!! NOTE: this is middleware. anything after this will use authentication
   app.post('/likePost', routes.likePost);
@@ -120,7 +122,6 @@ function register_routes(app) {
   app.get('/messages', routes.getChatMessages);
   app.post('/sendInvite', routes.sendChatInvite);
   app.post('/associate', routes.associateWithActor);
-  app.get('/getUserProfile/:username', routes.getUserProfile);
   app.get('/getUserPosts/:username', routes.getUserPosts);
   app.post('/updateProfile', profilePicUpload, routes.updateProfile);
 

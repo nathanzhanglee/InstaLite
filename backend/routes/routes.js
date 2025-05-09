@@ -2016,11 +2016,6 @@ async function postUpdateActivity(req, res) {
 // GET user profile
 async function getUserProfile(req, res) {
   const requestedUsername = req.params.username;
-  const userId = req.session.user_id; // The logged-in user
-  
-  if (!userId) {
-    return res.status(403).json({error: 'Not logged in.'});
-  }
 
   try {
     // First get the basic user profile
