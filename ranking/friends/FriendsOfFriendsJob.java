@@ -131,8 +131,6 @@ public class FriendsOfFriendsJob extends SparkJob<List<SerializablePair<Serializ
                 pair._2()
             ))
             .collect(); 
-
-        return recommendations.collect();
     }
 
     @Override
@@ -144,13 +142,13 @@ public class FriendsOfFriendsJob extends SparkJob<List<SerializablePair<Serializ
         Config config = new Config();
         boolean isLocal = args.length > 0 && args[0].equals("--local");
         boolean debug = args.length > 1 && args[1].equals("--debug");
-        
-        FriendsOfFriends fof = new FriendsOfFriends(isLocal, debug, config);
+        FlexibleLogger rankLogger = new FlexibleLogger(LogManager.getLogger(SparkJob.class), true, debug);
+        FriendsOfFriendsJob fof = new FriendsOfFriendsJob(isLocal, debug, rankLogger, config);
         try {
-            List<Tuple2<Tuple2<String, String>, Integer>> recommendations = fof.run(debug);
-            fof.storeRecommendations(recommendations);
+            List<SerializablePair<SerializablePair<String, String>, Integer>> recommendations = fof.run(debug);
+            //fof.storeRecommendations(recommendations);
         } catch (Exception e) {
-            logger.error("Error in main execution: " + e.getMessage(), e);
+            //logger.error("Error in main execution: " + e.getMessage());
         } finally {
             fof.shutdown();
         }

@@ -136,6 +136,7 @@ public class FeedRankJob extends SparkJob<List<SerializablePair<String, Serializ
 					}
 					return tuples.iterator();
 			});
+		logger.info("[FeedRankJob getGraph()] Found " + hashtagPostEdges.count() + " hashtagPostEdges");
 
 		JavaPairRDD<String, String> network = friendEdges
 			.union(hashtagEdges)
@@ -418,6 +419,8 @@ public class FeedRankJob extends SparkJob<List<SerializablePair<String, Serializ
 				String label = pair._2()._1();
 				return !label.startsWith("hashtag:") && !label.startsWith("post:") && current.startsWith("post:");
 			});
+
+		logger.info("[FeedRankJob getTopRecommendations()] Number of rec entries: " + userPostWeights.count());
 
     // 2) Turn Tuple2s to SerializablePairs of (user, (post, weight)) to work with Livy
 		return userPostWeights
