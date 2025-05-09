@@ -12,7 +12,14 @@ interface Post {
   image_link?: string;
   timestamp?: string;
   likes?: number;
-  // Removed isLiked from here
+  comments?: Comment[]; // Add comments array
+}
+
+interface Comment {
+  id: number;
+  username: string;
+  content: string;
+  timestamp?: string;
 }
 
 const Feed: React.FC = () => {
@@ -20,6 +27,8 @@ const Feed: React.FC = () => {
   const [loading, setLoading] = useState<boolean>(true);
   const [error, setError] = useState<string | null>(null);
   const [posts, setPosts] = useState<Post[]>([]);
+  const [commentText, setCommentText] = useState<string>('');
+  const [activeCommentPostId, setActiveCommentPostId] = useState<number | null>(null);
 
   useEffect(() => {
     const fetchPosts = async () => {
@@ -31,28 +40,40 @@ const Feed: React.FC = () => {
         
         const fetchedPosts = await Promise.all(response.data.map(async (post: any) => {
           try {
+            // Get like status
             const likeResponse = await axios.get(
               `${config.serverRootURL}/checkLikeStatus?post_id=${post.id}`,
               { withCredentials: true }
             );
+            
+            // Get comments for this post
+            const commentsResponse = await axios.get(
+              `${config.serverRootURL}/getComments?post_id=${post.id}`,
+              { withCredentials: true }
+            );
+            
+            return {
+              id: post.id,
+              title: post.title,
+              username: post.username,
+              content: post.content,
+              image_link: post.image_link || null,
+              timestamp: post.timestamp || new Date().toISOString(),
+              likes: post.likes || 0,
+              comments: commentsResponse.data || []
+            };
           } catch (err) {
-            console.error("Error checking like status:", err);
+            console.error("Error checking like status or comments:", err);
+            return {
+              ...post,
+              likes: post.likes || 0,
+              comments: []
+            };
           }
-          
-          return {
-            id: post.id,
-            title: post.title,
-            username: post.username,
-            content: post.content,
-            image_link: post.image_link || null,
-            timestamp: post.timestamp || new Date().toISOString(),
-            likes: post.likes || 0,
-          };
         }));
         
         setPosts(fetchedPosts);
         setError(null);
-        
       } catch (err) {
         console.error("Failed to fetch posts:", err);
         setError("Failed to load posts. Please try again later.");
@@ -75,23 +96,62 @@ const Feed: React.FC = () => {
         { post_id: postId },
         { withCredentials: true }
       );
-      console.log('Response from likePost:', response);  // Log the response from backend
-  
-      // Toggle the like count between 0 and 1 for each post
+      
       setPosts(posts.map(post => {
         if (post.id === postId) {
-          console.log('Post updated:', { ...post, likes: post.likes === 1 ? 0 : 1 });  // Log post update
           return {
             ...post,
-            likes: post.likes === 1 ? 0 : 1, // Toggle between 0 and 1
+            likes: post.likes === 1 ? 0 : 1,
+          };
+        }
+        return post;
+      }));
+    } catch (err) {
+      console.error("Failed to like post:", err);
+      setError("Failed to like post. Please try again.");
+    }
+  };
+
+  const handleCommentSubmit = async (postId: number) => {
+    if (!commentText.trim()) return;
+    
+    try {
+      const response = await axios.post(
+        `${config.serverRootURL}/createComment`,
+        { 
+          post_id: postId,
+          content: commentText
+        },
+        { withCredentials: true }
+      );
+      // // Refresh comments for this post
+      // const commentsResponse = await axios.get(
+      //   `${config.serverRootURL}/getComments?post_id=${postId}`,
+      //   { withCredentials: true }
+      // );
+      
+      setPosts(posts.map(post => {
+        if (post.id === postId) {
+          return {
+            ...post,
+            comments: [
+              {
+                id: new Date().getTime(),  // You can generate a temporary ID or get it from the backend response
+                username: 'Me',  // Replace this with the actual logged-in user's username
+                content: commentText,
+                timestamp: new Date().toISOString(),
+              }
+            ],
           };
         }
         return post;
       }));
       
+      setCommentText('');
+      setActiveCommentPostId(null);
     } catch (err) {
-      console.error("Failed to like post:", err);
-      setError("Failed to like post. Please try again.");
+      console.error("Failed to post comment:", err);
+      setError("Failed to post comment. Please try again.");
     }
   };
 
@@ -178,10 +238,49 @@ const Feed: React.FC = () => {
                 >
                   {post.likes === 1 ? '❤️' : '🤍'} {post.likes}
                 </button>
-                <button className="comment-button">
+                <button 
+                  className="comment-button"
+                  onClick={() => setActiveCommentPostId(post.id === activeCommentPostId ? null : post.id)}
+                >
                   💬 Comment
                 </button>
               </div>
+
+              {/* Comment input */}
+              {activeCommentPostId === post.id && (
+                <div className="comment-input-container">
+                  <input
+                    type="text"
+                    value={commentText}
+                    onChange={(e) => setCommentText(e.target.value)}
+                    placeholder="Write a comment..."
+                    className="comment-input"
+                  />
+                  <button 
+                    onClick={() => handleCommentSubmit(post.id)}
+                    className="comment-submit-button"
+                  >
+                    Post
+                  </button>
+                </div>
+              )}
+
+              {/* Comments list */}
+              {post.comments && post.comments.length > 0 && (
+                <div className="comments-section">
+                  {post.comments.map(comment => (
+                    <div key={comment.id} className="comment">
+                      <div className="comment-username">{comment.username}</div>
+                      <div className="comment-content">{comment.content}</div>
+                      {comment.timestamp && (
+                        <div className="comment-timestamp">
+                          {formatDate(comment.timestamp)}
+                        </div>
+                      )}
+                    </div>
+                  ))}
+                </div>
+              )}
             </div>
           ))
         ) : (

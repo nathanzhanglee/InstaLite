@@ -2198,6 +2198,49 @@ async function checkLikeStatus(req, res) {
   }
 }
 
+// POST /createComment
+async function createComment(req, res) {
+  const userId = req.session.user_id;
+  if (!userId) {
+    return res.status(403).json({error: 'Not logged in.'});
+  }
+
+  const { post_id, content } = req.body;
+  
+  if (!post_id || !content) {
+    return res.status(400).json({error: 'Post ID and content are required'});
+  }
+
+  try {
+    // Get username from user_id
+    const userResult = (await querySQLDatabase(
+      "SELECT username FROM users WHERE user_id = ?",
+      [userId]
+    ))[0][0];
+
+    if (!userResult) {
+      return res.status(404).json({error: 'User not found'});
+    }
+
+    const username = userResult.username;
+
+    // Create the comment (which is actually a new post with parent_post set)
+    const result = await querySQLDatabase(
+      "INSERT INTO posts (parent_post, content, author_username) VALUES (?, ?, ?)",
+      [post_id, content, username]
+    );
+
+    return res.status(201).json({
+      message: 'Comment created successfully',
+      comment_id: result[0].insertId
+    });
+  } catch (err) {
+    console.error("Error creating comment:", err);
+    return res.status(500).json({error: 'Internal server error'});
+  }
+}
+
+
 export {
   getUserProfile,
   getUserPosts,
@@ -2236,5 +2279,6 @@ export {
   postUpdateActivity,
   listChromaCollections,
   likePost, 
-  checkLikeStatus 
+  checkLikeStatus,
+  createComment
 }
