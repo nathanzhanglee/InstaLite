@@ -39,9 +39,9 @@ public class Config {
     public static String MYSQL_PASSWORD = "password,"; // S25AgH15 (local) or password (RDS)
     public static final String JDBC_DRIVER = "com.mysql.cj.jdbc.Driver";
     */
-    public static String MYSQL_USER = "nets2120_hw2"; // nets2120_hw2 (local) or admin1 (RDS)
-    public static String MYSQL_DATABASE = "imdb_basic"; // imdb_basic (local) or instalite (RDS)
-    public static String MYSQL_PASSWORD = "S25AgH15,"; // S25AgH15, (local) or password (RDS)
+    public static String MYSQL_USER = "admin"; // nets2120_hw2 (local) or admin1 (RDS)
+    public static String MYSQL_DATABASE = "instalite"; // imdb_basic (local) or instalite (RDS)
+    public static String MYSQL_PASSWORD = "80w9b243UBA*Xv!UnXSA%is"; // S25AgH15, (local) or password (RDS),
     public static final String JDBC_DRIVER = "com.mysql.cj.jdbc.Driver";
 
     public static Integer FIRST_N_ROWS = 1000;
