@@ -11,10 +11,14 @@ InstaLite is a social media platform developed as part of the NETS 2120 Spring 2
    - Profile pictures can be uploaded, with an option for users to select a similar actor using image embeddings. This process uses **image embeddings** to match user selfies with a precomputed vector database of actor images.
    - Hashtags based on user interests are also part of the registration process.
 
-   <img src="screenshots/createAccount.png" width="50%" />
-   <img src="screenshots/profilecreation.png" width="50%" />
-   <img src="screenshots/celebritymatch.png" width="50%" />
-   <img src="screenshots/nocelebritymatch.png" width="50%" />
+   <div style="display: flex; justify-content: space-between;">
+     <img src="screenshots/createAccount.png" width="48%" />
+     <img src="screenshots/profilecreation.png" width="48%" />
+   </div>
+   <div style="display: flex; justify-content: space-between;">
+     <img src="screenshots/celebritymatch.png" width="48%" />
+     <img src="screenshots/nocelebritymatch.png" width="48%" />
+   </div>
    <img src="screenshots/addinghashtags.png" width="50%" />
 
 2. **Feed and Ranking System**:
@@ -41,8 +45,10 @@ InstaLite is a social media platform developed as part of the NETS 2120 Spring 2
 6. **Friend Requests**:
    - Users can send friend requests, which can be accepted or rejected, allowing for the creation of a social network.
 
-   <img src="screenshots/addfriend.png" width="50%" />
-   <img src="screenshots/addfriendempty.png" width="50%" />
+   <div style="display: flex; justify-content: space-between;">
+     <img src="screenshots/addfriend.png" width="48%" />
+     <img src="screenshots/addfriendempty.png" width="48%" />
+   </div>
 
 7. **Real-Time Online Status**:
    - Users can see if their friends are online in real time using **WebSockets**, updating their status dynamically.
